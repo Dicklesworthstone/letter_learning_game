@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Learn Your Letters!</title>
 
     <!-- Modern Libraries via CDN -->
@@ -71,6 +71,12 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
+        }
+
+        /* Global reduce-motion support */
+        .reduce-motion * {
+            animation: none !important;
+            transition: none !important;
         }
 
         html,
@@ -256,20 +262,17 @@
             right: 0;
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
-            animation: shimmerHeader 3s ease-in-out infinite;
+            animation: shimmerHeader 5s ease-in-out infinite;
         }
 
         @keyframes shimmerHeader {
-
-            0%,
-            100% {
-                opacity: 0.5;
-                transform: translateX(-100%);
+            0%, 100% {
+                opacity: 0.3;
+                transform: translateX(0);
             }
-
             50% {
-                opacity: 1;
-                transform: translateX(100%);
+                opacity: 0.8;
+                transform: translateX(0);
             }
         }
 
@@ -334,12 +337,13 @@
         }
 
         .settings-btn:hover {
-            transform: rotate(90deg) scale(1.1);
+            /* tone down hover transform for touch devices */
             box-shadow: 0 6px 25px rgba(168, 85, 247, 0.3);
         }
 
         .settings-btn:active {
-            transform: rotate(180deg) scale(0.95);
+            /* provide tactile feedback without gimmicky rotation */
+            background: rgba(168, 85, 247, 0.4);
         }
 
         /* Achievement Badge Button */
@@ -377,7 +381,7 @@
         }
 
         .badges-btn:hover {
-            animation: trophyShake 0.5s ease-in-out;
+            /* keep hover subtle on touch devices */
             box-shadow: 0 6px 25px rgba(251, 191, 36, 0.4);
         }
 
@@ -399,6 +403,7 @@
 
         .badges-btn:active {
             transform: scale(0.95);
+            animation: trophyShake 0.5s ease-in-out;
         }
 
         .badge-count {
@@ -489,7 +494,7 @@
             padding: 20px 24px;
             background: linear-gradient(180deg, white 0%, var(--gray-50) 100%);
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 16px;
@@ -514,6 +519,7 @@
             flex-direction: column;
             gap: 6px;
             font-size: 14px;
+            flex: 1;
         }
 
         .score-right {
@@ -521,6 +527,7 @@
             flex-direction: column;
             align-items: flex-end;
             gap: 6px;
+            flex: 1;
         }
 
         .stars {
@@ -578,6 +585,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            padding: 5px;
             line-height: 1;
             /* ensure emoji like 🔊 are centered and not clipped */
             font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
@@ -654,7 +662,7 @@
             flex-direction: column;
             padding: 16px;
             padding-top: 8px;
-            padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: max(16px, calc(16px + env(safe-area-inset-bottom, 0px)));
             align-items: center;
             justify-content: center;
             position: relative;
@@ -669,6 +677,17 @@
                 0 -5px 20px rgba(168, 85, 247, 0.1);
             margin-top: 8px;
         }
+
+        /* Make any clickable/touch-start element avoid tap highlight */
+        [onclick], [ontouchstart] { -webkit-tap-highlight-color: transparent; }
+
+        /* Allow vertical scroll in modal content areas on iOS */
+        .settings-content,
+        .achievement-content,
+        .player-modal-content,
+        .round-content,
+        .streak-modal-content,
+        .parent-dashboard { touch-action: pan-y; -webkit-overflow-scrolling: touch; }
 
         /* Make interactive elements feel native on iOS */
         button,
@@ -700,6 +719,7 @@
             justify-content: center;
             font-size: 48px;
             line-height: 1;
+            padding: 10px;
             /* prevent vertical cropping of emoji */
             cursor: pointer;
             transition: all 0.2s var(--ease-spring);
@@ -780,6 +800,12 @@
             letter-spacing: -0.02em;
         }
 
+        /* Very narrow devices like iPhone SE */
+        @media (max-width: 375px) {
+            .options { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .option-btn { min-height: 80px; font-size: 36px; }
+        }
+
         .option-btn:hover {
             transform: translateY(-2px) scale(1.02);
             box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15), 0 4px 8px rgba(0, 0, 0, 0.05);
@@ -823,56 +849,20 @@
         }
 
         @keyframes correctBounce {
-            0% {
-                transform: scale(1);
-                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-            }
-
-            25% {
-                transform: scale(0.95);
-            }
-
-            50% {
-                transform: scale(1.1);
-                box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
-            }
-
-            100% {
-                transform: scale(1);
-                box-shadow: 0 0 0 40px rgba(16, 185, 129, 0);
-            }
+            0% { transform: scale(1); }
+            25% { transform: scale(0.97); }
+            50% { transform: scale(1.06); }
+            100% { transform: scale(1); }
         }
 
         @keyframes wrongWobble {
-
-            0%,
-            100% {
-                transform: translateX(0) rotate(0deg) scale(1);
-            }
-
-            15% {
-                transform: translateX(-10px) rotate(-5deg) scale(0.95);
-            }
-
-            30% {
-                transform: translateX(10px) rotate(5deg) scale(0.95);
-            }
-
-            45% {
-                transform: translateX(-8px) rotate(-3deg) scale(0.97);
-            }
-
-            60% {
-                transform: translateX(8px) rotate(3deg) scale(0.97);
-            }
-
-            75% {
-                transform: translateX(-4px) rotate(-1deg) scale(0.99);
-            }
-
-            85% {
-                transform: translateX(4px) rotate(1deg) scale(0.99);
-            }
+            0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
+            15% { transform: translateX(-4px) rotate(-2deg) scale(0.98); }
+            30% { transform: translateX(4px) rotate(2deg) scale(0.98); }
+            45% { transform: translateX(-3px) rotate(-1deg) scale(0.99); }
+            60% { transform: translateX(3px) rotate(1deg) scale(0.99); }
+            75% { transform: translateX(-2px) rotate(-0.5deg) scale(1.0); }
+            85% { transform: translateX(2px) rotate(0.5deg) scale(1.0); }
         }
 
         /* Celebration Particles (CSS-based) */
@@ -998,6 +988,14 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             letter-spacing: -0.02em;
+        }
+
+        @media (max-height: 450px) {
+            .feedback {
+                padding: 16px 32px;
+                font-size: 24px;
+                transform: translate(-50%, -50%) scale(0.9);
+            }
         }
 
         .feedback.success {
@@ -2133,18 +2131,13 @@
             line-height: 1;
             /* keep emoji centered when we swap to 🔊 */
             font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+            min-width: 80px; /* reserve space to avoid layout shift */
+            display: inline-block;
         }
 
         @keyframes phonicsCount {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.1);
-            }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         .phonics-letter {
@@ -4845,50 +4838,29 @@
             }
 
             const phoneticSound = phoneticSounds[letter.toLowerCase()];
-            if (phoneticSound) {
-                cancelSpeech();
-
-                // Step 1: Tell the child what letter it is - spell it phonetically
-                const letterSound = letterNamePronunciations[letter.toLowerCase()] || letter;
-                const letterName = letter.toUpperCase();
-                speakPhrase(`This is the letter ${letterSound}.`, () => {
-                    setTimeout(() => {
-                        speakPhrase(`Can you make the ${letterSound} sound?`, () => {
-                            // Give child time to try
-                            setTimeout(() => {
-                                speakPhrase(`Good try.`, () => {
-                                    setTimeout(() => {
-                                        speakPhrase(`Listen. The letter ${letterSound} makes this sound.`, () => {
-                                            setTimeout(() => {
-                                                const utterance = new SpeechSynthesisUtterance(phoneticSound);
-                                                utterance.rate = 0.55;  // Very slow for clarity
-                                                utterance.pitch = 1.1;
-                                                utterance.volume = 1;
-                                                const selectedVoice = getBestVoice();
-                                                if (selectedVoice) {
-                                                    utterance.voice = selectedVoice;
-                                                }
-                                                utterance.onend = () => {
-                                                    setTimeout(() => {
-                                                        speakPhrase(`Now you try. Say the ${letterSound} sound.`, () => {
-                                                            setTimeout(() => {
-                                                                speakPhrase(`Great job!`, callback);
-                                                            }, 2200);
-                                                        });
-                                                    }, 900);
-                                                };
-                                                speechSynthesis.speak(utterance);
-                                            }, 600);
-                                        });
-                                    }, 400);
-                                });
-                            }, 3200);
-                        });
-                    }, 900);
-                });
-            } else {
+            if (!phoneticSound) {
                 if (callback) callback();
+                return;
             }
+
+            cancelSpeech();
+            const letterSound = letterNamePronunciations[letter.toLowerCase()] || letter;
+            speakPhrase(`The letter ${letterSound} makes the sound:`, () => {
+                setTimeout(() => {
+                    const utterance = new SpeechSynthesisUtterance(phoneticSound);
+                    utterance.rate = 0.6;
+                    utterance.pitch = 1.1;
+                    utterance.volume = 1;
+                    const selectedVoice = getBestVoice();
+                    if (selectedVoice) utterance.voice = selectedVoice;
+                    utterance.onend = () => {
+                        setTimeout(() => {
+                            if (callback) callback();
+                        }, 500);
+                    };
+                    speechSynthesis.speak(utterance);
+                }, 800);
+            });
         }
 
         function updateScoreDisplay() {
@@ -5030,8 +5002,9 @@
             letterErrors[key] = (letterErrors[key] || 0) + 1;
         }
 
+        let lastCelebrationTime = 0;
         function createConfetti(element) {
-            if (focusModeEnabled) {
+            if (focusModeEnabled || reduceMotionEnabled) {
                 showFeedback('Great job! ✓', 'success');
                 return;
             }
@@ -5045,7 +5018,10 @@
             document.body.appendChild(layer);
 
             const emojis = celebrationEmojis[celebrationType] || celebrationEmojis.fireworks;
-            const count = 24;
+            const now = Date.now();
+            if (now - lastCelebrationTime < 500) { layer.remove(); return; }
+            lastCelebrationTime = now;
+            const count = 12;
 
             for (let i = 0; i < count; i++) {
                 const el = document.createElement('span');
@@ -5119,6 +5095,23 @@
         }
 
         function startIdentifyGame(resetRound = false) {
+            // In multiplayer mode, require a player to be selected
+            if (multiplayerMode && !currentPlayer) {
+                const gameArea = document.getElementById('gameArea');
+                gameArea.innerHTML = `
+                    <div class="start-screen" style="text-align:center; padding: 24px;">
+                        <h2 style="margin-bottom:8px;">Select a Player!</h2>
+                        <p>Tap on a player at the top to begin.</p>
+                    </div>
+                `;
+                const selector = document.getElementById('playerSelector');
+                if (selector) {
+                    selector.style.transition = 'background-color 0.3s';
+                    selector.style.backgroundColor = 'rgba(168, 85, 247, 0.2)';
+                    setTimeout(() => { selector.style.backgroundColor = ''; }, 600);
+                }
+                return;
+            }
             // Only reset counters when explicitly starting a new round/mode
             if (resetRound) {
                 roundCorrect = 0;
@@ -5238,14 +5231,15 @@
         }
 
         function checkAnswer(letter) {
-            if (waitingForPhonics) return;
-            if (isAnswering) return;
+            if (waitingForPhonics || isAnswering) return;
+            // Disable all buttons immediately to prevent rapid double clicks
+            document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'none');
+            clearTimer();
             isAnswering = true;
 
             const clickedButton = document.querySelector(`.option-btn[data-letter="${letter}"]`);
 
             if (letter === currentLetter) {
-                clearTimer();
                 clickedButton.classList.add('correct');
                 createConfetti(clickedButton);
                 roundCorrect++;
@@ -5299,10 +5293,16 @@
 
                 // Start phonics phase (track timeout so it can be cancelled)
                 if (phonicsEnabled) {
+                    if (phonicsPhaseTimeout) { clearTimeout(phonicsPhaseTimeout); phonicsPhaseTimeout = null; }
                     phonicsPhaseTimeout = setTimeout(() => startPhonicsPhase(), 1500);
                 } else {
                     setTimeout(() => startIdentifyGame(), 1200);
                 }
+
+                // Re-enable buttons after transition to next step
+                setTimeout(() => {
+                    document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
+                }, 1500);
 
             } else {
                 clickedButton.classList.add('wrong');
@@ -5322,9 +5322,25 @@
                 createWrongEffect();
                 speakPhrase('Not quite. Try again!');
 
+                // Briefly highlight the correct answer to guide learning
+                const correctButton = document.querySelector(`.option-btn[data-letter="${currentLetter}"]`);
+                if (correctButton) {
+                    correctButton.style.transition = 'transform 0.2s, background-color 0.2s';
+                    correctButton.style.backgroundColor = '#a7f3d0';
+                    correctButton.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        correctButton.style.backgroundColor = '';
+                        correctButton.style.transform = '';
+                    }, 1200);
+                }
+
                 setTimeout(() => {
                     clickedButton.classList.remove('wrong');
                     isAnswering = false;
+                    // Restart timer fresh for another attempt
+                    startTimer();
+                    // Re-enable buttons for retry
+                    document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
                 }, 1000);
             }
 
@@ -5682,7 +5698,7 @@
             checkAchievement('rounds', roundsCompleted);
 
             // Check for perfect round
-            if (roundWrong === 0 && roundCorrect >= 50) {
+            if (roundWrong === 0 && roundCorrect >= QUESTIONS_PER_ROUND) {
                 checkAchievement('perfect', 1);
             }
 
@@ -5718,6 +5734,12 @@
             modal.style.display = 'flex';
             previouslyFocusedElement = document.activeElement;
             setTimeout(() => trapFocus(modal.querySelector('.round-content')), 50);
+            // Close when tapping outside content
+            modal.onclick = function (e) {
+                if (e.target === modal) {
+                    startNextRound();
+                }
+            };
 
             // Play celebration sound
             speakPhrase(`Congratulations! You completed round ${currentRound}!`);
@@ -5745,14 +5767,15 @@
             currentLetter = getRandomLetter();
 
             const gameArea = document.getElementById('gameArea');
+            const canvasSize = Math.min(350, Math.max(200, Math.min(window.innerWidth - 40, window.innerHeight - 200)));
             gameArea.innerHTML = `
                 <div class="instruction">Draw the letter: <span class="letter-display">${currentLetter}</span></div>
                 <div class="canvas-container">
                     <div class="letter-guide">${currentLetter}</div>
-                    <svg class="formation-guide" width="350" height="350" id="formationGuide">
+                    <svg class="formation-guide" width="${canvasSize}" height="${canvasSize}" id="formationGuide">
                         <!-- Letter formation guide will be added here -->
                     </svg>
-                    <canvas id="drawCanvas" width="350" height="350"></canvas>
+                    <canvas id="drawCanvas" width="${canvasSize}" height="${canvasSize}"></canvas>
                 </div>
                 <div class="formation-controls">
                     <button class="formation-btn secondary" onclick="showFormationGuide()">Show How to Write</button>
@@ -5820,6 +5843,8 @@
 
         function setupCanvas() {
             const canvas = document.getElementById('drawCanvas');
+            // Prevent page scroll during drawing on touch devices
+            canvas.style.touchAction = 'none';
             ctx = canvas.getContext('2d');
             ctx.lineWidth = 8;
             ctx.lineCap = 'round';
@@ -6103,6 +6128,11 @@
         }
 
         function startRecording() {
+            // iOS Safari requires HTTPS for microphone access
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                alert('Voice recording requires HTTPS');
+                return;
+            }
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 alert('Voice recording is not supported on this device');
                 return;
@@ -7019,11 +7049,13 @@
                 style.id = 'reduce-motion-style';
                 style.textContent = '* { animation-duration: 0.01s !important; transition-duration: 0.01s !important; }';
                 document.head.appendChild(style);
+                document.body.classList.add('reduce-motion');
                 if (switchEl) { switchEl.classList.add('active'); switchEl.setAttribute('aria-checked', 'true'); }
             } else {
                 document.body.style.removeProperty('--animation-duration');
                 const style = document.getElementById('reduce-motion-style');
                 if (style) style.remove();
+                document.body.classList.remove('reduce-motion');
                 if (switchEl) { switchEl.classList.remove('active'); switchEl.setAttribute('aria-checked', 'false'); }
             }
 
