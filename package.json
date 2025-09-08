@@ -1,0 +1,8 @@
+{
+  "name": "letter-learning-game",
+  "version": "1.0.0",
+  "description": "Learn Your Letters - Educational Game",
+  "scripts": {
+    "build": "echo 'Static site - no build needed'"
+  }
+}
