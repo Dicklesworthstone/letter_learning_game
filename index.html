@@ -462,7 +462,8 @@
             margin-bottom: var(--space-8);
             position: relative;
             overflow: hidden;
-            color: var(--primary);
+            color: initial; /* allow native color emoji */
+            font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         }
 
         .sound-btn:hover {
@@ -475,7 +476,7 @@
 
         .sound-btn.playing {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
+            color: initial;
             animation: soundWave 0.8s ease-out;
             box-shadow: 0 8px 32px rgba(99,102,241,0.35), 
                         0 2px 8px rgba(0,0,0,0.1);
@@ -2338,7 +2339,7 @@
         }
 
         .vowel-highlight {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             padding: 2px 6px;
             border-radius: 8px;
@@ -3561,6 +3562,8 @@
         let problemLetters = [];
         let waitingForPhonics = false;
         let phonicsTimer = null;
+        let speakPromptTimeout = null;
+        let speakLetterTimeout = null;
         let isDrawing = false;
         let ctx = null;
         let voiceRecordingEnabled = false; // Hidden by default
@@ -3707,27 +3710,27 @@
             'c': 'kuh as in cat',
             'd': 'duh as in dog',
             'e': 'eh as in egg',
-            'f': 'fff as in fish',
+            'f': 'ff as in fish',
             'g': 'guh as in goat',
             'h': 'huh as in hat',
             'i': 'ih as in igloo',
             'j': 'juh as in jump',
             'k': 'kuh as in kite',
             'l': 'luh as in lion',
-            'm': 'mmm as in moon',
+            'm': 'mm as in moon',
             'n': 'nuh as in nose',
             'o': 'oh as in octopus',
             'p': 'puh as in pig',
             'q': 'kwuh as in queen',
             'r': 'ruh as in rabbit',
-            's': 'sss as in snake',
+            's': 'ss as in snake',
             't': 'tuh as in turtle',
             'u': 'uh as in umbrella',
             'v': 'vuh as in violin',
             'w': 'wuh as in whale',
             'x': 'ks as in fox',
             'y': 'yuh as in yellow',
-            'z': 'zz as in zebra'
+            'z': 'zuh as in zebra'
         };
 
         function getLetterCollection() {
@@ -4014,9 +4017,10 @@
                         .replace(/\blll\b/gi, 'luh')
                         .replace(/\brrr\b/gi, 'ruh')
                         .replace(/\bvvv\b/gi, 'vuh')
-                        .replace(/\bzzz\b/gi, 'zz')
+                        .replace(/\bzzz\b/gi, 'zuh')
                         .replace(/\bsss\b/gi, 'ss');
                 }
+                speakPhrase(`What sound does the letter ${letter} make?`);
                 speakPhrase(`The letter ${letter} makes the sound: ${safeSound}`, callback);
             } else {
                 if (callback) callback();
@@ -4133,6 +4137,14 @@
             if (phonicsPhaseTimeout) {
                 clearTimeout(phonicsPhaseTimeout);
                 phonicsPhaseTimeout = null;
+            }
+            if (speakPromptTimeout) {
+                clearTimeout(speakPromptTimeout);
+                speakPromptTimeout = null;
+            }
+            if (speakLetterTimeout) {
+                clearTimeout(speakLetterTimeout);
+                speakLetterTimeout = null;
             }
         }
 
@@ -4274,7 +4286,7 @@
             cancelSpeech();
 
             currentLetter = getRandomLetter();
-            const letters = getLetterCollection();
+            const letters = (currentLetter === currentLetter.toLowerCase()) ? lowerLetters : upperLetters; // distractors in same case as target
             const options = [currentLetter];
             
             // Generate 3 different options from a filtered pool
@@ -4333,17 +4345,18 @@
             startTimer();
             
             // Automatically play the letter sound
-            setTimeout(() => {
-                if (currentTheme === 'animals' && letterAssociations[currentLetter.toLowerCase()]) {
-                    const assoc = letterAssociations[currentLetter.toLowerCase()];
-                    speakPhrase(`Find the letter ${currentLetter} for ${assoc.word}`);
+            const thisQuestionLetter = currentLetter;
+            speakPromptTimeout = setTimeout(() => {
+                if (currentTheme === 'animals' && letterAssociations[thisQuestionLetter.toLowerCase()]) {
+                    const assoc = letterAssociations[thisQuestionLetter.toLowerCase()];
+                    speakPhrase(`Find the letter ${thisQuestionLetter} for ${assoc.word}`);
                 } else {
                     speakPhrase(`Find the letter`);
                 }
-                setTimeout(() => {
-                    speakLetter(currentLetter);
-                }, 1000);
-            }, 500);
+                speakLetterTimeout = setTimeout(() => {
+                    speakLetter(thisQuestionLetter);
+                }, 800);
+            }, 400);
         }
 
         function getVoiceRecorderHTML() {
