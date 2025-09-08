@@ -60,7 +60,7 @@
 
         .header {
             background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
-            padding: 12px 20px;
+            padding: 12px 15px;
             text-align: center;
             color: white;
             font-size: 22px;
@@ -68,6 +68,9 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
             position: relative;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .settings-btn {
@@ -104,7 +107,6 @@
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
         }
 
         .badges-btn:hover {
@@ -188,8 +190,10 @@
             padding: 16px 20px;
             background: linear-gradient(to bottom, #fafafa, #f5f5f5);
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
             font-weight: 600;
             color: #764ba2;
             border-bottom: 3px solid #f093fb;
@@ -536,6 +540,13 @@
         .feedback.error {
             background: linear-gradient(135deg, #f87171, #ef4444);
             animation: errorShake 0.6s;
+        }
+
+        /* Info feedback style for subtle hints */
+        .feedback.info {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            font-size: 24px;
+            animation: successPop 0.6s;
         }
 
         @keyframes successPop {
@@ -1086,11 +1097,28 @@
             color: #6b7280;
         }
 
+        /* Mobile adjustments */
+        @media (max-width: 600px) {
+            .achievement-notification {
+                top: 20px;
+                right: 50%;
+                transform: translateX(50%);
+                animation: notificationSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            @keyframes notificationSlide {
+                from {
+                    transform: translate(50%, -150px) scale(0.8);
+                    opacity: 0;
+                }
+                to {
+                    transform: translate(50%, 0) scale(1);
+                    opacity: 1;
+                }
+            }
+        }
+
         /* Difficulty Indicator */
         .difficulty-indicator {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -3216,6 +3244,7 @@
         let ctx = null;
         let drawingPoints = [];
         let recentLetters = [];
+        let isAnswering = false; // lock input during answer animations
 
         // Adaptive Difficulty State
         let letterPerformance = {};
@@ -3598,37 +3627,7 @@
             utterance.pitch = 1.1;  // More natural pitch
             utterance.volume = 1;
             
-            // Select the best available voice
-            const voices = speechSynthesis.getVoices();
-            
-            // Priority order for natural-sounding voices
-            const voicePriorities = [
-                'Google US English',
-                'Microsoft Zira',
-                'Microsoft David',
-                'Google UK English Female',
-                'Google UK English Male',
-                'Samantha',
-                'Daniel',
-                'Karen',
-                'Moira'
-            ];
-            
-            // Find the best voice
-            let selectedVoice = null;
-            for (const priority of voicePriorities) {
-                selectedVoice = voices.find(v => v.name.includes(priority));
-                if (selectedVoice) break;
-            }
-            
-            // Fallback to any English voice
-            if (!selectedVoice) {
-                selectedVoice = voices.find(v => 
-                    v.lang.startsWith('en-US') && 
-                    (v.name.includes('Google') || v.name.includes('Microsoft'))
-                ) || voices.find(v => v.lang.startsWith('en'));
-            }
-            
+            const selectedVoice = getBestVoice();
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
             }
@@ -3660,30 +3659,7 @@
             utterance.pitch = 1.05;  // Natural pitch
             utterance.volume = 1;
             
-            // Use the same voice selection logic
-            const voices = speechSynthesis.getVoices();
-            const voicePriorities = [
-                'Google US English',
-                'Microsoft Zira',
-                'Microsoft David',
-                'Google UK English Female',
-                'Samantha',
-                'Daniel'
-            ];
-            
-            let selectedVoice = null;
-            for (const priority of voicePriorities) {
-                selectedVoice = voices.find(v => v.name.includes(priority));
-                if (selectedVoice) break;
-            }
-            
-            if (!selectedVoice) {
-                selectedVoice = voices.find(v => 
-                    v.lang.startsWith('en-US') && 
-                    (v.name.includes('Google') || v.name.includes('Microsoft'))
-                ) || voices.find(v => v.lang.startsWith('en'));
-            }
-            
+            const selectedVoice = getBestVoice();
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
             }
@@ -3932,6 +3908,7 @@
 
         function startIdentifyGame() {
             if (waitingForPhonics) return;
+            isAnswering = false;
 
             clearAllTimers();
             cancelSpeech();
@@ -3940,9 +3917,10 @@
             const letters = getLetterCollection();
             const options = [currentLetter];
             
-            // Generate 3 different options
+            // Generate 3 different options from a filtered pool
+            const letterPool = letters.filter(l => l !== currentLetter);
             while (options.length < 4) {
-                const letter = letters[Math.floor(Math.random() * letters.length)];
+                const letter = letterPool[Math.floor(Math.random() * letterPool.length)];
                 if (!options.includes(letter)) {
                     options.push(letter);
                 }
@@ -4032,6 +4010,8 @@
 
         function checkAnswer(letter) {
             if (waitingForPhonics) return;
+            if (isAnswering) return;
+            isAnswering = true;
             
             const clickedButton = document.querySelector(`.option-btn[data-letter="${letter}"]`);
             
@@ -4111,6 +4091,7 @@
                 
                 setTimeout(() => {
                     clickedButton.classList.remove('wrong');
+                    isAnswering = false;
                 }, 1000);
             }
             
@@ -4894,35 +4875,35 @@
         }
 
         // Initialize speech synthesis with better voice loading
-        let voicesLoaded = false;
+        let voices = [];
+        function loadVoices() {
+            voices = speechSynthesis.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+            if (voices.length > 0) {
+                console.log('Speech voices loaded:', voices.length, 'English voices available');
+            }
+        }
+        function getBestVoice() {
+            if (!voices || voices.length === 0) return null;
+            const voicePriorities = [
+                'Google US English', 'Microsoft Zira', 'Microsoft David',
+                'Google UK English Female', 'Google UK English Male',
+                'Samantha', 'Daniel', 'Karen', 'Moira'
+            ];
+            for (const name of voicePriorities) {
+                const v = voices.find(v => v.name.includes(name));
+                if (v) return v;
+            }
+            return voices.find(v => v.lang === 'en-US') || voices[0];
+        }
         if (speechSupported) {
-            // Function to ensure voices are loaded
-            const loadVoices = () => {
-                const voices = speechSynthesis.getVoices();
-                if (voices.length > 0) {
-                    voicesLoaded = true;
-                    console.log('Speech voices loaded:', voices.length, 'voices available');
-                }
-                return voices;
-            };
-            
-            // Initial load attempt
+            speechSynthesis.onvoiceschanged = loadVoices;
             loadVoices();
-            
-            // Listen for voice changes (some browsers load asynchronously)
-            speechSynthesis.onvoiceschanged = () => {
-                loadVoices();
-            };
-            
-            // Force voice loading on some browsers
-            if (!voicesLoaded) {
-                const silentUtterance = new SpeechSynthesisUtterance('');
-                silentUtterance.volume = 0;
-                speechSynthesis.speak(silentUtterance);
-                setTimeout(() => {
-                    speechSynthesis.cancel();
-                    loadVoices();
-                }, 100);
+            // Nudge some browsers to populate voices
+            if (voices.length === 0) {
+                const silent = new SpeechSynthesisUtterance('');
+                silent.volume = 0;
+                speechSynthesis.speak(silent);
+                setTimeout(() => speechSynthesis.cancel(), 100);
             }
         }
 
@@ -5911,31 +5892,29 @@
 
         // Long press for parent dashboard
         let longPressTimer;
+        let hintTimer;
         const settingsBtn = document.getElementById('settingsBtn');
         
-        settingsBtn.addEventListener('touchstart', function(e) {
-            longPressTimer = setTimeout(() => {
-                openParentDashboard();
-            }, 2000); // 2 second long press
-        });
-        
-        settingsBtn.addEventListener('touchend', function(e) {
-            clearTimeout(longPressTimer);
-        });
-        
-        settingsBtn.addEventListener('mousedown', function(e) {
+        function startPressTimers() {
+            // Hint after short press
+            hintTimer = setTimeout(() => {
+                showFeedback('Hold for Parent Menu', 'info');
+            }, 800);
+            // Open dashboard after long press
             longPressTimer = setTimeout(() => {
                 openParentDashboard();
             }, 2000);
-        });
-        
-        settingsBtn.addEventListener('mouseup', function(e) {
+        }
+        function clearPressTimers() {
+            clearTimeout(hintTimer);
             clearTimeout(longPressTimer);
-        });
+        }
         
-        settingsBtn.addEventListener('mouseleave', function(e) {
-            clearTimeout(longPressTimer);
-        });
+        settingsBtn.addEventListener('touchstart', startPressTimers);
+        settingsBtn.addEventListener('touchend', clearPressTimers);
+        settingsBtn.addEventListener('mousedown', startPressTimers);
+        settingsBtn.addEventListener('mouseup', clearPressTimers);
+        settingsBtn.addEventListener('mouseleave', clearPressTimers);
 
         // Add keyboard support for debugging
         document.addEventListener('keydown', (e) => {
