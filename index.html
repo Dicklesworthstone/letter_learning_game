@@ -311,49 +311,43 @@
 
         /* Enhanced Sound Button */
         .sound-btn {
-            width: 140px;
-            height: 140px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border: 6px solid white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 0 rgba(102, 126, 234, 0.4);
+            background: white;
+            border: 4px solid #667eea;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 70px;
+            font-size: 60px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             margin-bottom: 25px;
-            animation: pulse 2s infinite;
             position: relative;
+            overflow: hidden;
+            color: #667eea;
         }
 
         .sound-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
         }
 
-        .sound-btn:active {
-            transform: scale(0.95);
-            animation: none;
-        }
+        .sound-btn:active { transform: scale(0.95); }
 
         .sound-btn.playing {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
             animation: soundWave 0.6s;
         }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 0 rgba(102, 126, 234, 0.4); }
-            70% { box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 20px rgba(102, 126, 234, 0); }
-            100% { box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 0 rgba(102, 126, 234, 0); }
-        }
-
         @keyframes soundWave {
-            0% { transform: scale(1); }
-            25% { transform: scale(1.1); }
-            50% { transform: scale(0.95); }
-            75% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% { box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2); }
+            50% { box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 0 15px rgba(102, 126, 234, 0.1), 0 0 0 30px rgba(102, 126, 234, 0.05); }
+            100% { box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2); }
         }
 
         /* Enhanced Options Grid */
@@ -424,28 +418,32 @@
             90% { transform: translateX(-1px) rotate(0deg); }
         }
 
-        /* Enhanced Particle Effects */
-        .particle {
-            position: absolute;
-            pointer-events: none;
-        }
-
-        .confetti {
-            width: 10px;
-            height: 10px;
-            position: absolute;
-            animation: confettiFall 1s ease-out forwards;
-        }
-
-        @keyframes confettiFall {
+        /* Celebration Particles (CSS-based) */
+        @keyframes celebrationParticle {
             0% {
+                transform: translate(0, 0) scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            20% {
+                transform: translate(0, 0) scale(1.2) rotate(90deg);
                 opacity: 1;
-                transform: translateY(0) rotate(0deg);
             }
             100% {
+                transform:
+                    translateX(calc(cos(var(--angle)) * var(--distance)))
+                    translateY(calc(sin(var(--angle)) * var(--distance)))
+                    scale(0.3)
+                    rotate(360deg);
                 opacity: 0;
-                transform: translateY(100px) rotate(720deg);
             }
+        }
+
+        .celebration-particle { will-change: transform, opacity; }
+
+        @keyframes correctPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
         }
 
         /* Draw Mode Styles */
@@ -662,8 +660,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -672,14 +670,14 @@
         }
 
         .settings-content {
-            background: white;
-            padding: 35px;
-            border-radius: 25px;
+            background: linear-gradient(to bottom, #ffffff, #f9fafb);
+            padding: 0;
+            border-radius: 30px;
             width: 90%;
-            max-width: 420px;
-            max-height: 80vh;
+            max-width: 480px;
+            max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.25);
             animation: slideUp 0.4s;
         }
 
@@ -689,11 +687,35 @@
         }
 
         .settings-header {
-            font-size: 28px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px 30px;
+            font-size: 24px;
             font-weight: bold;
-            color: #764ba2;
-            margin-bottom: 25px;
             text-align: center;
+            border-radius: 30px 30px 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .settings-body { padding: 30px; }
+
+        .settings-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .settings-section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f3f4f6;
         }
 
         /* Compact topbar for quick toggles (e.g., Reduce Motion) */
@@ -708,29 +730,30 @@
             border-radius: 14px;
         }
 
-        .setting-group {
-            margin-bottom: 25px;
-        }
+        .setting-group { margin-bottom: 20px; }
 
         .setting-label {
-            font-weight: 600;
-            color: #4b5563;
-            margin-bottom: 12px;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 10px;
             display: block;
-            font-size: 16px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .toggle-btn {
-            padding: 12px 24px;
-            border: 3px solid #e5e7eb;
+            padding: 10px 20px;
+            border: 2px solid #e5e7eb;
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             cursor: pointer;
-            margin-right: 10px;
-            margin-bottom: 8px;
+            margin-right: 8px;
+            margin-bottom: 6px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 600;
+            font-weight: 500;
             color: #6b7280;
+            font-size: 14px;
         }
 
         .toggle-btn:hover {
@@ -2459,8 +2482,7 @@
         }
 
         .focus-mode .bubble,
-        .focus-mode .confetti,
-        .focus-mode .particle {
+        .focus-mode .celebration-particle {
             display: none !important;
         }
 
@@ -3272,6 +3294,7 @@
         let phonicsTimer = null;
         let isDrawing = false;
         let ctx = null;
+        let voiceRecordingEnabled = false; // Hidden by default
         let drawingPoints = [];
         let recentLetters = [];
         let isAnswering = false; // lock input during answer animations
@@ -3844,26 +3867,35 @@
 
         function createConfetti(element) {
             if (focusModeEnabled) {
-                // Simple feedback for focus mode
                 showFeedback('Great job! ✓', 'success');
                 return;
             }
 
-            if (celebrationType === 'fireworks' && typeof confetti !== 'undefined') {
-                // Use canvas-confetti library for fireworks
-                const rect = element ? element.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2 };
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { 
-                        x: rect.left / window.innerWidth, 
-                        y: rect.top / window.innerHeight 
-                    }
-                });
-            } else {
-                // Custom celebration based on type
-                createCustomCelebration(element);
+            const rect = element ? element.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
+            const celebration = document.createElement('div');
+            celebration.className = 'celebration-container';
+            celebration.style.cssText = `
+                position: fixed;
+                left: ${rect.left + (rect.width || 0) / 2}px;
+                top: ${rect.top + (rect.height || 0) / 2}px;
+                width: 0; height: 0;
+                pointer-events: none; z-index: 9999;`;
+
+            const emojis = celebrationEmojis[celebrationType] || celebrationEmojis.fireworks;
+            const particles = 12;
+            for (let i = 0; i < particles; i++) {
+                const p = document.createElement('div');
+                p.className = 'celebration-particle';
+                p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                p.style.cssText = `
+                    position: absolute; font-size: 30px;
+                    animation: celebrationParticle 1.5s ease-out forwards;
+                    animation-delay: ${Math.random() * 0.2}s;
+                    --angle: ${(360 / particles) * i}deg; --distance: ${80 + Math.random() * 40}px;`;
+                celebration.appendChild(p);
             }
+            document.body.appendChild(celebration);
+            setTimeout(() => celebration.remove(), 2000);
         }
 
         function createCustomCelebration(element) {
@@ -3997,21 +4029,7 @@
                 <div class="instruction">Tap the speaker, then find the letter!</div>
                 <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">🔊</button>
                 <div class="options">${optionsHTML}</div>
-                <div class="voice-recorder">
-                    <button class="record-button" id="recordBtn" onclick="toggleRecording()" aria-label="Start recording">
-                        <span id="recordIcon">🎤</span>
-                    </button>
-                    <div class="voice-controls">
-                        <button class="voice-btn" onclick="playLastRecording()" id="playBtn" disabled aria-label="Play last recording">
-                            <span>▶️</span>
-                            <span>Play</span>
-                        </button>
-                        <button class="voice-btn" onclick="compareWithCorrect()" id="compareBtn" disabled aria-label="Compare with correct pronunciation">
-                            <span>🎙️</span>
-                            <span>Compare</span>
-                        </button>
-                    </div>
-                </div>
+                ${voiceRecordingEnabled ? getVoiceRecorderHTML() : ''}
             `;
             
             document.getElementById('scorePanel').style.display = 'flex';
@@ -4032,6 +4050,26 @@
                     speakLetter(currentLetter);
                 }, 1000);
             }, 500);
+        }
+
+        function getVoiceRecorderHTML() {
+            return `
+                <div class="voice-recorder">
+                    <button class="record-button" id="recordBtn" onclick="toggleRecording()" aria-label="Start recording">
+                        <span id="recordIcon">🎤</span>
+                    </button>
+                    <div class="voice-controls">
+                        <button class="voice-btn" onclick="playLastRecording()" id="playBtn" disabled aria-label="Play last recording">
+                            <span>▶️</span>
+                            <span>Play</span>
+                        </button>
+                        <button class="voice-btn" onclick="compareWithCorrect()" id="compareBtn" disabled aria-label="Compare with correct pronunciation">
+                            <span>🎙️</span>
+                            <span>Compare</span>
+                        </button>
+                    </div>
+                </div>
+            `;
         }
 
         function playCurrentLetter() {
@@ -4817,12 +4855,18 @@
             activeBtn.setAttribute('aria-pressed', 'true');
         }
 
+        function toggleVoiceRecording(enabled) {
+            voiceRecordingEnabled = !!enabled;
+            saveGameData();
+        }
+
         // Visual Theme Functions
         function setVisualTheme(theme) {
             currentTheme = theme;
-            document.querySelectorAll('.theme-option').forEach(option => {
+            // Support both legacy .theme-option and new .theme-button
+            document.querySelectorAll('.theme-option, .theme-button').forEach(option => {
                 option.classList.remove('active');
-                if (option.dataset.theme === theme) {
+                if ((option.dataset && option.dataset.theme === theme) || option.getAttribute('onclick')?.includes(`'${theme}'`)) {
                     option.classList.add('active');
                 }
             });
