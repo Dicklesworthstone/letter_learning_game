@@ -2933,6 +2933,12 @@
         <!-- Settings Modal -->
         <div class="settings-modal" id="settingsModal">
             <div class="settings-content">
+                <div class="settings-topbar">
+                    <span class="focus-option-label">Reduce Motion</span>
+                    <div class="focus-switch" id="reduceMotionSwitch" onclick="toggleReduceMotion()" role="switch" aria-checked="false" tabindex="0" aria-label="Reduce motion">
+                        <div class="focus-switch-thumb"></div>
+                    </div>
+                </div>
                 <div class="settings-header">⚙️ Game Settings</div>
                 
                 <div class="setting-group">
@@ -2969,12 +2975,7 @@
                                 <div class="focus-switch-thumb"></div>
                             </div>
                         </div>
-                        <div class="focus-option">
-                            <span class="focus-option-label">Reduce Motion</span>
-                            <div class="focus-switch" id="reduceMotionSwitch" onclick="toggleReduceMotion()" role="switch" aria-checked="false" tabindex="0" aria-label="Reduce motion">
-                                <div class="focus-switch-thumb"></div>
-                            </div>
-                        </div>
+                        
                     </div>
                 </div>
 
@@ -4753,6 +4754,15 @@
         function openSettings() {
             const modal = document.getElementById('settingsModal');
             modal.style.display = 'flex';
+            // Sync Reduce Motion topbar switch state from saved value
+            const reduceSwitch = document.getElementById('reduceMotionSwitch');
+            if (reduceMotionEnabled) {
+                reduceSwitch.classList.add('active');
+                reduceSwitch.setAttribute('aria-checked', 'true');
+            } else {
+                reduceSwitch.classList.remove('active');
+                reduceSwitch.setAttribute('aria-checked', 'false');
+            }
             
             // Close modal when clicking outside
             modal.onclick = function(e) {
