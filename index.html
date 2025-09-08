@@ -103,7 +103,9 @@
             position: absolute;
             border-radius: 50%;
             background: linear-gradient(135deg, rgba(91, 63, 216, 0.1), rgba(255, 94, 138, 0.1));
-            backdrop-filter: blur(10px);
+            /* Ensure bubbles never intercept touches or blur UI */
+            pointer-events: none;
+            z-index: 0;
             animation: float 20s infinite ease-in-out;
         }
 
@@ -117,6 +119,7 @@
             width: 100%;
             max-width: 500px;
             height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             background: rgba(255, 255, 255, 0.95);
@@ -124,6 +127,7 @@
             backdrop-filter: blur(20px);
             box-shadow: var(--shadow-2xl);
             border: 1px solid rgba(255, 255, 255, 0.8);
+            z-index: 1; /* Always above decorative bubbles */
         }
 
         .header {
