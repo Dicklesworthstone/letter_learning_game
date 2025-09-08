@@ -99,7 +99,8 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #fbbf24 100%);
             background-size: 200% 200%;
-            animation: gradientShift 15s ease infinite;
+            /* reduce continuous background motion for focus */
+            /* animation: gradientShift 15s ease infinite; */
             /* Avoid fixing the body; let it size to the dynamic viewport to prevent clipping under iOS chrome */
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
@@ -129,7 +130,9 @@
             border-radius: 50%;
             top: -150px;
             left: -150px;
-            animation: floatOrb 20s ease-in-out infinite;
+            /* disable floating orb animation for calmer UI */
+            display: none;
+            animation: none;
             pointer-events: none;
         }
 
@@ -142,7 +145,9 @@
             border-radius: 50%;
             bottom: -200px;
             right: -200px;
-            animation: floatOrb 25s ease-in-out infinite reverse;
+            /* disable floating orb animation for calmer UI */
+            display: none;
+            animation: none;
             pointer-events: none;
         }
 
@@ -172,7 +177,9 @@
             -webkit-backdrop-filter: blur(5px);
             pointer-events: none;
             z-index: 0;
-            animation: magicalBubbleFloat 20s infinite ease-in-out;
+            /* disable floating bubbles by default */
+            display: none;
+            animation: none;
             box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.5),
                 0 0 20px rgba(168, 85, 247, 0.2);
         }
@@ -286,7 +293,7 @@
             background-clip: text;
             font-weight: 700;
             filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.3));
-            animation: titlePulse 4s ease-in-out infinite;
+            /* remove continuous title pulse for focus */
         }
 
         @keyframes titlePulse {
@@ -332,9 +339,7 @@
             transition: transform 0.6s;
         }
 
-        .settings-btn:hover::before {
-            transform: translateX(100%);
-        }
+        /* hover effects scoped in media query below */
 
         .settings-btn:hover {
             /* tone down hover transform for touch devices */
@@ -364,7 +369,6 @@
             justify-content: center;
             box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3),
                 inset 0 1px 0 rgba(255, 255, 255, 0.6);
-            animation: trophyFloat 3s ease-in-out infinite;
             position: relative;
         }
 
@@ -383,6 +387,11 @@
         .badges-btn:hover {
             /* keep hover subtle on touch devices */
             box-shadow: 0 6px 25px rgba(251, 191, 36, 0.4);
+        }
+
+        /* Triggered only when a new achievement is unlocked */
+        .badges-btn.new-achievement {
+            animation: trophyShake 0.6s ease-in-out;
         }
 
         @keyframes trophyShake {
@@ -744,23 +753,34 @@
         .sound-btn.playing {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: initial;
-            animation: soundWave 0.8s ease-out;
             box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35),
                 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        @keyframes soundWave {
-            0% {
-                box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
-            }
-
-            50% {
-                box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 0 15px rgba(102, 126, 234, 0.1), 0 0 0 30px rgba(102, 126, 234, 0.05);
-            }
-
-            100% {
-                box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
-            }
+        /* Cheaper pulse using pseudo-elements */
+        .sound-btn::before,
+        .sound-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            background: rgba(102, 126, 234, 0.2);
+            transform: scale(0.8);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .sound-btn.playing::before {
+            animation: soundPulse 0.8s ease-out;
+        }
+        .sound-btn.playing::after {
+            animation: soundPulse 1s ease-out;
+        }
+        @keyframes soundPulse {
+            0% { transform: scale(0.8); opacity: 0.6; }
+            100% { transform: scale(1.6); opacity: 0; }
         }
 
         /* Enhanced Options Grid */
@@ -807,10 +827,19 @@
         }
 
         .option-btn:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15), 0 4px 8px rgba(0, 0, 0, 0.05);
             background-image: linear-gradient(white, white),
                 linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+
+        /* Apply hover effects only on devices that support hover */
+        @media (hover: hover) and (pointer: fine) {
+            .settings-btn:hover::before {
+                transform: translateX(100%);
+            }
+            .option-btn:hover {
+                transform: translateY(-2px) scale(1.02);
+                box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15), 0 4px 8px rgba(0, 0, 0, 0.05);
+            }
         }
 
         .option-btn:before {
@@ -2132,7 +2161,12 @@
             /* keep emoji centered when we swap to 🔊 */
             font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
             min-width: 80px; /* reserve space to avoid layout shift */
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1 / 1;
+            height: clamp(42px, 12.5vh, 72px);
+            width: auto;
         }
 
         @keyframes phonicsCount {
@@ -3504,7 +3538,7 @@
             font-weight: bold;
             box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
             z-index: 100;
-            animation: streakFloat 3s ease-in-out infinite;
+            /* remove continuous float; trigger on update only */
         }
 
         @keyframes streakFloat {
@@ -3517,6 +3551,11 @@
             50% {
                 transform: translateX(-50%) translateY(-5px);
             }
+        }
+
+        /* One-off streak animation when updated */
+        .streak-display.streak-animate {
+            animation: streakModalBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .streak-icon {
@@ -3969,8 +4008,8 @@
                 <span>Find Letters</span>
             </button>
             <button class="mode-btn" onclick="setMode('draw', this)" aria-pressed="false"
-                aria-label="Draw letters mode">
-                <span>Draw Letters</span>
+                aria-label="Tracing practice mode">
+                <span>Tracing Practice</span>
             </button>
         </div>
 
@@ -4352,6 +4391,155 @@
             { id: 'round_5', name: 'Persistent', icon: '🎯', description: 'Complete 5 rounds', requirement: 5, type: 'rounds' }
         ];
 
+        // Gesture Recognition Data for Tracing Practice (normalized 100x100 grid)
+        const LETTER_CHECKPOINTS = {
+            'a': { strokes: [
+                [{ x: 75, y: 55 }, { x: 50, y: 35 }, { x: 25, y: 55 }, { x: 50, y: 75 }, { x: 75, y: 55 }],
+                [{ x: 75, y: 35 }, { x: 75, y: 85 }]
+            ], tolerance: 30, feedback: { incomplete: "Make sure you draw the round part and the straight line for 'a'!", wrong: "Remember, 'a' has a circle with a tail on the side." } },
+            'b': { strokes: [
+                [{ x: 25, y: 10 }, { x: 25, y: 85 }],
+                [{ x: 25, y: 50 }, { x: 50, y: 35 }, { x: 75, y: 50 }, { x: 50, y: 75 }, { x: 25, y: 50 }]
+            ], tolerance: 28, feedback: { incomplete: "Don't forget the circle at the bottom of the 'b'!", wrong: "Try making a tall line down, then a circle at the bottom." } },
+            'c': { strokes: [[{ x: 80, y: 30 }, { x: 40, y: 20 }, { x: 20, y: 50 }, { x: 40, y: 80 }, { x: 80, y: 70 }]], tolerance: 35, feedback: { incomplete: "Keep going! Make a nice big curve for the 'c'.", wrong: "That's not quite a 'c'. Try starting at the top and curving around." } },
+            'd': { strokes: [
+                [{ x: 75, y: 10 }, { x: 75, y: 85 }],
+                [{ x: 75, y: 50 }, { x: 50, y: 35 }, { x: 25, y: 50 }, { x: 50, y: 75 }, { x: 75, y: 50 }]
+            ], tolerance: 28, feedback: { incomplete: "Don't forget the circle on the left of the tall line!", wrong: "For 'd', make a circle first, then a tall line on the right." } },
+            'e': { strokes: [[{ x: 20, y: 55 }, { x: 80, y: 55 }, { x: 75, y: 30 }, { x: 35, y: 25 }, { x: 25, y: 45 }, { x: 40, y: 75 }, { x: 75, y: 70 }]], tolerance: 35, feedback: { incomplete: "Keep curving all the way around to finish the 'e'!", wrong: "For 'e', draw a line across, then loop up and around." } },
+            'f': { strokes: [
+                [{ x: 70, y: 20 }, { x: 50, y: 10 }, { x: 50, y: 90 }],
+                [{ x: 25, y: 45 }, { x: 75, y: 45 }]
+            ], tolerance: 28, feedback: { incomplete: "The letter 'f' needs a line across the middle.", wrong: "Try a candy-cane shape, then a line across the middle." } },
+            'g': { strokes: [
+                [{ x: 75, y: 55 }, { x: 50, y: 35 }, { x: 25, y: 55 }, { x: 50, y: 75 }, { x: 75, y: 55 }],
+                [{ x: 75, y: 55 }, { x: 75, y: 90 }, { x: 40, y: 90 }]
+            ], tolerance: 30, feedback: { incomplete: "Don't forget the hook at the bottom of the 'g'!", wrong: "For 'g', make a circle, then a tail that hooks underneath." } },
+            'h': { strokes: [
+                [{ x: 25, y: 10 }, { x: 25, y: 90 }],
+                [{ x: 25, y: 50 }, { x: 50, y: 40 }, { x: 75, y: 50 }, { x: 75, y: 90 }]
+            ], tolerance: 28, feedback: { incomplete: "Now add the hump to the tall line to make an 'h'!", wrong: "Draw a tall line down, then add a hump in the middle." } },
+            'i': { strokes: [[{ x: 50, y: 40 }, { x: 50, y: 80 }], [{ x: 50, y: 20 }]], tolerance: 25, feedback: { incomplete: "You're so close! Just add the dot on top.", wrong: "For 'i', it's just a little line with a dot on top." } },
+            'j': { strokes: [[{ x: 60, y: 40 }, { x: 60, y: 90 }, { x: 30, y: 90 }], [{ x: 60, y: 20 }]], tolerance: 28, feedback: { incomplete: "Great hook! Now just add the dot on top for 'j'.", wrong: "For 'j', draw a hook shape, then put a dot on top." } },
+            'k': { strokes: [
+                [{ x: 25, y: 10 }, { x: 25, y: 90 }],
+                [{ x: 75, y: 45 }, { x: 25, y: 65 }],
+                [{ x: 25, y: 65 }, { x: 75, y: 90 }]
+            ], tolerance: 30, feedback: { incomplete: "A 'k' needs a tall line and two small slanted lines.", wrong: "Draw a tall line, then a 'less than' sign (<) next to it." } },
+            'l': { strokes: [[{ x: 50, y: 10 }, { x: 50, y: 90 }]], tolerance: 25, feedback: { incomplete: "Just one tall, straight line down for 'l'!", wrong: "Try making one simple line from top to bottom." } },
+            'm': { strokes: [[{ x: 20, y: 40 }, { x: 20, y: 90 }, { x: 20, y: 50 }, { x: 35, y: 35 }, { x: 50, y: 50 }, { x: 50, y: 90 }, { x: 50, y: 50 }, { x: 65, y: 35 }, { x: 80, y: 50 }, { x: 80, y: 90 }]], tolerance: 35, feedback: { incomplete: "Keep going, an 'm' needs two humps!", wrong: "For 'm', draw a line down, then bounce up and over twice." } },
+            'n': { strokes: [[{ x: 25, y: 40 }, { x: 25, y: 90 }, { x: 25, y: 50 }, { x: 40, y: 35 }, { x: 65, y: 40 }, { x: 75, y: 50 }, { x: 75, y: 90 }]], tolerance: 30, feedback: { incomplete: "Almost! An 'n' just needs one hump.", wrong: "Draw a line down, then bounce up and over once for 'n'." } },
+            'o': { strokes: [[{ x: 75, y: 50 }, { x: 50, y: 25 }, { x: 25, y: 50 }, { x: 50, y: 75 }, { x: 75, y: 50 }]], tolerance: 30, feedback: { incomplete: "Keep going all the way around to finish the 'o'!", wrong: "Try to draw a simple, round circle for the 'o'." } },
+            'p': { strokes: [
+                [{ x: 25, y: 40 }, { x: 25, y: 95 }],
+                [{ x: 25, y: 40 }, { x: 50, y: 25 }, { x: 75, y: 40 }, { x: 50, y: 65 }, { x: 25, y: 40 }]
+            ], tolerance: 28, feedback: { incomplete: "Now add the circle at the top to finish the 'p'!", wrong: "For 'p', draw a line that goes down, then add a circle at the top." } },
+            'q': { strokes: [
+                [{ x: 75, y: 40 }, { x: 50, y: 25 }, { x: 25, y: 40 }, { x: 50, y: 65 }, { x: 75, y: 40 }],
+                [{ x: 75, y: 40 }, { x: 75, y: 95 }]
+            ], tolerance: 28, feedback: { incomplete: "The circle looks good! Now add the line going down.", wrong: "A 'q' is a circle with a line that goes straight down on the right." } },
+            'r': { strokes: [[{ x: 25, y: 40 }, { x: 25, y: 90 }, { x: 25, y: 50 }, { x: 40, y: 35 }, { x: 70, y: 40 }]], tolerance: 30, feedback: { incomplete: "Just a little hook at the top is needed for 'r'.", wrong: "For 'r', draw a line down, then a small hook at the top." } },
+            's': { strokes: [[{ x: 75, y: 25 }, { x: 25, y: 40 }, { x: 50, y: 60 }, { x: 75, y: 75 }, { x: 25, y: 90 }]], tolerance: 35, feedback: { incomplete: "Keep curving! An 's' is like a little snake.", wrong: "Try making a curvy, snake-like line for the 's'." } },
+            't': { strokes: [
+                [{ x: 50, y: 20 }, { x: 50, y: 90 }],
+                [{ x: 25, y: 45 }, { x: 75, y: 45 }]
+            ], tolerance: 25, feedback: { incomplete: "Great line! Now cross the 't' in the middle.", wrong: "For 't', draw a line down, then a line across the middle." } },
+            'u': { strokes: [[{ x: 25, y: 40 }, { x: 25, y: 80 }, { x: 50, y: 90 }, { x: 75, y: 80 }, { x: 75, y: 40 }]], tolerance: 30, feedback: { incomplete: "Make sure you curve at the bottom like a smile!", wrong: "A 'u' is like a cup or a smile shape." } },
+            'v': { strokes: [[{ x: 15, y: 20 }, { x: 50, y: 90 }, { x: 85, y: 20 }]], tolerance: 30, feedback: { incomplete: "A 'v' needs two straight, slanted lines.", wrong: "For 'v', draw a slanted line down, and another one up!" } },
+            'w': { strokes: [[{ x: 15, y: 20 }, { x: 35, y: 90 }, { x: 50, y: 50 }, { x: 65, y: 90 }, { x: 85, y: 20 }]], tolerance: 35, feedback: { incomplete: "Keep going! A 'w' has two points at the bottom.", wrong: "A 'w' is like two 'v' shapes right next to each other." } },
+            'x': { strokes: [
+                [{ x: 20, y: 20 }, { x: 80, y: 80 }],
+                [{ x: 80, y: 20 }, { x: 20, y: 80 }]
+            ], tolerance: 30, feedback: { incomplete: "An 'x' needs two crossing lines.", wrong: "For 'x', just draw two lines that cross in the middle." } },
+            'y': { strokes: [
+                [{ x: 20, y: 20 }, { x: 50, y: 50 }],
+                [{ x: 80, y: 20 }, { x: 20, y: 80 }]
+            ], tolerance: 30, feedback: { incomplete: "The letter 'y' needs a short line and a long line.", wrong: "Draw a small slanted line, then a long one that crosses it." } },
+            'z': { strokes: [[{ x: 20, y: 20 }, { x: 80, y: 20 }, { x: 20, y: 80 }, { x: 80, y: 80 }]], tolerance: 30, feedback: { incomplete: "A 'z' needs a line on top, a slanted line, and a line on the bottom.", wrong: "For 'z', draw 'zig-zag-zig'!" } },
+
+            'A': { strokes: [
+                [{ x: 50, y: 10 }, { x: 20, y: 90 }],
+                [{ x: 50, y: 10 }, { x: 80, y: 90 }],
+                [{ x: 35, y: 60 }, { x: 65, y: 60 }]
+            ], tolerance: 25, feedback: { incomplete: "The letter 'A' needs two slanted lines and one across the middle.", wrong: "Remember the pointy top of the 'A', like a mountain with a bridge." } },
+            'B': { strokes: [
+                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                [{ x: 20, y: 10 }, { x: 60, y: 20 }, { x: 60, y: 40 }, { x: 20, y: 50 }],
+                [{ x: 20, y: 50 }, { x: 70, y: 60 }, { x: 70, y: 80 }, { x: 20, y: 90 }]
+            ], tolerance: 30, feedback: { incomplete: "A 'B' needs a straight line and two round bumps on the side.", wrong: "Draw a line down, then add a small bump on top and a big bump on the bottom." } },
+            'C': { strokes: [[{ x: 80, y: 20 }, { x: 40, y: 10 }, { x: 10, y: 50 }, { x: 40, y: 90 }, { x: 80, y: 80 }]], tolerance: 35, feedback: { incomplete: "Keep going! Make a nice big curve for the 'C'.", wrong: "That's not quite a 'C'. Try starting at the top and curving around." } },
+            'D': { strokes: [
+                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                [{ x: 20, y: 10 }, { x: 80, y: 30 }, { x: 80, y: 70 }, { x: 20, y: 90 }]
+            ], tolerance: 30, feedback: { incomplete: "Now draw the big curve to finish the 'D'.", wrong: "For 'D', draw a straight line down, then a big curve from top to bottom." } },
+            'E': { strokes: [
+                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                [{ x: 20, y: 10 }, { x: 80, y: 10 }],
+                [{ x: 20, y: 50 }, { x: 70, y: 50 }],
+                [{ x: 20, y: 90 }, { x: 80, y: 90 }]
+            ], tolerance: 25, feedback: { incomplete: "An 'E' needs three lines going to the right.", wrong: "Draw a line down, then add a line at the top, middle, and bottom." } },
+            'F': { strokes: [
+                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                [{ x: 20, y: 10 }, { x: 80, y: 10 }],
+                [{ x: 20, y: 50 }, { x: 70, y: 50 }]
+            ], tolerance: 25, feedback: { incomplete: "An 'F' is like an 'E' but without the bottom line.", wrong: "Draw a line down, then add a line at the top and in the middle." } },
+            'G': { strokes: [
+                [{ x: 80, y: 20 }, { x: 40, y: 10 }, { x: 10, y: 50 }, { x: 40, y: 90 }, { x: 80, y: 80 }, { x: 80, y: 50 }],
+                [{ x: 50, y: 50 }, { x: 80, y: 50 }]
+            ], tolerance: 35, feedback: { incomplete: "A 'G' is a big curve with a little line inside.", wrong: "Draw a big 'C', then give it a small line pointing inwards." } },
+            'H': { strokes: [
+                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                [{ x: 80, y: 10 }, { x: 80, y: 90 }],
+                [{ x: 20, y: 50 }, { x: 80, y: 50 }]
+            ], tolerance: 25, feedback: { incomplete: "An 'H' needs two tall lines and one across the middle.", wrong: "Draw two straight lines, then connect them in the middle." } },
+            'I': { strokes: [
+                [{ x: 50, y: 10 }, { x: 50, y: 90 }],
+                [{ x: 30, y: 10 }, { x: 70, y: 10 }],
+                [{ x: 30, y: 90 }, { x: 70, y: 90 }]
+            ], tolerance: 25, feedback: { incomplete: "An 'I' is a tall line with a hat and shoes.", wrong: "For 'I', draw a tall line with a small line across the top and bottom." } },
+            'J': { strokes: [[{ x: 80, y: 10 }, { x: 80, y: 70 }, { x: 60, y: 90 }, { x: 20, y: 80 }]], tolerance: 30, feedback: { incomplete: "A 'J' is a line down with a hook at the bottom.", wrong: "Draw a line down, and give it a hook at the bottom, like a fish hook." } },
+            'K': { strokes: [
+                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                [{ x: 80, y: 10 }, { x: 20, y: 50 }],
+                [{ x: 20, y: 50 }, { x: 80, y: 90 }]
+            ], tolerance: 30, feedback: { incomplete: "A 'K' needs a tall line and two slanted 'legs'.", wrong: "Draw a tall line, then have two slanted lines kick out from the middle." } },
+            'L': { strokes: [[{ x: 20, y: 10 }, { x: 20, y: 90 }, { x: 80, y: 90 }]], tolerance: 25, feedback: { incomplete: "An 'L' needs a line down, and then a line across the bottom.", wrong: "Try drawing a straight line down, then a straight line to the right." } },
+            'M': { strokes: [[{ x: 10, y: 90 }, { x: 10, y: 10 }, { x: 50, y: 70 }, { x: 90, y: 10 }, { x: 90, y: 90 }]], tolerance: 35, feedback: { incomplete: "An 'M' has four straight lines. Down, down, up, down!", wrong: "Think of jagged mountains for 'M': down, slant down, slant up, then straight down." } },
+            'N': { strokes: [[{ x: 20, y: 90 }, { x: 20, y: 10 }, { x: 80, y: 90 }, { x: 80, y: 10 }]], tolerance: 30, feedback: { incomplete: "An 'N' has three straight lines.", wrong: "For 'N', draw a line down, then a long slant down, then a line straight up." } },
+            'O': { strokes: [[{ x: 80, y: 50 }, { x: 50, y: 10 }, { x: 20, y: 50 }, { x: 50, y: 90 }, { x: 80, y: 50 }]], tolerance: 30, feedback: { incomplete: "Keep going all the way around to finish the 'O'!", wrong: "Try to draw a simple, round circle or oval for the 'O'." } },
+            'P': { strokes: [
+                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                [{ x: 20, y: 10 }, { x: 70, y: 20 }, { x: 70, y: 40 }, { x: 20, y: 50 }]
+            ], tolerance: 30, feedback: { incomplete: "Now add the bump at the top to finish the 'P'!", wrong: "Draw a line down, then add a bump on the top half." } },
+            'Q': { strokes: [
+                [{ x: 80, y: 50 }, { x: 50, y: 10 }, { x: 20, y: 50 }, { x: 50, y: 90 }, { x: 80, y: 50 }],
+                [{ x: 60, y: 70 }, { x: 90, y: 90 }]
+            ], tolerance: 30, feedback: { incomplete: "Great circle! Now add the little tail for the 'Q'.", wrong: "For 'Q', draw a big 'O', then give it a small slanted tail at the bottom." } },
+            'R': { strokes: [
+                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                [{ x: 20, y: 10 }, { x: 70, y: 20 }, { x: 70, y: 40 }, { x: 20, y: 50 }],
+                [{ x: 40, y: 50 }, { x: 80, y: 90 }]
+            ], tolerance: 30, feedback: { incomplete: "An 'R' has a bump and a leg!", wrong: "Draw a 'P', then give it a slanted leg to stand on." } },
+            'S': { strokes: [[{ x: 80, y: 20 }, { x: 20, y: 40 }, { x: 80, y: 60 }, { x: 20, y: 80 }]], tolerance: 35, feedback: { incomplete: "Keep curving! An 'S' is like a big snake.", wrong: "Try making a curvy, snake-like line for the 'S'." } },
+            'T': { strokes: [
+                [{ x: 10, y: 10 }, { x: 90, y: 10 }],
+                [{ x: 50, y: 10 }, { x: 50, y: 90 }]
+            ], tolerance: 25, feedback: { incomplete: "Now add the tall line down from the middle of the 'T'.", wrong: "Draw a line across the top, then a line down from the middle." } },
+            'U': { strokes: [[{ x: 20, y: 10 }, { x: 20, y: 70 }, { x: 50, y: 90 }, { x: 80, y: 70 }, { x: 80, y: 10 }]], tolerance: 30, feedback: { incomplete: "Make sure you curve at the bottom like a big smile!", wrong: "A 'U' is like a big cup or a smile shape." } },
+            'V': { strokes: [[{ x: 10, y: 10 }, { x: 50, y: 90 }, { x: 90, y: 10 }]], tolerance: 30, feedback: { incomplete: "A 'V' needs two straight, slanted lines.", wrong: "For 'V', draw a slanted line down, and another one up!" } },
+            'W': { strokes: [[{ x: 10, y: 10 }, { x: 30, y: 90 }, { x: 50, y: 30 }, { x: 70, y: 90 }, { x: 90, y: 10 }]], tolerance: 35, feedback: { incomplete: "Keep going! A 'W' has four straight lines.", wrong: "A 'W' is like two 'V' shapes right next to each other." } },
+            'X': { strokes: [
+                [{ x: 10, y: 10 }, { x: 90, y: 90 }],
+                [{ x: 90, y: 10 }, { x: 10, y: 90 }]
+            ], tolerance: 30, feedback: { incomplete: "An 'X' needs two crossing lines. 'X' marks the spot!", wrong: "For 'X', just draw two big lines that cross in the middle." } },
+            'Y': { strokes: [
+                [{ x: 10, y: 10 }, { x: 50, y: 50 }],
+                [{ x: 90, y: 10 }, { x: 50, y: 50 }],
+                [{ x: 50, y: 50 }, { x: 50, y: 90 }]
+            ], tolerance: 30, feedback: { incomplete: "A 'Y' needs the 'V' shape at the top and a line down.", wrong: "Draw a small 'V' at the top, then a straight line down from its point." } },
+            'Z': { strokes: [[{ x: 10, y: 10 }, { x: 90, y: 10 }, { x: 10, y: 90 }, { x: 90, y: 90 }]], tolerance: 30, feedback: { incomplete: "A 'Z' needs a line on top, a slanted line, and a line on the bottom.", wrong: "For 'Z', draw 'zig-zag-zig'!" } }
+        };
+
         // Initialize background bubbles
         function createBubbles() {
             for (let i = 0; i < 10; i++) {
@@ -4366,7 +4554,7 @@
                 document.body.appendChild(bubble);
             }
         }
-        createBubbles();
+        // Background bubbles disabled for calmer experience
 
         // Game state
         let currentMode = 'identify';
@@ -4832,35 +5020,24 @@
         }
 
         function speakPhonetics(letter, callback) {
-            if (!soundEnabled) {
-                if (callback) callback();
-                return;
-            }
-
-            const phoneticSound = phoneticSounds[letter.toLowerCase()];
-            if (!phoneticSound) {
-                if (callback) callback();
-                return;
-            }
+            if (!soundEnabled) { if (callback) callback(); return; }
+            const lower = letter.toLowerCase();
+            const phonetic = phoneticSounds[lower];
+            if (!phonetic) { if (callback) callback(); return; }
 
             cancelSpeech();
-            const letterSound = letterNamePronunciations[letter.toLowerCase()] || letter;
-            speakPhrase(`The letter ${letterSound} makes the sound:`, () => {
-                setTimeout(() => {
-                    const utterance = new SpeechSynthesisUtterance(phoneticSound);
-                    utterance.rate = 0.6;
-                    utterance.pitch = 1.1;
-                    utterance.volume = 1;
-                    const selectedVoice = getBestVoice();
-                    if (selectedVoice) utterance.voice = selectedVoice;
-                    utterance.onend = () => {
-                        setTimeout(() => {
-                            if (callback) callback();
-                        }, 500);
-                    };
-                    speechSynthesis.speak(utterance);
-                }, 800);
-            });
+            const letterName = letterNamePronunciations[lower] || letter;
+            const sound = phonetic.split(',')[0].trim();
+            const anchorIdx = phonetic.toLowerCase().indexOf('as in');
+            const anchor = anchorIdx !== -1 ? phonetic.slice(anchorIdx + 5).trim() : '';
+
+            const phrases = [
+                `The letter ${letterName} makes the sound: ${sound}, ${sound}, ${sound}${anchor ? ', as in ' + anchor : ''}.`,
+                `Here's the sound for ${letterName}: ${sound}${anchor ? ', as in ' + anchor : ''}.`,
+                `${letterName} says: ${sound}${anchor ? ', ' + sound + ', like in the word ' + anchor : ''}.`
+            ];
+            const phraseToSpeak = phrases[Math.floor(Math.random() * phrases.length)];
+            speakPhrase(phraseToSpeak, callback);
         }
 
         function updateScoreDisplay() {
@@ -4981,6 +5158,18 @@
             if (speakLetterTimeout) {
                 clearTimeout(speakLetterTimeout);
                 speakLetterTimeout = null;
+            }
+            if (rainGameInterval) {
+                clearInterval(rainGameInterval);
+                rainGameInterval = null;
+            }
+            if (minigameTimer) {
+                clearInterval(minigameTimer);
+                minigameTimer = null;
+            }
+            if (dashboardTimer) {
+                clearTimeout(dashboardTimer);
+                dashboardTimer = null;
             }
         }
 
@@ -5225,6 +5414,10 @@
         function playCurrentLetter() {
             const soundBtn = document.getElementById('soundBtn');
             soundBtn.classList.add('playing');
+            // Subtle press animation
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(soundBtn, { scale: 1 }, { scale: 0.95, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.inOut' });
+            }
             speakLetter(currentLetter, () => {
                 soundBtn.classList.remove('playing');
             });
@@ -5374,6 +5567,16 @@
             let timeLeft = 3;
             const timerElement = document.getElementById('phonicsTimer');
 
+            // Allow skipping phonics by tapping anywhere in the game area
+            const skipPhonics = () => {
+                if (!waitingForPhonics) return;
+                waitingForPhonics = false;
+                if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
+                gameArea.removeEventListener('click', skipPhonics);
+                startIdentifyGame();
+            };
+            gameArea.addEventListener('click', skipPhonics);
+
             function updatePhonicsTimer() {
                 timeLeft--;
                 if (timeLeft > 0) {
@@ -5383,6 +5586,7 @@
                     timerElement.innerHTML = '🗣️';  // Speaker icon for pronunciation phase
                     speakPhonetics(currentLetter, () => {
                         waitingForPhonics = false;
+                        gameArea.removeEventListener('click', skipPhonics);
                         setTimeout(() => startIdentifyGame(), 2000);
                     });
                 }
@@ -5769,7 +5973,7 @@
             const gameArea = document.getElementById('gameArea');
             const canvasSize = Math.min(350, Math.max(200, Math.min(window.innerWidth - 40, window.innerHeight - 200)));
             gameArea.innerHTML = `
-                <div class="instruction">Draw the letter: <span class="letter-display">${currentLetter}</span></div>
+                <div class="instruction">Trace the letter: <span class="letter-display">${currentLetter}</span></div>
                 <div class="canvas-container">
                     <div class="letter-guide">${currentLetter}</div>
                     <svg class="formation-guide" width="${canvasSize}" height="${canvasSize}" id="formationGuide">
@@ -5783,7 +5987,7 @@
                 </div>
                 <div class="controls">
                     <button class="control-btn clear-btn" onclick="clearCanvas()">Clear ✨</button>
-                    <button class="control-btn check-btn" onclick="checkDrawing()">Check ✓</button>
+                    <button class="control-btn check-btn" onclick="checkDrawing()">I'm Done!</button>
                 </div>
             `;
 
@@ -5791,7 +5995,7 @@
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
 
-            speakPhrase(`Draw the letter ${currentLetter}`);
+            speakPhrase(`Trace the letter ${currentLetter}`);
         }
 
         function showFormationGuide() {
@@ -5909,38 +6113,102 @@
         }
 
         function checkDrawing() {
-            if (drawingPoints.length < 30) {
-                showFeedback('Keep drawing! Add more detail ✏️', 'info');
-                speakPhrase('Try to draw the complete letter with all its parts!');
+            // Phase 1: quick checks
+            if (drawingPoints.length < 20) {
+                showFeedback('Keep drawing! Try to complete the letter. ✏️', 'info');
+                speakPhrase('Add a little more to your drawing!');
                 return;
             }
 
-            const canvas = document.getElementById('drawCanvas');
-            const bounds = getDrawingBounds();
-            const coverage = (bounds.width * bounds.height) / (canvas.width * canvas.height);
-            const isValid = drawingPoints.length > 50 && coverage > 0.05;
+            const letterData = LETTER_CHECKPOINTS[currentLetter];
+            if (!letterData) {
+                // Fallback: reward practice without strict validation
+                showFeedback("Great practice! Let's try another one. 👍", 'info');
+                speakPhrase('Good job practicing that letter!');
+                setTimeout(() => startDrawGame(), 2000);
+                return;
+            }
 
-            if (isValid) {
-                // Award gentle progress for practice
-                score += 15;
+            // Phase 2: normalize strokes to 100x100 grid
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            drawingPoints.forEach(p => { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); });
+            const width = maxX - minX, height = maxY - minY;
+            if (width < 25 && height < 25) {
+                showFeedback('Try to make your letter bigger! 🎨', 'info');
+                speakPhrase('Draw the letter a bit bigger so I can see it.');
+                return;
+            }
+
+            const userStrokes = [];
+            let stroke = [];
+            drawingPoints.forEach(p => {
+                if (p.newStroke && stroke.length) { userStrokes.push(stroke); stroke = []; }
+                stroke.push(p);
+            });
+            if (stroke.length) userStrokes.push(stroke);
+
+            const normalizedUserStrokes = userStrokes.map(s => s.map(p => ({
+                x: width === 0 ? 50 : ((p.x - minX) / width) * 100,
+                y: height === 0 ? 50 : ((p.y - minY) / height) * 100
+            })));
+
+            // Phase 3: matching
+            const isStrokeMatch = (userStroke, checkpoints) => {
+                let lastIdx = -1;
+                for (const cp of checkpoints) {
+                    let found = false;
+                    for (let i = lastIdx + 1; i < userStroke.length; i++) {
+                        const u = userStroke[i];
+                        const dist = Math.hypot(u.x - cp.x, u.y - cp.y);
+                        if (dist < letterData.tolerance) { lastIdx = i; found = true; break; }
+                    }
+                    if (!found) return false;
+                }
+                return true;
+            };
+
+            let matched = 0;
+            const avail = [...normalizedUserStrokes];
+            letterData.strokes.forEach(req => {
+                for (let i = 0; i < avail.length; i++) {
+                    if (isStrokeMatch(avail[i], req)) { matched++; avail.splice(i, 1); break; }
+                }
+            });
+
+            // Phase 4: feedback and progression
+            if (matched === letterData.strokes.length) {
+                score += 25;
                 roundCorrect++;
+                correctAnswers++;
                 totalQuestions++;
                 updateScoreDisplay();
 
-                showFeedback('Great tracing! +15 ✨', 'success');
-                speakPhrase('Great practice! Now let\'s draw the next letter.');
-                createDrawingCelebration();
+                showFeedback(`That's a perfect "${currentLetter}"! +25 ✨`, 'success');
+                speakPhrase(`Wow! That's a great ${currentLetter}!`);
+                const container = document.querySelector('.canvas-container');
+                if (container) {
+                    container.style.boxShadow = '0 10px 30px rgba(74, 222, 128, 0.5)';
+                    container.style.transform = 'scale(1.03)';
+                    setTimeout(() => { container.style.boxShadow = ''; container.style.transform = ''; }, 1000);
+                }
 
                 setTimeout(() => {
-                    if (roundCorrect >= QUESTIONS_PER_ROUND) {
-                        showRoundCompletion();
-                    } else {
+                    checkRoundCompletion();
+                    const modal = document.getElementById('roundModal');
+                    if (!modal || modal.style.display === 'none') {
                         startDrawGame();
                     }
                 }, 2500);
             } else {
-                showFeedback('Try to make your letter bigger! 🎨', 'error');
-                speakPhrase('Make sure to draw the complete letter shape!');
+                const msg = matched > 0 ? letterData.feedback.incomplete : letterData.feedback.wrong;
+                showFeedback(msg, 'error');
+                speakPhrase(msg);
+                const container = document.querySelector('.canvas-container');
+                if (container) {
+                    container.classList.add('animate__animated', 'animate__shakeX');
+                    setTimeout(() => container.classList.remove('animate__animated', 'animate__shakeX'), 800);
+                }
+                setTimeout(() => clearCanvas(), 2000);
             }
         }
 
@@ -6288,6 +6556,11 @@
                 badge.style.transform = 'scale(1.25)';
                 setTimeout(() => { badge.style.transform = ''; }, 300);
             }
+            const trophyBtn = document.querySelector('.badges-btn');
+            if (trophyBtn) {
+                trophyBtn.classList.add('new-achievement');
+                setTimeout(() => trophyBtn.classList.remove('new-achievement'), 1000);
+            }
         }
 
         function updateBadgeCount() {
@@ -6447,6 +6720,13 @@
             document.getElementById('playerModal').style.display = 'flex';
             previouslyFocusedElement = document.activeElement;
             setTimeout(() => trapFocus(document.getElementById('playerModal').querySelector('.player-modal-content')), 50);
+            // Close when tapping outside modal content
+            const modal = document.getElementById('playerModal');
+            modal.onclick = function (e) {
+                if (e.target === modal) {
+                    closePlayerModal();
+                }
+            };
 
             // Set up avatar selection
             document.querySelectorAll('.avatar-option').forEach(option => {
@@ -6612,6 +6892,13 @@
             document.getElementById('parentDashboard').style.display = 'block';
             previouslyFocusedElement = document.activeElement;
             setTimeout(() => trapFocus(document.getElementById('parentDashboard')), 50);
+            // Close when tapping outside dashboard content
+            const modal = document.getElementById('parentDashboard');
+            modal.onclick = function (e) {
+                if (e.target === modal) {
+                    closeParentDashboard();
+                }
+            };
         }
 
         function closeParentDashboard() {
@@ -7110,6 +7397,9 @@
             if (currentStreak > 1) {
                 display.style.display = 'flex';
                 number.textContent = currentStreak;
+                // brief attention animation on update
+                display.classList.add('streak-animate');
+                setTimeout(() => display.classList.remove('streak-animate'), 700);
 
                 // Add special effects for longer streaks
                 if (currentStreak >= 30) {
@@ -7153,6 +7443,12 @@
                 modal.style.display = 'flex';
                 previouslyFocusedElement = document.activeElement;
                 setTimeout(() => trapFocus(modal.querySelector('.streak-modal-content')), 50);
+                // Close when tapping outside content
+                modal.onclick = function (e) {
+                    if (e.target === modal) {
+                        closeStreakModal();
+                    }
+                };
 
                 // Celebration
                 setTimeout(() => {
