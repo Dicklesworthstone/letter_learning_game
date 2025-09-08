@@ -176,7 +176,7 @@
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
             pointer-events: none;
-            z-index: 0;
+            z-index: -1;
             /* disable floating bubbles by default */
             display: none;
             animation: none;
@@ -185,25 +185,10 @@
         }
 
         @keyframes magicalBubbleFloat {
-
-            0%,
-            100% {
-                transform: translateY(100vh) translateX(0) scale(0.8) rotate(0deg);
-                opacity: 0;
-            }
-
-            10% {
-                opacity: 0.7;
-            }
-
-            50% {
-                transform: translateY(-100vh) translateX(100px) scale(1.2) rotate(180deg);
-                opacity: 0.5;
-            }
-
-            90% {
-                opacity: 0.7;
-            }
+            0%, 100% { transform: translateY(50vh) translateX(0) scale(0.8) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.7; }
+            50% { transform: translateY(-50vh) translateX(60px) scale(1.1) rotate(120deg); opacity: 0.5; }
+            90% { opacity: 0.7; }
         }
 
         @keyframes float {
@@ -239,6 +224,7 @@
             position: relative;
             z-index: 1;
             overflow: hidden;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
             box-shadow: inset 0 0 200px rgba(255, 255, 255, 0.5),
                 inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
@@ -268,19 +254,15 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
+            background: linear-gradient(90deg, transparent 0%, rgba(168, 85, 247, 0.5) 50%, transparent 100%);
+            background-size: 200% 100%;
             animation: shimmerHeader 5s ease-in-out infinite;
         }
 
         @keyframes shimmerHeader {
-            0%, 100% {
-                opacity: 0.3;
-                transform: translateX(0);
-            }
-            50% {
-                opacity: 0.8;
-                transform: translateX(0);
-            }
+            0% { background-position: left; opacity: 0.3; }
+            50% { background-position: right; opacity: 0.8; }
+            100% { background-position: left; opacity: 0.3; }
         }
 
         .header-title {
@@ -505,8 +487,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 8px;
             font-weight: 600;
             color: var(--gray-700);
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -713,6 +696,9 @@
             touch-action: manipulation;
         }
 
+        /* Extra tap highlight suppression */
+        button, .option-btn, .sound-btn { -webkit-tap-highlight-color: transparent; }
+
         /* Enhanced Sound Button */
         .sound-btn {
             width: 120px;
@@ -818,12 +804,13 @@
             align-items: center;
             justify-content: center;
             letter-spacing: -0.02em;
+            touch-action: manipulation;
         }
 
         /* Very narrow devices like iPhone SE */
         @media (max-width: 375px) {
             .options { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .option-btn { min-height: 80px; font-size: 36px; }
+            .option-btn { min-height: 100px; font-size: 48px; }
         }
 
         .option-btn:hover {
@@ -948,6 +935,7 @@
             cursor: crosshair;
             border-radius: 20px;
             background: white;
+            will-change: transform;
         }
 
         .letter-guide {
@@ -1003,10 +991,10 @@
         /* Enhanced Feedback Modal */
         .feedback {
             position: fixed;
-            top: 50%;
+            top: calc(50% + env(safe-area-inset-top, 0px));
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 32px;
+            font-size: 24px;
             font-weight: 600;
             color: white;
             padding: 24px 48px;
@@ -6054,6 +6042,7 @@
             ctx.lineCap = 'round';
             ctx.strokeStyle = '#764ba2';
             drawingPoints = [];
+            lastDrawTime = 0;
 
             // Touch events
             canvas.addEventListener('touchstart', startDrawing, { passive: false });
@@ -6083,6 +6072,10 @@
         function draw(e) {
             if (!isDrawing) return;
             e.preventDefault();
+            // throttle to ~60fps to reduce lag on older devices
+            const now = Date.now();
+            if (now - lastDrawTime < 16) return;
+            lastDrawTime = now;
 
             const rect = e.target.getBoundingClientRect();
             const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
@@ -6091,6 +6084,9 @@
             ctx.lineTo(x, y);
             ctx.stroke();
             drawingPoints.push({ x, y });
+            if (drawingPoints.length > 1000) {
+                drawingPoints = drawingPoints.slice(-500);
+            }
         }
 
         function stopDrawing(e) {
@@ -6283,6 +6279,7 @@
             const modal = document.getElementById('settingsModal');
             previouslyFocusedElement = document.activeElement;
             modal.style.display = 'flex';
+            document.body.classList.add('modal-open');
             // Sync advanced settings checkboxes if present
             try {
                 const savedPhonics = localStorage.getItem('letterLearningPhonics');
@@ -6318,6 +6315,7 @@
                 modal.style.display = 'none';
                 modal.style.animation = '';
                 if (previouslyFocusedElement) previouslyFocusedElement.focus();
+                document.body.classList.remove('modal-open');
             }, 300);
         }
 
@@ -6586,6 +6584,7 @@
 
             previouslyFocusedElement = document.activeElement;
             modal.style.display = 'flex';
+            document.body.classList.add('modal-open');
             // Trap focus inside the modal content
             setTimeout(() => trapFocus(modal.querySelector('.achievement-content')), 50);
             // Close when tapping/clicking outside of the content
@@ -6600,6 +6599,7 @@
             const modal = document.getElementById('achievementModal');
             modal.style.display = 'none';
             if (previouslyFocusedElement) previouslyFocusedElement.focus();
+            document.body.classList.remove('modal-open');
         }
 
         function createBadgeElement(achievement) {
