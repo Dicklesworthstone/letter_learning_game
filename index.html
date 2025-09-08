@@ -742,6 +742,25 @@
             letter-spacing: 0.05em;
         }
 
+        /* New Settings Styles */
+        .toggle-group { display: flex; gap: 6px; }
+        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .theme-button {
+            padding: 15px; background: white; border: 2px solid #e5e7eb; border-radius: 16px;
+            text-align: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .theme-button:hover { border-color: #667eea; transform: translateY(-2px); }
+        .theme-button.active { border-color: #667eea; background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); }
+        .theme-icon { font-size: 28px; margin-bottom: 6px; }
+        .theme-name { font-size: 12px; font-weight: 500; color: #6b7280; }
+        .theme-button.active .theme-name { color: #667eea; font-weight: 600; }
+        .toggle-switch { position: relative; width: 48px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-switch-label { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #e5e7eb; transition: all 0.3s; border-radius: 24px; }
+        .toggle-switch-label:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: all 0.3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .toggle-switch input:checked + .toggle-switch-label { background: #667eea; }
+        .toggle-switch input:checked + .toggle-switch-label:before { transform: translateX(24px); }
+
         .toggle-btn {
             padding: 10px 20px;
             border: 2px solid #e5e7eb;
@@ -2955,103 +2974,64 @@
         <!-- Settings Modal -->
         <div class="settings-modal" id="settingsModal">
             <div class="settings-content">
-                <div class="settings-topbar">
-                    <span class="focus-option-label">Reduce Motion</span>
-                    <div class="focus-switch" id="reduceMotionSwitch" onclick="toggleReduceMotion()" role="switch" aria-checked="false" tabindex="0" aria-label="Reduce motion">
-                        <div class="focus-switch-thumb"></div>
-                    </div>
-                </div>
-                <div class="settings-header">⚙️ Game Settings</div>
-                
-                <div class="setting-group">
-                    <label class="setting-label">⏱️ Timer Mode</label>
-                    <button class="toggle-btn" id="timerOff" onclick="setTimerMode('off')" aria-pressed="false" aria-label="Turn timer off">Off</button>
-                    <button class="toggle-btn active" id="timerOn" onclick="setTimerMode('on')" aria-pressed="true" aria-label="Turn timer on">10 Seconds</button>
-                </div>
-
-                <div class="setting-group">
-                    <label class="setting-label">🔤 Letter Case</label>
-                    <button class="toggle-btn" id="caseLower" onclick="setCaseMode('lower')" aria-pressed="false" aria-label="Use lowercase letters">abc</button>
-                    <button class="toggle-btn" id="caseUpper" onclick="setCaseMode('upper')" aria-pressed="false" aria-label="Use uppercase letters">ABC</button>
-                    <button class="toggle-btn active" id="caseMixed" onclick="setCaseMode('mixed')" aria-pressed="true" aria-label="Use both cases">Mixed</button>
-                </div>
-
-                <div class="setting-group">
-                    <label class="setting-label">🔊 Sound Effects</label>
-                    <button class="toggle-btn active" id="soundOn" onclick="setSoundMode('on')" aria-pressed="true" aria-label="Turn sound on">On</button>
-                    <button class="toggle-btn" id="soundOff" onclick="setSoundMode('off')" aria-pressed="false" aria-label="Turn sound off">Off</button>
-                </div>
-
-                <div class="setting-group">
-                    <label class="setting-label">♿ Focus Mode</label>
-                    <div class="focus-mode-toggle">
-                        <div class="focus-option">
-                            <span class="focus-option-label">Enable Focus Mode</span>
-                            <div class="focus-switch" id="focusModeSwitch" onclick="toggleFocusMode()" role="switch" aria-checked="false" tabindex="0" aria-label="Enable focus mode">
-                                <div class="focus-switch-thumb"></div>
+                <div class="settings-header">Game Settings</div>
+                <div class="settings-body">
+                    <div class="settings-section">
+                        <div class="settings-section-title">Basic Settings</div>
+                        <div class="setting-group">
+                            <label class="setting-label">Timer</label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn" id="timerOff" onclick="setTimerMode('off')" aria-pressed="false" aria-label="Turn timer off">Off</button>
+                                <button class="toggle-btn active" id="timerOn" onclick="setTimerMode('on')" aria-pressed="true" aria-label="Turn timer on">On</button>
                             </div>
                         </div>
-                        <div class="focus-option">
-                            <span class="focus-option-label">High Contrast</span>
-                            <div class="focus-switch" id="highContrastSwitch" onclick="toggleHighContrast()" role="switch" aria-checked="false" tabindex="0" aria-label="Enable high contrast">
-                                <div class="focus-switch-thumb"></div>
+                        <div class="setting-group">
+                            <label class="setting-label">Letters</label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn" id="caseLower" onclick="setCaseMode('lower')" aria-pressed="false" aria-label="Use lowercase letters">abc</button>
+                                <button class="toggle-btn" id="caseUpper" onclick="setCaseMode('upper')" aria-pressed="false" aria-label="Use uppercase letters">ABC</button>
+                                <button class="toggle-btn active" id="caseMixed" onclick="setCaseMode('mixed')" aria-pressed="true" aria-label="Use both cases">Both</button>
                             </div>
                         </div>
-                        
-                    </div>
-                </div>
-
-                <div class="setting-group">
-                    <label class="setting-label">🎆 Celebration Style</label>
-                    <div class="celebration-selector">
-                        <div class="celebration-grid">
-                            <div class="celebration-option selected" data-celebration="fireworks" onclick="setCelebration('fireworks')">
-                                <div class="celebration-preview">🎆</div>
-                                <div class="celebration-name">Fireworks</div>
-                            </div>
-                            <div class="celebration-option" data-celebration="animals" onclick="setCelebration('animals')">
-                                <div class="celebration-preview">🦁</div>
-                                <div class="celebration-name">Animals</div>
-                            </div>
-                            <div class="celebration-option" data-celebration="vehicles" onclick="setCelebration('vehicles')">
-                                <div class="celebration-preview">🚀</div>
-                                <div class="celebration-name">Vehicles</div>
-                            </div>
-                            <div class="celebration-option" data-celebration="space" onclick="setCelebration('space')">
-                                <div class="celebration-preview">⭐</div>
-                                <div class="celebration-name">Space</div>
-                            </div>
-                            <div class="celebration-option" data-celebration="dinosaurs" onclick="setCelebration('dinosaurs')">
-                                <div class="celebration-preview">🦖</div>
-                                <div class="celebration-name">Dinosaurs</div>
-                            </div>
-                            <div class="celebration-option" data-celebration="hearts" onclick="setCelebration('hearts')">
-                                <div class="celebration-preview">💖</div>
-                                <div class="celebration-name">Hearts</div>
+                        <div class="setting-group">
+                            <label class="setting-label">Sound</label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn active" id="soundOn" onclick="setSoundMode('on')" aria-pressed="true" aria-label="Turn sound on">On</button>
+                                <button class="toggle-btn" id="soundOff" onclick="setSoundMode('off')" aria-pressed="false" aria-label="Turn sound off">Off</button>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="setting-group">
-                    <label class="setting-label">🌈 Visual Learning Style</label>
-                    <div class="theme-selector">
-                        <div class="theme-option active" data-theme="classic" onclick="setVisualTheme('classic')">
-                            <div class="theme-icon">🔤</div>
-                            <div class="theme-name">Classic</div>
-                        </div>
-                        <div class="theme-option" data-theme="animals" onclick="setVisualTheme('animals')">
-                            <div class="theme-icon">🐾</div>
-                            <div class="theme-name">Animals</div>
-                        </div>
-                        <div class="theme-option" data-theme="colors" onclick="setVisualTheme('colors')">
-                            <div class="theme-icon">🎨</div>
-                            <div class="theme-name">Colors</div>
+                    <div class="settings-section">
+                        <div class="settings-section-title">Visual Theme</div>
+                        <div class="theme-grid">
+                            <button class="theme-button active" onclick="setVisualTheme('classic')"><div class="theme-icon">🔤</div><div class="theme-name">Classic</div></button>
+                            <button class="theme-button" onclick="setVisualTheme('animals')"><div class="theme-icon">🐾</div><div class="theme-name">Animals</div></button>
+                            <button class="theme-button" onclick="setVisualTheme('colors')"><div class="theme-icon">🎨</div><div class="theme-name">Colors</div></button>
                         </div>
                     </div>
-                </div>
 
-                <button class="close-settings" onclick="closeSettings()">Save & Close</button>
+                    <details class="settings-section advanced-settings">
+                        <summary class="settings-section-title">Advanced Settings</summary>
+                        <div class="setting-group">
+                            <label class="setting-label">Voice Recording</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="voiceToggle" onchange="toggleVoiceRecording(this.checked)">
+                                <label for="voiceToggle" class="toggle-switch-label"></label>
+                            </div>
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">Accessibility</label>
+                            <div class="accessibility-options">
+                                <label class="checkbox-label"><input type="checkbox" id="focusModeCheck" onchange="toggleFocusMode()"><span> Focus Mode</span></label>
+                                <label class="checkbox-label"><input type="checkbox" id="highContrastCheck" onchange="toggleHighContrast()"><span> High Contrast</span></label>
+                                <label class="checkbox-label"><input type="checkbox" id="reduceMotionCheck" onchange="toggleReduceMotion()"><span> Reduce Motion</span></label>
+                            </div>
+                        </div>
+                    </details>
+
+                    <button class="close-settings" onclick="closeSettings()">Done</button>
+                </div>
                 
                 <!-- About Section -->
                 <div class="about-section">
@@ -4792,15 +4772,15 @@
         function openSettings() {
             const modal = document.getElementById('settingsModal');
             modal.style.display = 'flex';
-            // Sync Reduce Motion topbar switch state from saved value
-            const reduceSwitch = document.getElementById('reduceMotionSwitch');
-            if (reduceMotionEnabled) {
-                reduceSwitch.classList.add('active');
-                reduceSwitch.setAttribute('aria-checked', 'true');
-            } else {
-                reduceSwitch.classList.remove('active');
-                reduceSwitch.setAttribute('aria-checked', 'false');
-            }
+            // Sync advanced settings checkboxes if present
+            const voiceToggle = document.getElementById('voiceToggle');
+            if (voiceToggle) voiceToggle.checked = !!voiceRecordingEnabled;
+            const fm = document.getElementById('focusModeCheck');
+            if (fm) fm.checked = !!focusModeEnabled;
+            const hc = document.getElementById('highContrastCheck');
+            if (hc) hc.checked = !!highContrastEnabled;
+            const rm = document.getElementById('reduceMotionCheck');
+            if (rm) rm.checked = !!reduceMotionEnabled;
             
             // Close modal when clicking outside
             modal.onclick = function(e) {
@@ -5672,7 +5652,8 @@
                 highContrastEnabled,
                 reduceMotionEnabled,
                 celebrationType,
-                currentTheme
+                currentTheme,
+                voiceRecordingEnabled
             };
             
             localStorage.setItem('letterLearningGameData', JSON.stringify(gameData));
@@ -5709,6 +5690,7 @@
                     reduceMotionEnabled = gameData.reduceMotionEnabled || false;
                     celebrationType = gameData.celebrationType || 'fireworks';
                     currentTheme = gameData.currentTheme || 'classic';
+                    voiceRecordingEnabled = !!gameData.voiceRecordingEnabled;
                     
                     // Check streak continuity
                     checkStreakContinuity();
@@ -5717,20 +5699,17 @@
                     if (focusModeEnabled) {
                         document.body.classList.add('focus-mode');
                         const el = document.getElementById('focusModeSwitch');
-                        el.classList.add('active');
-                        el.setAttribute('aria-checked', 'true');
+                        if (el) { el.classList.add('active'); el.setAttribute('aria-checked', 'true'); }
                     }
                     if (highContrastEnabled) {
                         document.body.style.filter = 'contrast(1.5)';
                         const el = document.getElementById('highContrastSwitch');
-                        el.classList.add('active');
-                        el.setAttribute('aria-checked', 'true');
+                        if (el) { el.classList.add('active'); el.setAttribute('aria-checked', 'true'); }
                     }
                     if (reduceMotionEnabled) {
                         document.body.style.setProperty('--animation-duration', '0.01s');
                         const el = document.getElementById('reduceMotionSwitch');
-                        el.classList.add('active');
-                        el.setAttribute('aria-checked', 'true');
+                        if (el) { el.classList.add('active'); el.setAttribute('aria-checked', 'true'); }
                     }
                     
                     // Update UI
