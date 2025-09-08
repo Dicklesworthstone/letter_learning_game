@@ -677,22 +677,34 @@
             flex: 1 1 auto;
             display: flex;
             flex-direction: column;
-            padding: 16px;
-            padding-top: 8px;
-            padding-bottom: max(16px, calc(16px + env(safe-area-inset-bottom, 0px)));
             align-items: center;
             justify-content: center;
             position: relative;
-            overflow: hidden;
-            /* prevent scrolling; ensure in-view content fits */
-            -webkit-overflow-scrolling: auto;
+            padding: 12px 16px 16px;
+            padding-bottom: max(16px, calc(16px + env(safe-area-inset-bottom, 0px)));
+            overflow: hidden; /* absolutely no scrolling for kids */
             background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(15px) saturate(150%);
             -webkit-backdrop-filter: blur(15px) saturate(150%);
             border-radius: 24px 24px 0 0;
-            box-shadow: inset 0 2px 20px rgba(255, 255, 255, 0.4),
-                0 -5px 20px rgba(168, 85, 247, 0.1);
+            box-shadow: inset 0 2px 20px rgba(255, 255, 255, 0.4), 0 -5px 20px rgba(168, 85, 247, 0.1);
             margin-top: 8px;
+        }
+
+        /* When a prominent sound button is present, reserve top space so nothing overlaps it */
+        .game-area.with-sound {
+            padding-top: clamp(96px, 22vmin, 150px);
+        }
+
+        /* Keep speaker visible using a separate composited layer */
+        .game-area.with-sound .sound-btn {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            margin-bottom: 0;
+            will-change: transform;
         }
 
         /* Make any clickable/touch-start element avoid tap highlight */
@@ -736,8 +748,8 @@
 
         /* Enhanced Sound Button */
         .sound-btn {
-            width: 120px;
-            height: 120px;
+            width: clamp(84px, 18vmin, 120px);
+            height: clamp(84px, 18vmin, 120px);
             border-radius: 50%;
             background: linear-gradient(135deg, white 0%, var(--gray-50) 100%);
             border: none;
@@ -747,7 +759,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
+            font-size: clamp(36px, 6vmin, 48px);
             line-height: 1;
             padding: 10px;
             /* prevent vertical cropping of emoji */
@@ -857,9 +869,9 @@
             /* Make all letter options perfect squares for consistent layout */
             width: 100%;
             aspect-ratio: 1 / 1;
-            min-height: 110px;
+            min-height: 96px;
             /* sensible floor for very narrow devices */
-            font-size: 48px;
+            font-size: clamp(36px, 8vmin, 48px);
             border: 2px solid transparent;
             background: white;
             background-image: linear-gradient(white, white),
@@ -1245,9 +1257,9 @@
 
         .instruction {
             text-align: center;
-            font-size: 20px;
+            font-size: clamp(16px, 2.6vmin, 20px);
             color: #764ba2;
-            margin-bottom: 20px;
+            margin-bottom: clamp(8px, 2vmin, 16px);
             font-weight: 600;
             animation: fadeIn 0.5s;
         }
@@ -1294,12 +1306,12 @@
         }
 
         .letter-display {
-            font-size: 90px;
+            font-size: clamp(56px, 12vmin, 90px);
             color: transparent;
             background: linear-gradient(90deg, #667eea, #764ba2);
             -webkit-background-clip: text;
             background-clip: text;
-            margin-bottom: 20px;
+            margin-bottom: clamp(8px, 2vmin, 16px);
             font-weight: bold;
             animation: letterFloat 3s ease-in-out infinite;
         }
@@ -4272,7 +4284,7 @@
                         </div>
                     </div>
 
-                    <details class="settings-section advanced-settings">
+                    <details class="settings-section advanced-settings" open>
                         <summary class="settings-section-title">Advanced Settings</summary>
                         <div class="setting-group">
                             <label class="setting-label">Voice Recording</label>
@@ -4479,6 +4491,18 @@
                     </div>
                     <div id="recommendationsList">
                         <!-- Recommendations will be added here -->
+                    </div>
+                </div>
+
+                <!-- Data Management -->
+                <div class="dashboard-section">
+                    <div class="dashboard-section-title">
+                        <span>🧹</span>
+                        <span>Data Management</span>
+                    </div>
+                    <div style="display:flex; gap:12px; flex-wrap: wrap;">
+                        <button class="toggle-btn" onclick="resetAllStatistics()" aria-label="Reset all statistics">Reset All Statistics</button>
+                        <button class="toggle-btn" onclick="resetCurrentPlayerStatistics()" aria-label="Reset current player statistics">Reset Current Player</button>
                     </div>
                 </div>
             </div>
@@ -5586,6 +5610,8 @@
                 <div class="options">${optionsHTML}</div>
                 ${voiceRecordingEnabled ? getVoiceRecorderHTML() : ''}
             `;
+            // Reserve space so the floating sound button doesn't overlap content
+            gameArea.classList.add('with-sound');
 
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
@@ -5783,10 +5809,8 @@
                     <button class="phonics-skip" onclick="skipPhonics()" aria-label="Skip phonics">Skip →</button>
                 </div>
             `;
-            // Speak the prompt for non-readers
+            // Speak the prompt for non-readers, then start the countdown
             const promptName = letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter;
-            speakPhrase(`What sound does ${promptName} make?`);
-
             let timeLeft = 3;
             const timerElement = document.getElementById('phonicsTimer');
 
@@ -5804,12 +5828,7 @@
                 timeLeft--;
                 if (timeLeft > 0) {
                     timerElement.textContent = timeLeft;
-                    // avoid overlapping with active speech
-                    if (speechSynthesis.speaking) {
-                        phonicsTimer = setTimeout(updatePhonicsTimer, 300);
-                    } else {
-                        phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
-                    }
+                    phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
                 } else {
                     timerElement.innerHTML = '🗣️';  // Speaker icon for pronunciation phase
                     if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
@@ -5821,7 +5840,11 @@
                 }
             }
 
-            phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
+            // Start countdown only after the prompt finishes speaking (or immediately if speech is disabled)
+            speakPhrase(`What sound does ${promptName} make?`, () => {
+                if (!waitingForPhonics) return; // in case it was skipped
+                phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
+            });
         }
 
         function skipPhonics() {
@@ -6213,7 +6236,12 @@
             currentLetter = getRandomLetter();
 
             const gameArea = document.getElementById('gameArea');
-            const canvasSize = Math.min(350, Math.max(200, Math.min(window.innerWidth - 40, window.innerHeight - 200)));
+            // Compute space: keep everything fully in view without scrolling
+            const headerHeight = 0; // header is outside game-area; padding already applied
+            const reservedTop = Math.max(96, Math.min(window.innerHeight * 0.22, 150));
+            const verticalGutters = reservedTop + 16 /*bottom padding approx*/ + 120 /*controls+labels*/;
+            const maxSquare = Math.min(window.innerWidth - 40, window.innerHeight - verticalGutters);
+            const canvasSize = Math.max(180, Math.min(340, maxSquare));
             gameArea.innerHTML = `
                 <div class="instruction">Trace the letter: <span class="letter-display">${currentLetter}</span></div>
                 <div class="canvas-container">
@@ -6234,6 +6262,7 @@
             `;
 
             setupCanvas();
+            gameArea.classList.remove('with-sound');
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
 
@@ -7179,6 +7208,59 @@
             updateRecommendations();
         }
 
+        function resetAllStatistics() {
+            // Clear overall saved game data and players
+            try { localStorage.removeItem('letterLearningGameData'); } catch (e) { }
+            try { localStorage.removeItem('letterLearningPlayers'); } catch (e) { }
+            // Reset in-memory state for current session
+            score = 0; correctAnswers = 0; wrongAnswers = 0; totalQuestions = 0; currentRound = 1;
+            roundCorrect = 0; roundWrong = 0; scoreAtRoundStart = 0;
+            letterPerformance = {}; lettersMastered = new Set(); unlockedAchievements = new Set();
+            achievementProgress = {}; bestStreak = 0; speedAnswers = 0; totalPlayTime = 0; roundsCompleted = 0;
+            currentStreak = 0; lastPlayDate = null; streakHistory = [];
+            players = []; currentPlayer = null; currentPlayerIndex = 0; multiplayerMode = false;
+            updateBadgeCount();
+            updateAchievementStats();
+            initializeMultiplayer();
+            updateDashboard();
+            showFeedback('All statistics have been reset.', 'info');
+        }
+
+        function resetCurrentPlayerStatistics() {
+            if (!multiplayerMode || !currentPlayer) {
+                // Reset single-player state only
+                score = 0; correctAnswers = 0; wrongAnswers = 0; totalQuestions = 0; currentRound = 1;
+                roundCorrect = 0; roundWrong = 0; scoreAtRoundStart = 0;
+                letterPerformance = {}; lettersMastered = new Set(); unlockedAchievements = new Set();
+                achievementProgress = {}; bestStreak = 0; speedAnswers = 0; roundsCompleted = 0;
+                updateBadgeCount();
+                updateAchievementStats();
+                saveGameData();
+            } else {
+                // Reset only the selected player's stats
+                currentPlayer.score = 0;
+                currentPlayer.correctAnswers = 0;
+                currentPlayer.wrongAnswers = 0;
+                currentPlayer.currentRound = 1;
+                currentPlayer.roundCorrect = 0;
+                currentPlayer.roundWrong = 0;
+                currentPlayer.letterPerformance = {};
+                currentPlayer.unlockedAchievements = new Set();
+                currentPlayer.achievementProgress = {};
+                currentPlayer.lettersMastered = new Set();
+                currentPlayer.bestStreak = 0;
+                currentPlayer.speedAnswers = 0;
+                currentPlayer.roundsCompleted = 0;
+                savePlayers();
+                // Reload into memory
+                loadPlayerState(currentPlayer);
+            }
+            updatePlayerDisplay();
+            updateScoreDisplay();
+            updateDashboard();
+            showFeedback('Player statistics have been reset.', 'info');
+        }
+
         function updatePlayerStats() {
             const grid = document.getElementById('playerStatsGrid');
             grid.innerHTML = '';
@@ -7836,6 +7918,12 @@
         settingsBtn.addEventListener('mousedown', startPressTimers);
         settingsBtn.addEventListener('mouseup', clearPressTimers);
         settingsBtn.addEventListener('mouseleave', clearPressTimers);
+        // Quick access: double-click to open Parent Dashboard
+        settingsBtn.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            clearPressTimers();
+            openParentDashboard();
+        });
 
         // Convenience: open Parent Dashboard directly from Settings
         function openParentDashboardViaSettings() {
