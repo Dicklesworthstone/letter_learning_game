@@ -1830,7 +1830,7 @@
             display: none;
             align-items: center;
             gap: 15px;
-            z-index: 5000;
+            z-index: 15000;
             animation: notificationSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: 2px solid transparent;
             background-clip: padding-box;
@@ -3929,9 +3929,10 @@
             }
 
             .sound-btn {
-                width: 44px;
-                height: 44px;
-                font-size: 22px;
+                width: min(25vh, 80px);
+                height: min(25vh, 80px);
+                font-size: min(12vh, 40px);
+                margin-bottom: 8px;
             }
 
             .score-panel {
@@ -4115,15 +4116,31 @@
                             </div>
                         </div>
                         <div class="setting-group">
-                            <label class="setting-label">Accessibility</label>
-                            <div class="accessibility-options">
-                                <label class="checkbox-label"><input type="checkbox" id="focusModeCheck"
-                                        onchange="toggleFocusMode()"><span> Focus Mode</span></label>
-                                <label class="checkbox-label"><input type="checkbox" id="highContrastCheck"
-                                        onchange="toggleHighContrast()"><span> High Contrast</span></label>
-                                <label class="checkbox-label"><input type="checkbox" id="reduceMotionCheck"
-                                        onchange="toggleReduceMotion()"><span> Reduce Motion</span></label>
-                            </div>
+                            <label class="setting-label" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                                <span>Focus Mode</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="focusModeCheck" onchange="toggleFocusMode()">
+                                    <label for="focusModeCheck" class="toggle-switch-label"></label>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                                <span>High Contrast</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="highContrastCheck" onchange="toggleHighContrast()">
+                                    <label for="highContrastCheck" class="toggle-switch-label"></label>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                                <span>Reduce Motion</span>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="reduceMotionCheck" onchange="toggleReduceMotion()">
+                                    <label for="reduceMotionCheck" class="toggle-switch-label"></label>
+                                </div>
+                            </label>
                         </div>
                         <div class="setting-group">
                             <label class="setting-label">Parent & Teacher</label>
@@ -5699,6 +5716,8 @@
             // Show modal with animation
             const modal = document.getElementById('roundModal');
             modal.style.display = 'flex';
+            previouslyFocusedElement = document.activeElement;
+            setTimeout(() => trapFocus(modal.querySelector('.round-content')), 50);
 
             // Play celebration sound
             speakPhrase(`Congratulations! You completed round ${currentRound}!`);
@@ -5871,24 +5890,28 @@
                 return;
             }
 
-            // Enhanced validation: check for sufficient coverage and strokes
             const canvas = document.getElementById('drawCanvas');
             const bounds = getDrawingBounds();
             const coverage = (bounds.width * bounds.height) / (canvas.width * canvas.height);
-
-            // Check if drawing covers enough of the canvas and has enough points
             const isValid = drawingPoints.length > 50 && coverage > 0.05;
 
             if (isValid) {
-                // Practice-only feedback (no scoring in draw mode)
-                showFeedback('Great tracing! Let\'s try another! ✨', 'success');
-                speakPhrase('Great practice! Now let\'s draw the next letter.');
+                // Award gentle progress for practice
+                score += 15;
+                roundCorrect++;
+                totalQuestions++;
+                updateScoreDisplay();
 
-                // Create celebration overlay without disrupting the view
+                showFeedback('Great tracing! +15 ✨', 'success');
+                speakPhrase('Great practice! Now let\'s draw the next letter.');
                 createDrawingCelebration();
 
                 setTimeout(() => {
-                    startDrawGame();
+                    if (roundCorrect >= QUESTIONS_PER_ROUND) {
+                        showRoundCompletion();
+                    } else {
+                        startDrawGame();
+                    }
                 }, 2500);
             } else {
                 showFeedback('Try to make your letter bigger! 🎨', 'error');
@@ -6392,6 +6415,8 @@
             selectedAvatar = '🦁';
             document.getElementById('playerNameInput').value = '';
             document.getElementById('playerModal').style.display = 'flex';
+            previouslyFocusedElement = document.activeElement;
+            setTimeout(() => trapFocus(document.getElementById('playerModal').querySelector('.player-modal-content')), 50);
 
             // Set up avatar selection
             document.querySelectorAll('.avatar-option').forEach(option => {
@@ -6490,6 +6515,7 @@
                 // Switch to new player
                 currentPlayerIndex = index;
                 currentPlayer = players[index];
+                sessionStartTime = Date.now(); // Reset session timer for the new player
 
                 // Load new player's state
                 loadPlayerState(currentPlayer);
@@ -6554,6 +6580,8 @@
         function openParentDashboard() {
             updateDashboard();
             document.getElementById('parentDashboard').style.display = 'block';
+            previouslyFocusedElement = document.activeElement;
+            setTimeout(() => trapFocus(document.getElementById('parentDashboard')), 50);
         }
 
         function closeParentDashboard() {
@@ -7091,6 +7119,8 @@
 
                 // Show modal
                 modal.style.display = 'flex';
+                previouslyFocusedElement = document.activeElement;
+                setTimeout(() => trapFocus(modal.querySelector('.streak-modal-content')), 50);
 
                 // Celebration
                 setTimeout(() => {
