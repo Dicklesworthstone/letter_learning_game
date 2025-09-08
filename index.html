@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Learn Your Letters!</title>
+    
+    <!-- Modern Libraries via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
     <style>
         * {
             margin: 0;
@@ -15,13 +21,28 @@
         }
 
         body {
-            font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background bubbles */
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0) scale(1); }
+            33% { transform: translateY(-100px) translateX(50px) scale(1.1); }
+            66% { transform: translateY(50px) translateX(-50px) scale(0.9); }
         }
 
         .container {
@@ -30,19 +51,22 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             position: relative;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
         .header {
             background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
-            padding: 10px 15px;
+            padding: 12px 20px;
             text-align: center;
             color: white;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
             position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .settings-btn {
@@ -50,85 +74,181 @@
             right: 15px;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255,255,255,0.2);
-            border: none;
+            background: rgba(255,255,255,0.25);
+            border: 2px solid rgba(255,255,255,0.5);
             color: white;
             font-size: 20px;
-            padding: 5px 10px;
-            border-radius: 5px;
+            padding: 6px 12px;
+            border-radius: 10px;
             cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .settings-btn:hover {
+            background: rgba(255,255,255,0.35);
+            transform: translateY(-50%) scale(1.1);
         }
 
         .mode-selector {
             display: flex;
-            gap: 10px;
-            padding: 15px;
-            background: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            gap: 12px;
+            padding: 16px;
+            background: linear-gradient(to bottom, #ffffff, #f9fafb);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .mode-btn {
             flex: 1;
-            padding: 12px;
+            padding: 14px;
             border: 3px solid #f093fb;
             background: white;
-            border-radius: 15px;
+            border-radius: 20px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-btn:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .mode-btn.active:before {
+            width: 300%;
+            height: 300%;
         }
 
         .mode-btn.active {
-            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
             color: white;
             transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(240, 147, 251, 0.4);
+        }
+
+        .mode-btn span {
+            position: relative;
+            z-index: 1;
         }
 
         .score-panel {
-            padding: 15px;
-            background: rgba(255,255,255,0.9);
+            padding: 16px 20px;
+            background: linear-gradient(to bottom, #fafafa, #f5f5f5);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-weight: bold;
+            font-weight: 600;
             color: #764ba2;
-            border-bottom: 2px solid #f093fb;
+            border-bottom: 3px solid #f093fb;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .score-left {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
         }
 
         .score-right {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 5px;
+            gap: 6px;
         }
 
         .stars {
+            font-size: 24px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .star {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-block;
+        }
+
+        .star.filled {
+            animation: starPop 0.5s;
+        }
+
+        @keyframes starPop {
+            0% { transform: scale(0) rotate(0deg); }
+            50% { transform: scale(1.3) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+
+        .score-value {
             font-size: 20px;
+            color: #f5576c;
+            font-weight: bold;
         }
 
         .timer-display {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
-            color: #f5576c;
-            margin-bottom: 10px;
+            color: #667eea;
+            margin: 10px 0;
             text-align: center;
-            min-height: 30px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .timer-display.warning {
             animation: pulse-red 0.5s infinite;
+            color: #dc2626;
+        }
+
+        .timer-display.critical {
+            animation: shake 0.3s infinite;
+            color: #ff0000;
+            font-size: 32px;
         }
 
         @keyframes pulse-red {
-            0%, 100% { color: #f5576c; }
-            50% { color: #dc2626; }
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .timer-bar {
+            width: 80%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .timer-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+            transition: width 1s linear;
+            border-radius: 3px;
+        }
+
+        .timer-bar-fill.warning {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+        }
+
+        .timer-bar-fill.critical {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
         }
 
         .game-area {
@@ -138,55 +258,82 @@
             padding: 20px;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
 
-        /* Sound Button */
+        /* Enhanced Sound Button */
         .sound-btn {
-            width: 120px;
-            height: 120px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
             background: linear-gradient(135deg, #667eea, #764ba2);
-            border: 5px solid white;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            border: 6px solid white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 0 rgba(102, 126, 234, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 60px;
+            font-size: 70px;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 25px;
             animation: pulse 2s infinite;
+            position: relative;
+        }
+
+        .sound-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
         }
 
         .sound-btn:active {
             transform: scale(0.95);
+            animation: none;
+        }
+
+        .sound-btn.playing {
+            animation: soundWave 0.6s;
         }
 
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
-            50% { box-shadow: 0 5px 30px rgba(102, 126, 234, 0.5); }
+            0% { box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 0 rgba(102, 126, 234, 0.4); }
+            70% { box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 20px rgba(102, 126, 234, 0); }
+            100% { box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 0 rgba(102, 126, 234, 0); }
         }
 
-        /* Identify Mode Styles */
+        @keyframes soundWave {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(0.95); }
+            75% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Enhanced Options Grid */
         .options {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            gap: 18px;
             width: 100%;
-            max-width: 300px;
+            max-width: 320px;
         }
 
         .option-btn {
-            padding: 20px;
-            font-size: 40px;
-            border: 3px solid #667eea;
+            padding: 25px;
+            font-size: 48px;
+            border: 4px solid #667eea;
             background: white;
-            border-radius: 20px;
+            border-radius: 25px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: bold;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .option-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
         .option-btn:active {
@@ -194,75 +341,81 @@
         }
 
         .option-btn.correct {
-            background: #4ade80;
+            animation: correctBounce 0.8s;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
             color: white;
-            animation: correct-celebration 1s;
+            border-color: #22c55e;
         }
 
         .option-btn.wrong {
-            background: #f87171;
+            animation: wrongShake 0.6s;
+            background: linear-gradient(135deg, #f87171, #ef4444);
             color: white;
-            animation: wrong-shake 0.8s;
+            border-color: #ef4444;
         }
 
-        @keyframes correct-celebration {
+        @keyframes correctBounce {
             0% { transform: scale(1) rotate(0deg); }
-            25% { transform: scale(1.2) rotate(10deg); }
-            50% { transform: scale(1.1) rotate(-5deg); }
-            75% { transform: scale(1.15) rotate(5deg); }
+            20% { transform: scale(0.9) rotate(-5deg); }
+            40% { transform: scale(1.3) rotate(5deg); }
+            60% { transform: scale(1.1) rotate(-3deg); }
+            80% { transform: scale(1.15) rotate(2deg); }
             100% { transform: scale(1) rotate(0deg); }
         }
 
-        @keyframes wrong-shake {
-            0%, 100% { transform: translateX(0) scale(1); }
-            10% { transform: translateX(-10px) scale(0.9); }
-            20% { transform: translateX(10px) scale(1.1); }
-            30% { transform: translateX(-8px) scale(0.95); }
-            40% { transform: translateX(8px) scale(1.05); }
-            50% { transform: translateX(-5px) scale(0.98); }
-            60% { transform: translateX(5px) scale(1.02); }
-            70% { transform: translateX(-3px) scale(0.99); }
-            80% { transform: translateX(3px) scale(1.01); }
-            90% { transform: translateX(-1px) scale(1); }
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            10% { transform: translateX(-10px) rotate(-2deg); }
+            20% { transform: translateX(10px) rotate(2deg); }
+            30% { transform: translateX(-8px) rotate(-1deg); }
+            40% { transform: translateX(8px) rotate(1deg); }
+            50% { transform: translateX(-5px) rotate(-0.5deg); }
+            60% { transform: translateX(5px) rotate(0.5deg); }
+            70% { transform: translateX(-3px) rotate(0deg); }
+            80% { transform: translateX(3px) rotate(0deg); }
+            90% { transform: translateX(-1px) rotate(0deg); }
         }
 
-        /* Fireworks animation for correct answers */
-        .firework {
+        /* Enhanced Particle Effects */
+        .particle {
             position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            animation: firework 1s ease-out forwards;
+            pointer-events: none;
         }
 
-        @keyframes firework {
+        .confetti {
+            width: 10px;
+            height: 10px;
+            position: absolute;
+            animation: confettiFall 1s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
             0% {
                 opacity: 1;
-                transform: scale(0);
-            }
-            50% {
-                opacity: 1;
-                transform: scale(1);
+                transform: translateY(0) rotate(0deg);
             }
             100% {
                 opacity: 0;
-                transform: scale(1.5);
+                transform: translateY(100px) rotate(720deg);
             }
         }
 
         /* Draw Mode Styles */
         .canvas-container {
             position: relative;
-            border: 4px solid #667eea;
-            border-radius: 20px;
-            background: white;
+            border: 5px solid transparent;
+            background: linear-gradient(white, white) padding-box,
+                        linear-gradient(90deg, #667eea, #764ba2) border-box;
+            border-radius: 25px;
             margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
         canvas {
             display: block;
             cursor: crosshair;
-            border-radius: 16px;
+            border-radius: 20px;
+            background: white;
         }
 
         .letter-guide {
@@ -270,114 +423,158 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 200px;
-            color: rgba(102, 126, 234, 0.15);
+            font-size: 220px;
+            color: rgba(102, 126, 234, 0.08);
             pointer-events: none;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Georgia', serif;
+            font-weight: bold;
         }
 
         .controls {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             width: 100%;
             max-width: 350px;
         }
 
         .control-btn {
             flex: 1;
-            padding: 15px;
+            padding: 16px;
             font-size: 18px;
             font-weight: bold;
             border: none;
-            border-radius: 15px;
+            border-radius: 20px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .clear-btn {
-            background: #fbbf24;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
             color: white;
         }
 
         .check-btn {
-            background: #4ade80;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
             color: white;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
 
         .control-btn:active {
             transform: scale(0.95);
         }
 
+        /* Enhanced Feedback Modal */
         .feedback {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 50px;
+            font-size: 48px;
             font-weight: bold;
             color: white;
-            padding: 30px 50px;
+            padding: 30px 60px;
             border-radius: 30px;
             z-index: 1000;
             display: none;
-            animation: pop 0.5s;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
 
         .feedback.success {
-            background: rgba(74, 222, 128, 0.95);
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            animation: successPop 0.6s;
         }
 
         .feedback.error {
-            background: rgba(248, 113, 113, 0.95);
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            animation: errorShake 0.6s;
         }
 
-        @keyframes pop {
+        @keyframes successPop {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); }
+            50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        }
+
+        @keyframes errorShake {
             0% { transform: translate(-50%, -50%) scale(0); }
-            50% { transform: translate(-50%, -50%) scale(1.2); }
-            100% { transform: translate(-50%, -50%) scale(1); }
+            20% { transform: translate(-50%, -50%) scale(1.1) rotate(-5deg); }
+            40% { transform: translate(-48%, -50%) scale(1) rotate(5deg); }
+            60% { transform: translate(-52%, -50%) scale(1) rotate(-5deg); }
+            80% { transform: translate(-49%, -50%) scale(1) rotate(2deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
         }
 
         .instruction {
             text-align: center;
-            font-size: 18px;
+            font-size: 20px;
             color: #764ba2;
-            margin-bottom: 15px;
-            font-weight: bold;
+            margin-bottom: 20px;
+            font-weight: 600;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .letter-display {
-            font-size: 80px;
-            color: #764ba2;
+            font-size: 90px;
+            color: transparent;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
             margin-bottom: 20px;
             font-weight: bold;
+            animation: letterFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes letterFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
         .start-screen {
             text-align: center;
-            padding: 20px;
+            padding: 30px;
+            animation: fadeIn 0.8s;
         }
 
         .start-screen h2 {
             color: #764ba2;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            font-size: 28px;
         }
 
         .start-screen p {
-            color: #666;
-            margin-bottom: 30px;
-            line-height: 1.5;
+            color: #6b7280;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 16px;
         }
 
         .start-btn {
-            padding: 20px 40px;
+            padding: 20px 50px;
             font-size: 24px;
-            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #f093fb, #f5576c);
             color: white;
             border: none;
-            border-radius: 30px;
+            border-radius: 35px;
             cursor: pointer;
             font-weight: bold;
             animation: bounce 2s infinite;
+            box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(240, 147, 251, 0.4);
         }
 
         @keyframes bounce {
@@ -385,86 +582,113 @@
             50% { transform: translateY(-10px); }
         }
 
-        /* Settings Modal */
+        /* Enhanced Settings Modal */
         .settings-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 2000;
+            animation: fadeIn 0.3s;
         }
 
         .settings-content {
             background: white;
-            padding: 30px;
-            border-radius: 20px;
+            padding: 35px;
+            border-radius: 25px;
             width: 90%;
-            max-width: 400px;
+            max-width: 420px;
             max-height: 80vh;
             overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.4s;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .settings-header {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             color: #764ba2;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             text-align: center;
         }
 
         .setting-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .setting-label {
-            font-weight: bold;
-            color: #666;
-            margin-bottom: 10px;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 12px;
             display: block;
+            font-size: 16px;
         }
 
         .toggle-btn {
-            padding: 10px 20px;
-            border: 2px solid #f093fb;
+            padding: 12px 24px;
+            border: 3px solid #e5e7eb;
             background: white;
-            border-radius: 10px;
+            border-radius: 15px;
             cursor: pointer;
             margin-right: 10px;
-            margin-bottom: 5px;
-            transition: all 0.3s;
+            margin-bottom: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .toggle-btn:hover {
+            border-color: #f093fb;
+            transform: translateY(-2px);
         }
 
         .toggle-btn.active {
-            background: #f093fb;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
             color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
         }
 
         .close-settings {
-            background: #4ade80;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 15px;
+            padding: 16px 35px;
+            border-radius: 20px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
             margin-top: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
         }
 
-        /* Round Completion Modal */
+        .close-settings:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+        }
+
+        /* Enhanced Round Completion Modal */
         .round-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -472,77 +696,189 @@
         }
 
         .round-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            padding: 30px;
-            border-radius: 20px;
+            padding: 40px;
+            border-radius: 30px;
             width: 90%;
-            max-width: 400px;
+            max-width: 420px;
             text-align: center;
-            animation: slideIn 0.5s;
+            animation: roundSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
         }
 
-        @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes roundSlideIn {
+            from { 
+                transform: translateY(-50px) scale(0.9); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateY(0) scale(1); 
+                opacity: 1; 
+            }
         }
 
         .round-title {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
         .round-stats {
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
         }
 
         .round-stat {
-            margin-bottom: 10px;
-            font-size: 16px;
+            margin-bottom: 12px;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .round-stat-label {
+            opacity: 0.9;
+        }
+
+        .round-stat-value {
+            font-weight: bold;
+            font-size: 20px;
         }
 
         .problem-letters {
             background: rgba(255,255,255,0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .problem-letters-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .problem-letters-list {
+            font-size: 24px;
+            letter-spacing: 8px;
+            font-weight: bold;
         }
 
         .continue-btn {
-            background: #4ade80;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 15px;
-            font-size: 18px;
+            padding: 18px 40px;
+            border-radius: 25px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.3);
         }
 
-        /* Phonics Phase */
+        .continue-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(74, 222, 128, 0.4);
+        }
+
+        /* Enhanced Phonics Phase */
         .phonics-phase {
             text-align: center;
-            animation: fadeIn 0.5s;
+            animation: phonicsSlideIn 0.5s;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        @keyframes phonicsSlideIn {
+            from { 
+                opacity: 0; 
+                transform: scale(0.9); 
+            }
+            to { 
+                opacity: 1; 
+                transform: scale(1); 
+            }
         }
 
         .phonics-instruction {
-            font-size: 20px;
+            font-size: 24px;
             color: #764ba2;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             font-weight: bold;
         }
 
         .phonics-timer {
-            font-size: 60px;
-            color: #f5576c;
-            margin-bottom: 20px;
+            font-size: 72px;
             font-weight: bold;
+            margin-bottom: 25px;
+            animation: phonicsCount 1s infinite;
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        @keyframes phonicsCount {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .phonics-letter {
+            font-size: 100px;
+            margin-top: 20px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: letterPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes letterPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 480px) {
+            .option-btn {
+                font-size: 36px;
+                padding: 20px;
+            }
+            
+            .sound-btn {
+                width: 120px;
+                height: 120px;
+                font-size: 60px;
+            }
+            
+            .letter-display {
+                font-size: 70px;
+            }
+        }
+
+        /* Loading animation */
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #764ba2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -554,28 +890,37 @@
         </div>
         
         <div class="mode-selector">
-            <button class="mode-btn active" onclick="setMode('identify', this)">Find Letters</button>
-            <button class="mode-btn" onclick="setMode('draw', this)">Draw Letters</button>
+            <button class="mode-btn active" onclick="setMode('identify', this)">
+                <span>Find Letters</span>
+            </button>
+            <button class="mode-btn" onclick="setMode('draw', this)">
+                <span>Draw Letters</span>
+            </button>
         </div>
 
         <div class="score-panel" id="scorePanel">
             <div class="score-left">
-                <div class="stars" id="starsDisplay">⭐⭐⭐⭐⭐</div>
+                <div class="stars" id="starsDisplay"></div>
                 <div>Round <span id="roundNumber">1</span></div>
             </div>
             <div class="score-right">
-                <div>Score: <span id="scoreDisplay">0</span></div>
-                <div><span id="correctCount">0</span>/<span id="totalCount">0</span> | Wrong: <span id="wrongCount">0</span></div>
+                <div class="score-value">Score: <span id="scoreDisplay">0</span></div>
+                <div><span id="correctCount">0</span>/<span id="totalCount">50</span> | ❌ <span id="wrongCount">0</span></div>
             </div>
         </div>
 
         <div class="timer-display" id="timerDisplay"></div>
+        <div class="timer-bar" id="timerBar" style="display: none;">
+            <div class="timer-bar-fill" id="timerBarFill"></div>
+        </div>
 
         <div class="game-area" id="gameArea">
             <div class="start-screen">
-                <h2>Welcome to Letter Learning!</h2>
-                <p>This app uses sounds to help you learn letters. Make sure your device's volume is turned up!</p>
-                <p>Tap the speaker button to hear letter sounds.</p>
+                <h2>Welcome to Letter Learning! 🎉</h2>
+                <p>This fun game helps you learn letters through sounds and interaction!</p>
+                <p>🔊 Make sure your volume is turned up</p>
+                <p>⭐ Earn stars and points as you play</p>
+                <p>🎯 Complete rounds to unlock new challenges</p>
                 <button class="start-btn" onclick="startIdentifyGame()">Let's Start!</button>
             </div>
         </div>
@@ -585,59 +930,93 @@
         <!-- Settings Modal -->
         <div class="settings-modal" id="settingsModal">
             <div class="settings-content">
-                <div class="settings-header">Game Settings</div>
+                <div class="settings-header">⚙️ Game Settings</div>
                 
                 <div class="setting-group">
-                    <label class="setting-label">Timer</label>
+                    <label class="setting-label">⏱️ Timer Mode</label>
                     <button class="toggle-btn" id="timerOff" onclick="setTimerMode('off')">Off</button>
-                    <button class="toggle-btn active" id="timerOn" onclick="setTimerMode('on')">On</button>
+                    <button class="toggle-btn active" id="timerOn" onclick="setTimerMode('on')">10 Seconds</button>
                 </div>
 
                 <div class="setting-group">
-                    <label class="setting-label">Letter Case</label>
-                    <button class="toggle-btn" id="caseLower" onclick="setCaseMode('lower')">Lowercase</button>
-                    <button class="toggle-btn" id="caseUpper" onclick="setCaseMode('upper')">Uppercase</button>
+                    <label class="setting-label">🔤 Letter Case</label>
+                    <button class="toggle-btn" id="caseLower" onclick="setCaseMode('lower')">abc</button>
+                    <button class="toggle-btn" id="caseUpper" onclick="setCaseMode('upper')">ABC</button>
                     <button class="toggle-btn active" id="caseMixed" onclick="setCaseMode('mixed')">Mixed</button>
                 </div>
 
-                <button class="close-settings" onclick="closeSettings()">Save Settings</button>
+                <div class="setting-group">
+                    <label class="setting-label">🔊 Sound Effects</label>
+                    <button class="toggle-btn active" id="soundOn" onclick="setSoundMode('on')">On</button>
+                    <button class="toggle-btn" id="soundOff" onclick="setSoundMode('off')">Off</button>
+                </div>
+
+                <button class="close-settings" onclick="closeSettings()">Save & Close</button>
             </div>
         </div>
 
         <!-- Round Completion Modal -->
         <div class="round-modal" id="roundModal">
             <div class="round-content">
-                <div class="round-title">Round <span id="completedRound">1</span> Complete! 🎉</div>
+                <div class="round-title">🎉 Round <span id="completedRound">1</span> Complete! 🎉</div>
                 <div class="round-stats">
-                    <div class="round-stat">Average Time: <span id="avgTime">0</span>s</div>
-                    <div class="round-stat">Accuracy: <span id="accuracy">0</span>%</div>
-                    <div class="round-stat">Score Gained: <span id="scoreGained">0</span></div>
+                    <div class="round-stat">
+                        <span class="round-stat-label">⏱️ Avg Time:</span>
+                        <span class="round-stat-value" id="avgTime">0</span>s
+                    </div>
+                    <div class="round-stat">
+                        <span class="round-stat-label">🎯 Accuracy:</span>
+                        <span class="round-stat-value" id="accuracy">0</span>%
+                    </div>
+                    <div class="round-stat">
+                        <span class="round-stat-label">⭐ Points:</span>
+                        <span class="round-stat-value" id="scoreGained">0</span>
+                    </div>
                 </div>
                 <div class="problem-letters">
-                    <div><strong>Letters to practice:</strong></div>
-                    <div id="problemLettersList">None - Great job!</div>
+                    <div class="problem-letters-title">Letters to practice:</div>
+                    <div class="problem-letters-list" id="problemLettersList">None - Perfect! 🌟</div>
                 </div>
-                <button class="continue-btn" onclick="startNextRound()">Continue to Round <span id="nextRoundNum">2</span></button>
+                <button class="continue-btn" onclick="startNextRound()">Continue to Round <span id="nextRoundNum">2</span> →</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Initialize background bubbles
+        function createBubbles() {
+            for (let i = 0; i < 10; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.style.width = Math.random() * 100 + 50 + 'px';
+                bubble.style.height = bubble.style.width;
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.top = Math.random() * 100 + '%';
+                bubble.style.animationDelay = Math.random() * 20 + 's';
+                bubble.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                document.body.appendChild(bubble);
+            }
+        }
+        createBubbles();
+
         // Game state
         let currentMode = 'identify';
         let currentLetter = '';
-        let currentCase = 'mixed'; // lower, upper, mixed
+        let currentCase = 'mixed';
         let score = 0;
         let correctAnswers = 0;
         let wrongAnswers = 0;
         let totalQuestions = 0;
         let currentRound = 1;
+        let roundCorrect = 0;
+        let roundWrong = 0;
         let scoreAtRoundStart = 0;
         let timerEnabled = true;
-        let timerDuration = 10; // seconds
+        let soundEnabled = true;
+        let timerDuration = 10;
         let currentTimer = null;
+        let timerBarInterval = null;
         let questionStartTime = 0;
-        let roundStartTime = 0;
         let responseTimes = [];
         let letterErrors = {};
         let problemLetters = [];
@@ -646,6 +1025,7 @@
         let isDrawing = false;
         let ctx = null;
         let drawingPoints = [];
+        let recentLetters = [];
 
         // Speech settings
         let speechSupported = 'speechSynthesis' in window;
@@ -654,67 +1034,139 @@
         const lowerLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
         const upperLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         
-        // Phonetic sounds for letters
+        // Improved phonetic sounds
         const phoneticSounds = {
-            'a': 'ah', 'b': 'buh', 'c': 'kuh', 'd': 'duh', 'e': 'eh', 'f': 'fuh',
-            'g': 'guh', 'h': 'huh', 'i': 'ih', 'j': 'juh', 'k': 'kuh', 'l': 'luh',
-            'm': 'muh', 'n': 'nuh', 'o': 'oh', 'p': 'puh', 'q': 'kwuh', 'r': 'ruh',
-            's': 'sss', 't': 'tuh', 'u': 'uh', 'v': 'vuh', 'w': 'wuh', 'x': 'ks',
-            'y': 'yuh', 'z': 'zzz'
+            'a': 'ah as in apple',
+            'b': 'buh as in ball', 
+            'c': 'kuh as in cat',
+            'd': 'duh as in dog',
+            'e': 'eh as in egg',
+            'f': 'fff as in fish',
+            'g': 'guh as in goat',
+            'h': 'huh as in hat',
+            'i': 'ih as in igloo',
+            'j': 'juh as in jump',
+            'k': 'kuh as in kite',
+            'l': 'lll as in lion',
+            'm': 'mmm as in moon',
+            'n': 'nnn as in nose',
+            'o': 'oh as in octopus',
+            'p': 'puh as in pig',
+            'q': 'kwuh as in queen',
+            'r': 'rrr as in rabbit',
+            's': 'sss as in snake',
+            't': 'tuh as in turtle',
+            'u': 'uh as in umbrella',
+            'v': 'vvv as in violin',
+            'w': 'wuh as in whale',
+            'x': 'ks as in fox',
+            'y': 'yuh as in yellow',
+            'z': 'zzz as in zebra'
         };
 
         function getLetterCollection() {
             if (currentCase === 'lower') return lowerLetters;
             if (currentCase === 'upper') return upperLetters;
-            return [...lowerLetters, ...upperLetters]; // mixed
+            return [...lowerLetters, ...upperLetters];
         }
 
-        function getRandomLetter(avoidRecent = []) {
+        function getRandomLetter() {
             let letters = getLetterCollection();
             
-            // In later rounds, focus more on problem letters
-            if (currentRound > 1 && problemLetters.length > 0 && Math.random() < 0.6) {
-                letters = problemLetters.filter(l => letters.includes(l));
-                if (letters.length === 0) letters = getLetterCollection();
+            // Focus on problem letters in later rounds
+            if (currentRound > 1 && problemLetters.length > 0 && Math.random() < 0.5) {
+                const problemPool = problemLetters.filter(l => {
+                    const normalizedLetter = l.toLowerCase();
+                    return letters.some(letter => letter.toLowerCase() === normalizedLetter);
+                });
+                if (problemPool.length > 0) {
+                    const selectedProblem = problemPool[Math.floor(Math.random() * problemPool.length)];
+                    // Match case if needed
+                    const matchingLetter = letters.find(l => l.toLowerCase() === selectedProblem.toLowerCase());
+                    if (matchingLetter) return matchingLetter;
+                }
             }
             
-            // Avoid recently used letters if possible
-            if (avoidRecent.length > 0) {
-                const filtered = letters.filter(l => !avoidRecent.includes(l));
+            // Avoid recently used letters
+            if (recentLetters.length > 0 && letters.length > 4) {
+                const filtered = letters.filter(l => !recentLetters.includes(l.toLowerCase()));
                 if (filtered.length > 0) letters = filtered;
             }
             
-            return letters[Math.floor(Math.random() * letters.length)];
+            const selected = letters[Math.floor(Math.random() * letters.length)];
+            
+            // Track recent letters (keep last 3)
+            recentLetters.push(selected.toLowerCase());
+            if (recentLetters.length > 3) recentLetters.shift();
+            
+            return selected;
         }
 
         function cancelSpeech() {
-            if (speechSupported) {
+            if (speechSupported && soundEnabled) {
                 try { speechSynthesis.cancel(); } catch (e) {}
             }
         }
 
         function speakLetter(letter, callback) {
-            if (!speechSupported) {
+            if (!speechSupported || !soundEnabled) {
                 if (callback) callback();
                 return;
             }
             
-            // Special handling for letter 'a' pronunciation
+            cancelSpeech();
+            
+            // Improved pronunciation for letter names
             let textToSpeak = letter;
-            if (letter.toLowerCase() === 'a') {
-                textToSpeak = 'ay'; // Better pronunciation for letter A
+            const lowerLetter = letter.toLowerCase();
+            
+            // Special pronunciations for better clarity
+            const specialPronunciations = {
+                'a': 'ay',
+                'c': 'see',
+                'e': 'ee',
+                'g': 'jee',
+                'h': 'aych',
+                'i': 'eye',
+                'j': 'jay',
+                'k': 'kay',
+                'l': 'ell',
+                'm': 'em',
+                'n': 'en',
+                'o': 'oh',
+                'p': 'pee',
+                'q': 'queue',
+                'r': 'are',
+                's': 'ess',
+                't': 'tee',
+                'u': 'you',
+                'v': 'vee',
+                'w': 'double you',
+                'x': 'ex',
+                'y': 'why',
+                'z': 'zee'
+            };
+            
+            if (specialPronunciations[lowerLetter]) {
+                textToSpeak = specialPronunciations[lowerLetter];
             }
             
-            cancelSpeech();
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.rate = 0.8;
+            utterance.rate = 0.85;
             utterance.pitch = 1.2;
             utterance.volume = 1;
             
+            // Try to get a good English voice
             const voices = speechSynthesis.getVoices();
-            const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
-            if (englishVoice) {
-                utterance.voice = englishVoice;
+            const preferredVoices = voices.filter(voice => 
+                voice.lang.startsWith('en-US') || voice.lang.startsWith('en-GB')
+            );
+            
+            if (preferredVoices.length > 0) {
+                utterance.voice = preferredVoices[0];
+            } else if (voices.length > 0) {
+                const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
+                if (englishVoice) utterance.voice = englishVoice;
             }
             
             if (callback) {
@@ -725,20 +1177,24 @@
         }
 
         function speakPhrase(phrase, callback) {
-            if (!speechSupported) {
+            if (!speechSupported || !soundEnabled) {
                 if (callback) callback();
                 return;
             }
             
             cancelSpeech();
             const utterance = new SpeechSynthesisUtterance(phrase);
-            utterance.rate = 0.9;
-            utterance.pitch = 1.1;
+            utterance.rate = 0.95;
+            utterance.pitch = 1.15;
+            utterance.volume = 1;
             
             const voices = speechSynthesis.getVoices();
-            const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
-            if (englishVoice) {
-                utterance.voice = englishVoice;
+            const preferredVoices = voices.filter(voice => 
+                voice.lang.startsWith('en-US') || voice.lang.startsWith('en-GB')
+            );
+            
+            if (preferredVoices.length > 0) {
+                utterance.voice = preferredVoices[0];
             }
             
             if (callback) {
@@ -749,9 +1205,14 @@
         }
 
         function speakPhonetics(letter, callback) {
+            if (!soundEnabled) {
+                if (callback) callback();
+                return;
+            }
+            
             const phoneticSound = phoneticSounds[letter.toLowerCase()];
             if (phoneticSound) {
-                speakPhrase(phoneticSound, callback);
+                speakPhrase(`The letter ${letter} makes the sound: ${phoneticSound}`, callback);
             } else {
                 if (callback) callback();
             }
@@ -759,45 +1220,83 @@
 
         function updateScoreDisplay() {
             document.getElementById('scoreDisplay').textContent = score;
-            document.getElementById('correctCount').textContent = correctAnswers;
-            document.getElementById('totalCount').textContent = totalQuestions;
-            document.getElementById('wrongCount').textContent = wrongAnswers;
+            document.getElementById('correctCount').textContent = roundCorrect;
+            document.getElementById('totalCount').textContent = '50';
+            document.getElementById('wrongCount').textContent = roundWrong;
             document.getElementById('roundNumber').textContent = currentRound;
             
-            // Update stars display (max 5 stars)
+            // Update stars with animation
             const starCount = Math.min(5, Math.floor(score / 100));
             const starsDisplay = document.getElementById('starsDisplay');
-            starsDisplay.textContent = '⭐'.repeat(starCount) + '☆'.repeat(5 - starCount);
+            starsDisplay.innerHTML = '';
+            
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement('span');
+                star.className = 'star';
+                if (i < starCount) {
+                    star.textContent = '⭐';
+                    star.classList.add('filled');
+                    star.style.animationDelay = `${i * 0.1}s`;
+                } else {
+                    star.textContent = '☆';
+                }
+                starsDisplay.appendChild(star);
+            }
         }
 
         function startTimer() {
             if (!timerEnabled) return;
             
-            const actualDuration = currentRound === 1 ? timerDuration : Math.max(5, timerDuration - 2);
-            let timeLeft = actualDuration;
+            clearTimer();
+            
+            const duration = currentRound === 1 ? timerDuration : Math.max(5, timerDuration - 2);
+            let timeLeft = duration;
             
             const timerDisplay = document.getElementById('timerDisplay');
-            timerDisplay.textContent = `⏱️ ${timeLeft}`;
-            timerDisplay.classList.remove('warning');
+            const timerBar = document.getElementById('timerBar');
+            const timerBarFill = document.getElementById('timerBarFill');
+            
+            timerBar.style.display = 'block';
+            timerBarFill.style.width = '100%';
+            timerBarFill.className = 'timer-bar-fill';
+            
+            timerDisplay.innerHTML = `⏱️ <span>${timeLeft}</span>`;
+            timerDisplay.className = 'timer-display';
+            
+            let startTime = Date.now();
             
             currentTimer = setInterval(() => {
-                timeLeft--;
-                timerDisplay.textContent = `⏱️ ${timeLeft}`;
+                const elapsed = (Date.now() - startTime) / 1000;
+                timeLeft = Math.max(0, Math.ceil(duration - elapsed));
                 
-                if (timeLeft <= 3) {
-                    timerDisplay.classList.add('warning');
-                    speakPhrase(timeLeft.toString());
+                const percentage = ((duration - elapsed) / duration) * 100;
+                timerBarFill.style.width = Math.max(0, percentage) + '%';
+                
+                timerDisplay.innerHTML = `⏱️ <span>${timeLeft}</span>`;
+                
+                if (timeLeft <= 3 && timeLeft > 0) {
+                    timerDisplay.className = 'timer-display warning';
+                    timerBarFill.classList.add('warning');
+                    
+                    // Speak countdown
+                    if (Math.floor(elapsed) !== Math.floor(elapsed - 1)) {
+                        speakPhrase(timeLeft.toString());
+                    }
+                } else if (timeLeft === 0) {
+                    timerDisplay.className = 'timer-display critical';
+                    timerBarFill.classList.add('critical');
                 }
                 
                 if (timeLeft <= 0) {
-                    clearInterval(currentTimer);
-                    timerDisplay.textContent = "⏰ Time's up!";
+                    clearTimer();
+                    timerDisplay.innerHTML = "⏰ Time's up!";
+                    timerBarFill.style.width = '0%';
                     speakPhrase("Time's up!");
                     setTimeout(() => {
                         handleTimeUp();
                     }, 1000);
                 }
-            }, 1000);
+            }, 100);
         }
 
         function clearTimer() {
@@ -805,14 +1304,19 @@
                 clearInterval(currentTimer);
                 currentTimer = null;
             }
-            document.getElementById('timerDisplay').textContent = '';
-            document.getElementById('timerDisplay').classList.remove('warning');
+            if (timerBarInterval) {
+                clearInterval(timerBarInterval);
+                timerBarInterval = null;
+            }
+            document.getElementById('timerDisplay').innerHTML = '';
+            document.getElementById('timerDisplay').className = 'timer-display';
+            document.getElementById('timerBar').style.display = 'none';
         }
 
         function clearAllTimers() {
             clearTimer();
             if (phonicsTimer) {
-                clearInterval(phonicsTimer);
+                clearTimeout(phonicsTimer);
                 phonicsTimer = null;
             }
         }
@@ -820,12 +1324,13 @@
         function handleTimeUp() {
             if (waitingForPhonics) return;
             
+            roundWrong++;
             wrongAnswers++;
             totalQuestions++;
             score = Math.max(0, score - 10);
             trackLetterError(currentLetter);
             showFeedback('Too slow! ⏰', 'error');
-            speakPhrase('Too slow! Let\'s try another one.');
+            createWrongEffect();
             setTimeout(() => startIdentifyGame(), 2000);
         }
 
@@ -834,29 +1339,52 @@
             letterErrors[key] = (letterErrors[key] || 0) + 1;
         }
 
-        function createFireworks(element) {
+        function createConfetti(element) {
             const rect = element.getBoundingClientRect();
-            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'];
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#fd79a8', '#a29bfe'];
             
-            for (let i = 0; i < 15; i++) {
-                const firework = document.createElement('div');
-                firework.className = 'firework';
-                firework.style.background = colors[Math.floor(Math.random() * colors.length)];
-                firework.style.left = Math.random() * rect.width + 'px';
-                firework.style.top = Math.random() * rect.height + 'px';
-                element.appendChild(firework);
+            for (let i = 0; i < 20; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = rect.left + Math.random() * rect.width + 'px';
+                confetti.style.top = rect.top + Math.random() * rect.height + 'px';
+                confetti.style.animationDelay = Math.random() * 0.3 + 's';
+                document.body.appendChild(confetti);
                 
                 setTimeout(() => {
-                    if (firework.parentNode) {
-                        firework.parentNode.removeChild(firework);
+                    if (confetti.parentNode) {
+                        confetti.parentNode.removeChild(confetti);
                     }
                 }, 1000);
             }
         }
 
+        function createWrongEffect() {
+            // Create a red flash effect
+            const flash = document.createElement('div');
+            flash.style.position = 'fixed';
+            flash.style.top = '0';
+            flash.style.left = '0';
+            flash.style.width = '100%';
+            flash.style.height = '100%';
+            flash.style.background = 'rgba(239, 68, 68, 0.2)';
+            flash.style.pointerEvents = 'none';
+            flash.style.zIndex = '999';
+            flash.style.animation = 'fadeIn 0.3s';
+            document.body.appendChild(flash);
+            
+            setTimeout(() => {
+                if (flash.parentNode) {
+                    flash.parentNode.removeChild(flash);
+                }
+            }, 300);
+        }
+
         function setMode(mode, buttonEl) {
             if (currentMode === mode) return;
             currentMode = mode;
+            
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -883,19 +1411,21 @@
             const letters = getLetterCollection();
             const options = [currentLetter];
             
+            // Generate 3 different options
             while (options.length < 4) {
-                const letter = getRandomLetter();
+                const letter = letters[Math.floor(Math.random() * letters.length)];
                 if (!options.includes(letter)) {
                     options.push(letter);
                 }
             }
             
+            // Shuffle options
             options.sort(() => Math.random() - 0.5);
             
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = `
                 <div class="instruction">Tap the speaker, then find the letter!</div>
-                <button class="sound-btn" onclick="playCurrentLetter()">🔊</button>
+                <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()">🔊</button>
                 <div class="options">
                     ${options.map(letter => 
                         `<button class="option-btn" onclick="checkAnswer('${letter}')">${letter}</button>`
@@ -911,12 +1441,19 @@
             
             // Automatically play the letter sound
             setTimeout(() => {
-                speakPhrase(`Find the letter ${currentLetter}`);
+                speakPhrase(`Find the letter`);
+                setTimeout(() => {
+                    speakLetter(currentLetter);
+                }, 1000);
             }, 500);
         }
 
         function playCurrentLetter() {
-            speakLetter(currentLetter);
+            const soundBtn = document.getElementById('soundBtn');
+            soundBtn.classList.add('playing');
+            speakLetter(currentLetter, () => {
+                soundBtn.classList.remove('playing');
+            });
         }
 
         function checkAnswer(letter) {
@@ -928,7 +1465,8 @@
             if (letter === currentLetter) {
                 clearTimer();
                 clickedButton.classList.add('correct');
-                createFireworks(clickedButton);
+                createConfetti(clickedButton);
+                roundCorrect++;
                 correctAnswers++;
                 const responseTime = (Date.now() - questionStartTime) / 1000;
                 responseTimes.push(responseTime);
@@ -942,18 +1480,32 @@
                 
                 score += points;
                 showFeedback(`Excellent! +${points} 🎉`, 'success');
+                
+                // Use GSAP for celebration animation if available
+                if (typeof gsap !== 'undefined') {
+                    gsap.from(clickedButton, {
+                        scale: 0.8,
+                        duration: 0.5,
+                        ease: "back.out(1.7)"
+                    });
+                }
+                
                 speakPhrase('Excellent! That\'s correct!');
                 
                 // Start phonics phase
-                setTimeout(() => startPhonicsPhase(), 1000);
+                setTimeout(() => startPhonicsPhase(), 1500);
                 
             } else {
                 clickedButton.classList.add('wrong');
+                roundWrong++;
                 wrongAnswers++;
+                totalQuestions++;
                 score = Math.max(0, score - 15);
                 trackLetterError(currentLetter);
                 showFeedback('Try again! 💪', 'error');
+                createWrongEffect();
                 speakPhrase('Not quite. Try again!');
+                
                 setTimeout(() => {
                     clickedButton.classList.remove('wrong');
                 }, 1000);
@@ -973,30 +1525,32 @@
                 <div class="phonics-phase">
                     <div class="phonics-instruction">What sound does "${currentLetter}" make?</div>
                     <div class="phonics-timer" id="phonicsTimer">3</div>
-                    <div style="font-size: 60px; margin-top: 20px;">${currentLetter}</div>
+                    <div class="phonics-letter">${currentLetter}</div>
                 </div>
             `;
             
             let timeLeft = 3;
             const timerElement = document.getElementById('phonicsTimer');
             
-            phonicsTimer = setInterval(() => {
+            function updatePhonicsTimer() {
                 timeLeft--;
                 if (timeLeft > 0) {
                     timerElement.textContent = timeLeft;
+                    phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
                 } else {
-                    clearInterval(phonicsTimer);
-                    timerElement.textContent = '🔊';
+                    timerElement.innerHTML = '🔊';
                     speakPhonetics(currentLetter, () => {
                         waitingForPhonics = false;
-                        setTimeout(() => startIdentifyGame(), 1500);
+                        setTimeout(() => startIdentifyGame(), 2000);
                     });
                 }
-            }, 1000);
+            }
+            
+            phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
         }
 
         function checkRoundCompletion() {
-            if (correctAnswers >= 50 && wrongAnswers < 5) {
+            if (roundCorrect >= 50 && roundWrong < 5) {
                 showRoundCompletion();
             }
         }
@@ -1004,37 +1558,53 @@
         function showRoundCompletion() {
             clearAllTimers();
             cancelSpeech();
+            
             // Calculate stats
             const avgTime = responseTimes.length > 0 ? 
                 (responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length).toFixed(1) : 0;
-            const accuracy = totalQuestions > 0 ? 
-                Math.round((correctAnswers / totalQuestions) * 100) : 0;
+            const accuracy = (roundCorrect + roundWrong) > 0 ? 
+                Math.round((roundCorrect / (roundCorrect + roundWrong)) * 100) : 0;
             const scoreGained = Math.max(0, score - scoreAtRoundStart);
             
-            // Identify problem letters
+            // Identify problem letters (those with 2+ errors)
             problemLetters = Object.entries(letterErrors)
                 .filter(([letter, errors]) => errors >= 2)
                 .sort((a, b) => b[1] - a[1])
-                .slice(0, 6)
-                .map(([letter, errors]) => currentCase === 'upper' ? letter.toUpperCase() : letter);
+                .slice(0, 5)
+                .map(([letter]) => letter);
             
-            // Show modal
+            // Update modal content
             document.getElementById('completedRound').textContent = currentRound;
             document.getElementById('avgTime').textContent = avgTime;
             document.getElementById('accuracy').textContent = accuracy;
             document.getElementById('scoreGained').textContent = scoreGained;
             document.getElementById('nextRoundNum').textContent = currentRound + 1;
-            document.getElementById('problemLettersList').textContent = 
-                problemLetters.length > 0 ? problemLetters.join(', ') : 'None - Great job!';
             
-            document.getElementById('roundModal').style.display = 'flex';
+            const problemList = document.getElementById('problemLettersList');
+            if (problemLetters.length > 0) {
+                // Format letters based on current case setting
+                const formattedLetters = problemLetters.map(l => {
+                    if (currentCase === 'upper') return l.toUpperCase();
+                    if (currentCase === 'lower') return l.toLowerCase();
+                    return l; // mixed case
+                }).join(' ');
+                problemList.textContent = formattedLetters;
+            } else {
+                problemList.innerHTML = 'None - Perfect! 🌟';
+            }
+            
+            // Show modal with animation
+            const modal = document.getElementById('roundModal');
+            modal.style.display = 'flex';
+            
+            // Play celebration sound
+            speakPhrase(`Congratulations! You completed round ${currentRound}!`);
         }
 
         function startNextRound() {
             currentRound++;
-            correctAnswers = 0;
-            wrongAnswers = 0;
-            totalQuestions = 0;
+            roundCorrect = 0;
+            roundWrong = 0;
             responseTimes = [];
             letterErrors = {};
             scoreAtRoundStart = score;
@@ -1056,8 +1626,8 @@
                     <canvas id="drawCanvas" width="350" height="350"></canvas>
                 </div>
                 <div class="controls">
-                    <button class="control-btn clear-btn" onclick="clearCanvas()">Clear</button>
-                    <button class="control-btn check-btn" onclick="checkDrawing()">Check</button>
+                    <button class="control-btn clear-btn" onclick="clearCanvas()">Clear ✨</button>
+                    <button class="control-btn check-btn" onclick="checkDrawing()">Check ✓</button>
                 </div>
             `;
             
@@ -1076,10 +1646,12 @@
             ctx.strokeStyle = '#764ba2';
             drawingPoints = [];
 
+            // Touch events
             canvas.addEventListener('touchstart', startDrawing, { passive: false });
             canvas.addEventListener('touchmove', draw, { passive: false });
             canvas.addEventListener('touchend', stopDrawing, { passive: false });
             
+            // Mouse events
             canvas.addEventListener('mousedown', startDrawing);
             canvas.addEventListener('mousemove', draw);
             canvas.addEventListener('mouseup', stopDrawing);
@@ -1092,6 +1664,7 @@
             const rect = e.target.getBoundingClientRect();
             const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
             const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+            
             ctx.beginPath();
             ctx.moveTo(x, y);
             drawingPoints = [{x, y}];
@@ -1100,9 +1673,11 @@
         function draw(e) {
             if (!isDrawing) return;
             e.preventDefault();
+            
             const rect = e.target.getBoundingClientRect();
             const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
             const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+            
             ctx.lineTo(x, y);
             ctx.stroke();
             drawingPoints.push({x, y});
@@ -1117,6 +1692,13 @@
             const canvas = document.getElementById('drawCanvas');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawingPoints = [];
+            
+            // Add clear animation
+            const container = document.querySelector('.canvas-container');
+            container.style.animation = 'shake 0.3s';
+            setTimeout(() => {
+                container.style.animation = '';
+            }, 300);
         }
 
         function checkDrawing() {
@@ -1126,17 +1708,24 @@
                 return;
             }
             
-            const probability = Math.random();
+            // Simple validation based on drawing complexity
+            const isValid = drawingPoints.length > 20;
             
-            if (probability > 0.3 || drawingPoints.length > 30) {
-                score += 15;
-                showFeedback('Good job! ✨', 'success');
-                speakPhrase('Well done! That looks great!');
+            if (isValid) {
+                score += 25;
+                correctAnswers++;
+                showFeedback('Amazing work! ✨', 'success');
+                speakPhrase('Well done! That looks fantastic!');
                 updateScoreDisplay();
+                
+                // Create celebration effect
+                const canvas = document.getElementById('drawCanvas');
+                createConfetti(canvas);
+                
                 setTimeout(() => startDrawGame(), 2000);
             } else {
                 showFeedback('Try again! 🎨', 'error');
-                speakPhrase('Let\'s try once more!');
+                speakPhrase('Let\'s try once more! You can do it!');
                 clearCanvas();
             }
         }
@@ -1146,9 +1735,10 @@
             feedback.textContent = message;
             feedback.className = 'feedback ' + type;
             feedback.style.display = 'block';
+            
             setTimeout(() => {
                 feedback.style.display = 'none';
-            }, 1500);
+            }, 2000);
         }
 
         function openSettings() {
@@ -1156,7 +1746,12 @@
         }
 
         function closeSettings() {
-            document.getElementById('settingsModal').style.display = 'none';
+            const modal = document.getElementById('settingsModal');
+            modal.style.animation = 'fadeOut 0.3s';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.style.animation = '';
+            }, 300);
         }
 
         function setTimerMode(mode) {
@@ -1172,11 +1767,23 @@
             document.querySelectorAll('#caseLower, #caseUpper, #caseMixed').forEach(btn => {
                 btn.classList.remove('active');
             });
-            document.getElementById('case' + mode.charAt(0).toUpperCase() + mode.slice(1)).classList.add('active');
+            
+            const btnId = mode === 'lower' ? 'caseLower' : 
+                         mode === 'upper' ? 'caseUpper' : 'caseMixed';
+            document.getElementById(btnId).classList.add('active');
         }
 
-        // Initialize voices
+        function setSoundMode(mode) {
+            soundEnabled = mode === 'on';
+            document.querySelectorAll('#soundOn, #soundOff').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('sound' + (mode === 'on' ? 'On' : 'Off')).classList.add('active');
+        }
+
+        // Initialize speech synthesis
         if (speechSupported) {
+            // Load voices
             speechSynthesis.getVoices();
             speechSynthesis.onvoiceschanged = () => {
                 speechSynthesis.getVoices();
@@ -1185,6 +1792,21 @@
 
         // Initialize display
         updateScoreDisplay();
+
+        // Add keyboard support for debugging
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSettings();
+                document.getElementById('roundModal').style.display = 'none';
+            }
+        });
+
+        // Prevent pull-to-refresh on mobile
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     </script>
 </body>
 </html>

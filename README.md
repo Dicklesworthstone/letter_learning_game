@@ -147,11 +147,37 @@ Penalties:
 - Score delta from round start
 - Problem letter identification
 
-### 🔊 Audio-First Learning
-- **Letter Pronunciation**: Clear audio for each letter
-- **Phonics Sounds**: Learn the sound each letter makes
-- **Voice Feedback**: Encouraging messages for correct/incorrect answers
-- **Countdown Warnings**: Audio alerts when time is running low
+### 🔊 Audio System Deep Dive
+
+#### Web Speech API Implementation
+
+The game leverages the **Web Speech Synthesis API** for all audio feedback:
+
+```javascript
+// Speech configuration
+utterance.rate = 0.8;     // Slower for clarity
+utterance.pitch = 1.2;    // Higher pitch for child-friendly voice
+utterance.volume = 1.0;   // Full volume
+```
+
+**Audio Types:**
+1. **Letter Names**: Special handling for tricky letters (e.g., 'a' pronounced as "ay")
+2. **Phonetic Sounds**: Mapped pronunciations for each letter
+3. **Instructional Phrases**: "Find the letter", "Well done!", etc.
+4. **Countdown Alerts**: Numbers spoken when timer reaches 3, 2, 1
+
+**Phonetic Sound Map:**
+```javascript
+'a': 'ah',  'b': 'buh',  'c': 'kuh',  'd': 'duh',
+'e': 'eh',  'f': 'fuh',  'g': 'guh',  'h': 'huh',
+// ... complete phonetic mappings for all 26 letters
+```
+
+**Speech Queue Management:**
+- Cancels previous speech before new utterance
+- Callback support for sequential audio
+- Voice selection prioritizes English voices
+- Fallback to default voice if English unavailable
 
 ### ⚙️ Customizable Settings
 - **Timer Control**: Turn timer on/off for stress-free learning
@@ -170,17 +196,48 @@ The game features:
 - **Smooth Animations**: Engaging visual feedback without being distracting
 - **No External Dependencies**: Everything runs locally, no internet required after loading!
 
-## 🚀 Getting Started
+## 🚀 Getting Started & Deployment
 
 ### Quick Start
 1. Simply open `index.html` in any modern web browser
 2. That's it! No installation, no build process, no dependencies!
 
-### Deployment Options
-- **Local File**: Just double-click the HTML file
-- **Web Server**: Host on any static file server
-- **GitHub Pages**: Perfect for free hosting
-- **School Networks**: Works great on restricted networks (no external resources needed)
+### 🌐 GitHub Pages Deployment (Recommended)
+
+Since this is a single `index.html` file, deploying to GitHub Pages is incredibly simple:
+
+#### Step 1: Repository Setup
+1. Create a new GitHub repository (or use existing)
+2. Upload the `index.html` file to the repository root
+3. Optionally add this README.md for documentation
+
+#### Step 2: Enable GitHub Pages
+1. Go to your repository on GitHub
+2. Click **Settings** (in the repository navigation)
+3. Scroll down to **Pages** section (left sidebar)
+4. Under **Source**, select:
+   - **Deploy from a branch**
+   - **Branch**: `main` (or `master`)
+   - **Folder**: `/ (root)`
+5. Click **Save**
+
+#### Step 3: Access Your Game
+- Your game will be available at: `https://[username].github.io/[repository-name]/`
+- First deployment may take 5-10 minutes
+- Updates are automatic when you push changes
+
+#### Alternative: Direct Link Method
+If you want the simplest approach:
+1. Name your repository `[username].github.io`
+2. The index.html will automatically be served as your main GitHub Pages site
+3. Access at: `https://[username].github.io/`
+
+### 📱 Other Deployment Options
+- **Netlify**: Drag and drop the HTML file
+- **Vercel**: Import from GitHub, zero config needed
+- **Firebase Hosting**: Free tier perfect for this
+- **School Servers**: Copy single file to web directory
+- **Local Network**: Open file path in browser (`file:///path/to/index.html`)
 
 ## 📱 Device Compatibility
 
