@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Learn Your Letters!</title>
 
     <!-- Modern Libraries via CDN -->
@@ -185,10 +184,25 @@
         }
 
         @keyframes magicalBubbleFloat {
-            0%, 100% { transform: translateY(50vh) translateX(0) scale(0.8) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.7; }
-            50% { transform: translateY(-50vh) translateX(60px) scale(1.1) rotate(120deg); opacity: 0.5; }
-            90% { opacity: 0.7; }
+
+            0%,
+            100% {
+                transform: translateY(50vh) translateX(0) scale(0.8) rotate(0deg);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: translateY(-50vh) translateX(60px) scale(1.1) rotate(120deg);
+                opacity: 0.5;
+            }
+
+            90% {
+                opacity: 0.7;
+            }
         }
 
         @keyframes float {
@@ -260,9 +274,20 @@
         }
 
         @keyframes shimmerHeader {
-            0% { background-position: left; opacity: 0.3; }
-            50% { background-position: right; opacity: 0.8; }
-            100% { background-position: left; opacity: 0.3; }
+            0% {
+                background-position: left;
+                opacity: 0.3;
+            }
+
+            50% {
+                background-position: right;
+                opacity: 0.8;
+            }
+
+            100% {
+                background-position: left;
+                opacity: 0.3;
+            }
         }
 
         .header-title {
@@ -671,7 +696,10 @@
         }
 
         /* Make any clickable/touch-start element avoid tap highlight */
-        [onclick], [ontouchstart] { -webkit-tap-highlight-color: transparent; }
+        [onclick],
+        [ontouchstart] {
+            -webkit-tap-highlight-color: transparent;
+        }
 
         /* Allow vertical scroll in modal content areas on iOS */
         .settings-content,
@@ -679,7 +707,10 @@
         .player-modal-content,
         .round-content,
         .streak-modal-content,
-        .parent-dashboard { touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+        .parent-dashboard {
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+        }
 
         /* Make interactive elements feel native on iOS */
         button,
@@ -697,7 +728,11 @@
         }
 
         /* Extra tap highlight suppression */
-        button, .option-btn, .sound-btn { -webkit-tap-highlight-color: transparent; }
+        button,
+        .option-btn,
+        .sound-btn {
+            -webkit-tap-highlight-color: transparent;
+        }
 
         /* Enhanced Sound Button */
         .sound-btn {
@@ -758,19 +793,33 @@
             opacity: 0;
             pointer-events: none;
         }
+
         .sound-btn.playing::before {
             animation: soundPulse 0.8s ease-out;
         }
+
         .sound-btn.playing::after {
             animation: soundPulse 1s ease-out;
         }
+
         @keyframes soundPulse {
-            0% { transform: scale(0.8); opacity: 0.6; }
-            100% { transform: scale(1.6); opacity: 0; }
+            0% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
         }
 
         /* Modal body lock */
-        body.modal-open { overflow: hidden; position: fixed; width: 100%; }
+        body.modal-open {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
 
         /* Phonics skip button */
         .phonics-skip {
@@ -786,7 +835,12 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .bubble, body::before, body::after { animation: none !important; }
+
+            .bubble,
+            body::before,
+            body::after {
+                animation: none !important;
+            }
         }
 
         /* Enhanced Options Grid */
@@ -829,8 +883,15 @@
 
         /* Very narrow devices like iPhone SE */
         @media (max-width: 375px) {
-            .options { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .option-btn { min-height: 100px; font-size: 48px; }
+            .options {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .option-btn {
+                min-height: 100px;
+                font-size: 48px;
+            }
         }
 
         .option-btn:hover {
@@ -843,6 +904,7 @@
             .settings-btn:hover::before {
                 transform: translateX(100%);
             }
+
             .option-btn:hover {
                 transform: translateY(-2px) scale(1.02);
                 box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15), 0 4px 8px rgba(0, 0, 0, 0.05);
@@ -885,30 +947,75 @@
         }
 
         @keyframes correctBounce {
-            0% { transform: scale(1); }
-            25% { transform: scale(0.97); }
-            50% { transform: scale(1.06); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(0.97);
+            }
+
+            50% {
+                transform: scale(1.06);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         @keyframes wrongWobbleRich {
-            0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
-            15% { transform: translateX(-4px) rotate(-2deg) scale(0.98); }
-            30% { transform: translateX(4px) rotate(2deg) scale(0.98); }
-            45% { transform: translateX(-3px) rotate(-1deg) scale(0.99); }
-            60% { transform: translateX(3px) rotate(1deg) scale(0.99); }
-            75% { transform: translateX(-2px) rotate(-0.5deg) scale(1.0); }
-            85% { transform: translateX(2px) rotate(0.5deg) scale(1.0); }
+
+            0%,
+            100% {
+                transform: translateX(0) rotate(0deg) scale(1);
+            }
+
+            15% {
+                transform: translateX(-4px) rotate(-2deg) scale(0.98);
+            }
+
+            30% {
+                transform: translateX(4px) rotate(2deg) scale(0.98);
+            }
+
+            45% {
+                transform: translateX(-3px) rotate(-1deg) scale(0.99);
+            }
+
+            60% {
+                transform: translateX(3px) rotate(1deg) scale(0.99);
+            }
+
+            75% {
+                transform: translateX(-2px) rotate(-0.5deg) scale(1.0);
+            }
+
+            85% {
+                transform: translateX(2px) rotate(0.5deg) scale(1.0);
+            }
         }
 
         @keyframes wrongWobbleSoft {
-            0%, 100% { transform: translateX(0) rotate(0deg); }
-            25% { transform: translateX(-4px) rotate(-2deg); }
-            75% { transform: translateX(4px) rotate(2deg); }
+
+            0%,
+            100% {
+                transform: translateX(0) rotate(0deg);
+            }
+
+            25% {
+                transform: translateX(-4px) rotate(-2deg);
+            }
+
+            75% {
+                transform: translateX(4px) rotate(2deg);
+            }
         }
 
         /* Tone it down when reduced motion is enabled */
-        .reduce-motion .option-btn.wrong { animation: wrongWobbleSoft 0.4s; }
+        .reduce-motion .option-btn.wrong {
+            animation: wrongWobbleSoft 0.4s;
+        }
 
         /* Celebration Particles (CSS-based) */
         @keyframes celebrationParticle {
@@ -2177,7 +2284,8 @@
             line-height: 1;
             /* keep emoji centered when we swap to 🔊 */
             font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-            min-width: 80px; /* reserve space to avoid layout shift */
+            min-width: 80px;
+            /* reserve space to avoid layout shift */
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -2187,8 +2295,15 @@
         }
 
         @keyframes phonicsCount {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
         }
 
         .phonics-letter {
@@ -4122,8 +4237,10 @@
                         <div class="setting-group">
                             <label class="setting-label">Phonics</label>
                             <div class="toggle-group">
-                                <button class="toggle-btn active" id="phonicsOn" onclick="setPhonicsMode('on')" aria-pressed="true" aria-label="Enable phonics flow">On</button>
-                                <button class="toggle-btn" id="phonicsOff" onclick="setPhonicsMode('off')" aria-pressed="false" aria-label="Disable phonics flow">Off</button>
+                                <button class="toggle-btn active" id="phonicsOn" onclick="setPhonicsMode('on')"
+                                    aria-pressed="true" aria-label="Enable phonics flow">On</button>
+                                <button class="toggle-btn" id="phonicsOff" onclick="setPhonicsMode('off')"
+                                    aria-pressed="false" aria-label="Disable phonics flow">Off</button>
                             </div>
                         </div>
                         <div class="setting-group">
@@ -4165,7 +4282,8 @@
                             </div>
                         </div>
                         <div class="setting-group">
-                            <label class="setting-label" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                            <label class="setting-label"
+                                style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
                                 <span>Focus Mode</span>
                                 <div class="toggle-switch">
                                     <input type="checkbox" id="focusModeCheck" onchange="toggleFocusMode()">
@@ -4174,7 +4292,8 @@
                             </label>
                         </div>
                         <div class="setting-group">
-                            <label class="setting-label" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                            <label class="setting-label"
+                                style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
                                 <span>High Contrast</span>
                                 <div class="toggle-switch">
                                     <input type="checkbox" id="highContrastCheck" onchange="toggleHighContrast()">
@@ -4183,7 +4302,8 @@
                             </label>
                         </div>
                         <div class="setting-group">
-                            <label class="setting-label" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                            <label class="setting-label"
+                                style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
                                 <span>Reduce Motion</span>
                                 <div class="toggle-switch">
                                     <input type="checkbox" id="reduceMotionCheck" onchange="toggleReduceMotion()">
@@ -4194,7 +4314,8 @@
                         <div class="setting-group">
                             <label class="setting-label">Parent & Teacher</label>
                             <div class="toggle-group">
-                                <button class="toggle-btn" id="openParent" onclick="openParentDashboardViaSettings()" aria-label="Open parent dashboard">Open Parent Dashboard</button>
+                                <button class="toggle-btn" id="openParent" onclick="openParentDashboardViaSettings()"
+                                    aria-label="Open parent dashboard">Open Parent Dashboard</button>
                             </div>
                         </div>
                     </details>
@@ -4410,150 +4531,204 @@
 
         // Gesture Recognition Data for Tracing Practice (normalized 100x100 grid)
         const LETTER_CHECKPOINTS = {
-            'a': { strokes: [
-                [{ x: 75, y: 55 }, { x: 50, y: 35 }, { x: 25, y: 55 }, { x: 50, y: 75 }, { x: 75, y: 55 }],
-                [{ x: 75, y: 35 }, { x: 75, y: 85 }]
-            ], tolerance: 30, feedback: { incomplete: "Make sure you draw the round part and the straight line for 'a'!", wrong: "Remember, 'a' has a circle with a tail on the side." } },
-            'b': { strokes: [
-                [{ x: 25, y: 10 }, { x: 25, y: 85 }],
-                [{ x: 25, y: 50 }, { x: 50, y: 35 }, { x: 75, y: 50 }, { x: 50, y: 75 }, { x: 25, y: 50 }]
-            ], tolerance: 28, feedback: { incomplete: "Don't forget the circle at the bottom of the 'b'!", wrong: "Try making a tall line down, then a circle at the bottom." } },
+            'a': {
+                strokes: [
+                    [{ x: 75, y: 55 }, { x: 50, y: 35 }, { x: 25, y: 55 }, { x: 50, y: 75 }, { x: 75, y: 55 }],
+                    [{ x: 75, y: 35 }, { x: 75, y: 85 }]
+                ], tolerance: 30, feedback: { incomplete: "Make sure you draw the round part and the straight line for 'a'!", wrong: "Remember, 'a' has a circle with a tail on the side." }
+            },
+            'b': {
+                strokes: [
+                    [{ x: 25, y: 10 }, { x: 25, y: 85 }],
+                    [{ x: 25, y: 50 }, { x: 50, y: 35 }, { x: 75, y: 50 }, { x: 50, y: 75 }, { x: 25, y: 50 }]
+                ], tolerance: 28, feedback: { incomplete: "Don't forget the circle at the bottom of the 'b'!", wrong: "Try making a tall line down, then a circle at the bottom." }
+            },
             'c': { strokes: [[{ x: 80, y: 30 }, { x: 40, y: 20 }, { x: 20, y: 50 }, { x: 40, y: 80 }, { x: 80, y: 70 }]], tolerance: 35, feedback: { incomplete: "Keep going! Make a nice big curve for the 'c'.", wrong: "That's not quite a 'c'. Try starting at the top and curving around." } },
-            'd': { strokes: [
-                [{ x: 75, y: 10 }, { x: 75, y: 85 }],
-                [{ x: 75, y: 50 }, { x: 50, y: 35 }, { x: 25, y: 50 }, { x: 50, y: 75 }, { x: 75, y: 50 }]
-            ], tolerance: 28, feedback: { incomplete: "Don't forget the circle on the left of the tall line!", wrong: "For 'd', make a circle first, then a tall line on the right." } },
+            'd': {
+                strokes: [
+                    [{ x: 75, y: 10 }, { x: 75, y: 85 }],
+                    [{ x: 75, y: 50 }, { x: 50, y: 35 }, { x: 25, y: 50 }, { x: 50, y: 75 }, { x: 75, y: 50 }]
+                ], tolerance: 28, feedback: { incomplete: "Don't forget the circle on the left of the tall line!", wrong: "For 'd', make a circle first, then a tall line on the right." }
+            },
             'e': { strokes: [[{ x: 20, y: 55 }, { x: 80, y: 55 }, { x: 75, y: 30 }, { x: 35, y: 25 }, { x: 25, y: 45 }, { x: 40, y: 75 }, { x: 75, y: 70 }]], tolerance: 35, feedback: { incomplete: "Keep curving all the way around to finish the 'e'!", wrong: "For 'e', draw a line across, then loop up and around." } },
-            'f': { strokes: [
-                [{ x: 70, y: 20 }, { x: 50, y: 10 }, { x: 50, y: 90 }],
-                [{ x: 25, y: 45 }, { x: 75, y: 45 }]
-            ], tolerance: 28, feedback: { incomplete: "The letter 'f' needs a line across the middle.", wrong: "Try a candy-cane shape, then a line across the middle." } },
-            'g': { strokes: [
-                [{ x: 75, y: 55 }, { x: 50, y: 35 }, { x: 25, y: 55 }, { x: 50, y: 75 }, { x: 75, y: 55 }],
-                [{ x: 75, y: 55 }, { x: 75, y: 90 }, { x: 40, y: 90 }]
-            ], tolerance: 30, feedback: { incomplete: "Don't forget the hook at the bottom of the 'g'!", wrong: "For 'g', make a circle, then a tail that hooks underneath." } },
-            'h': { strokes: [
-                [{ x: 25, y: 10 }, { x: 25, y: 90 }],
-                [{ x: 25, y: 50 }, { x: 50, y: 40 }, { x: 75, y: 50 }, { x: 75, y: 90 }]
-            ], tolerance: 28, feedback: { incomplete: "Now add the hump to the tall line to make an 'h'!", wrong: "Draw a tall line down, then add a hump in the middle." } },
+            'f': {
+                strokes: [
+                    [{ x: 70, y: 20 }, { x: 50, y: 10 }, { x: 50, y: 90 }],
+                    [{ x: 25, y: 45 }, { x: 75, y: 45 }]
+                ], tolerance: 28, feedback: { incomplete: "The letter 'f' needs a line across the middle.", wrong: "Try a candy-cane shape, then a line across the middle." }
+            },
+            'g': {
+                strokes: [
+                    [{ x: 75, y: 55 }, { x: 50, y: 35 }, { x: 25, y: 55 }, { x: 50, y: 75 }, { x: 75, y: 55 }],
+                    [{ x: 75, y: 55 }, { x: 75, y: 90 }, { x: 40, y: 90 }]
+                ], tolerance: 30, feedback: { incomplete: "Don't forget the hook at the bottom of the 'g'!", wrong: "For 'g', make a circle, then a tail that hooks underneath." }
+            },
+            'h': {
+                strokes: [
+                    [{ x: 25, y: 10 }, { x: 25, y: 90 }],
+                    [{ x: 25, y: 50 }, { x: 50, y: 40 }, { x: 75, y: 50 }, { x: 75, y: 90 }]
+                ], tolerance: 28, feedback: { incomplete: "Now add the hump to the tall line to make an 'h'!", wrong: "Draw a tall line down, then add a hump in the middle." }
+            },
             'i': { strokes: [[{ x: 50, y: 40 }, { x: 50, y: 80 }], [{ x: 50, y: 20 }]], tolerance: 25, feedback: { incomplete: "You're so close! Just add the dot on top.", wrong: "For 'i', it's just a little line with a dot on top." } },
             'j': { strokes: [[{ x: 60, y: 40 }, { x: 60, y: 90 }, { x: 30, y: 90 }], [{ x: 60, y: 20 }]], tolerance: 28, feedback: { incomplete: "Great hook! Now just add the dot on top for 'j'.", wrong: "For 'j', draw a hook shape, then put a dot on top." } },
-            'k': { strokes: [
-                [{ x: 25, y: 10 }, { x: 25, y: 90 }],
-                [{ x: 75, y: 45 }, { x: 25, y: 65 }],
-                [{ x: 25, y: 65 }, { x: 75, y: 90 }]
-            ], tolerance: 30, feedback: { incomplete: "A 'k' needs a tall line and two small slanted lines.", wrong: "Draw a tall line, then a 'less than' sign (<) next to it." } },
+            'k': {
+                strokes: [
+                    [{ x: 25, y: 10 }, { x: 25, y: 90 }],
+                    [{ x: 75, y: 45 }, { x: 25, y: 65 }],
+                    [{ x: 25, y: 65 }, { x: 75, y: 90 }]
+                ], tolerance: 30, feedback: { incomplete: "A 'k' needs a tall line and two small slanted lines.", wrong: "Draw a tall line, then a 'less than' sign (<) next to it." }
+            },
             'l': { strokes: [[{ x: 50, y: 10 }, { x: 50, y: 90 }]], tolerance: 25, feedback: { incomplete: "Just one tall, straight line down for 'l'!", wrong: "Try making one simple line from top to bottom." } },
             'm': { strokes: [[{ x: 20, y: 40 }, { x: 20, y: 90 }, { x: 20, y: 50 }, { x: 35, y: 35 }, { x: 50, y: 50 }, { x: 50, y: 90 }, { x: 50, y: 50 }, { x: 65, y: 35 }, { x: 80, y: 50 }, { x: 80, y: 90 }]], tolerance: 35, feedback: { incomplete: "Keep going, an 'm' needs two humps!", wrong: "For 'm', draw a line down, then bounce up and over twice." } },
             'n': { strokes: [[{ x: 25, y: 40 }, { x: 25, y: 90 }, { x: 25, y: 50 }, { x: 40, y: 35 }, { x: 65, y: 40 }, { x: 75, y: 50 }, { x: 75, y: 90 }]], tolerance: 30, feedback: { incomplete: "Almost! An 'n' just needs one hump.", wrong: "Draw a line down, then bounce up and over once for 'n'." } },
             'o': { strokes: [[{ x: 75, y: 50 }, { x: 50, y: 25 }, { x: 25, y: 50 }, { x: 50, y: 75 }, { x: 75, y: 50 }]], tolerance: 30, feedback: { incomplete: "Keep going all the way around to finish the 'o'!", wrong: "Try to draw a simple, round circle for the 'o'." } },
-            'p': { strokes: [
-                [{ x: 25, y: 40 }, { x: 25, y: 95 }],
-                [{ x: 25, y: 40 }, { x: 50, y: 25 }, { x: 75, y: 40 }, { x: 50, y: 65 }, { x: 25, y: 40 }]
-            ], tolerance: 28, feedback: { incomplete: "Now add the circle at the top to finish the 'p'!", wrong: "For 'p', draw a line that goes down, then add a circle at the top." } },
-            'q': { strokes: [
-                [{ x: 75, y: 40 }, { x: 50, y: 25 }, { x: 25, y: 40 }, { x: 50, y: 65 }, { x: 75, y: 40 }],
-                [{ x: 75, y: 40 }, { x: 75, y: 95 }]
-            ], tolerance: 28, feedback: { incomplete: "The circle looks good! Now add the line going down.", wrong: "A 'q' is a circle with a line that goes straight down on the right." } },
+            'p': {
+                strokes: [
+                    [{ x: 25, y: 40 }, { x: 25, y: 95 }],
+                    [{ x: 25, y: 40 }, { x: 50, y: 25 }, { x: 75, y: 40 }, { x: 50, y: 65 }, { x: 25, y: 40 }]
+                ], tolerance: 28, feedback: { incomplete: "Now add the circle at the top to finish the 'p'!", wrong: "For 'p', draw a line that goes down, then add a circle at the top." }
+            },
+            'q': {
+                strokes: [
+                    [{ x: 75, y: 40 }, { x: 50, y: 25 }, { x: 25, y: 40 }, { x: 50, y: 65 }, { x: 75, y: 40 }],
+                    [{ x: 75, y: 40 }, { x: 75, y: 95 }]
+                ], tolerance: 28, feedback: { incomplete: "The circle looks good! Now add the line going down.", wrong: "A 'q' is a circle with a line that goes straight down on the right." }
+            },
             'r': { strokes: [[{ x: 25, y: 40 }, { x: 25, y: 90 }, { x: 25, y: 50 }, { x: 40, y: 35 }, { x: 70, y: 40 }]], tolerance: 30, feedback: { incomplete: "Just a little hook at the top is needed for 'r'.", wrong: "For 'r', draw a line down, then a small hook at the top." } },
             's': { strokes: [[{ x: 75, y: 25 }, { x: 25, y: 40 }, { x: 50, y: 60 }, { x: 75, y: 75 }, { x: 25, y: 90 }]], tolerance: 35, feedback: { incomplete: "Keep curving! An 's' is like a little snake.", wrong: "Try making a curvy, snake-like line for the 's'." } },
-            't': { strokes: [
-                [{ x: 50, y: 20 }, { x: 50, y: 90 }],
-                [{ x: 25, y: 45 }, { x: 75, y: 45 }]
-            ], tolerance: 25, feedback: { incomplete: "Great line! Now cross the 't' in the middle.", wrong: "For 't', draw a line down, then a line across the middle." } },
+            't': {
+                strokes: [
+                    [{ x: 50, y: 20 }, { x: 50, y: 90 }],
+                    [{ x: 25, y: 45 }, { x: 75, y: 45 }]
+                ], tolerance: 25, feedback: { incomplete: "Great line! Now cross the 't' in the middle.", wrong: "For 't', draw a line down, then a line across the middle." }
+            },
             'u': { strokes: [[{ x: 25, y: 40 }, { x: 25, y: 80 }, { x: 50, y: 90 }, { x: 75, y: 80 }, { x: 75, y: 40 }]], tolerance: 30, feedback: { incomplete: "Make sure you curve at the bottom like a smile!", wrong: "A 'u' is like a cup or a smile shape." } },
             'v': { strokes: [[{ x: 15, y: 20 }, { x: 50, y: 90 }, { x: 85, y: 20 }]], tolerance: 30, feedback: { incomplete: "A 'v' needs two straight, slanted lines.", wrong: "For 'v', draw a slanted line down, and another one up!" } },
             'w': { strokes: [[{ x: 15, y: 20 }, { x: 35, y: 90 }, { x: 50, y: 50 }, { x: 65, y: 90 }, { x: 85, y: 20 }]], tolerance: 35, feedback: { incomplete: "Keep going! A 'w' has two points at the bottom.", wrong: "A 'w' is like two 'v' shapes right next to each other." } },
-            'x': { strokes: [
-                [{ x: 20, y: 20 }, { x: 80, y: 80 }],
-                [{ x: 80, y: 20 }, { x: 20, y: 80 }]
-            ], tolerance: 30, feedback: { incomplete: "An 'x' needs two crossing lines.", wrong: "For 'x', just draw two lines that cross in the middle." } },
-            'y': { strokes: [
-                [{ x: 20, y: 20 }, { x: 50, y: 50 }],
-                [{ x: 80, y: 20 }, { x: 20, y: 80 }]
-            ], tolerance: 30, feedback: { incomplete: "The letter 'y' needs a short line and a long line.", wrong: "Draw a small slanted line, then a long one that crosses it." } },
+            'x': {
+                strokes: [
+                    [{ x: 20, y: 20 }, { x: 80, y: 80 }],
+                    [{ x: 80, y: 20 }, { x: 20, y: 80 }]
+                ], tolerance: 30, feedback: { incomplete: "An 'x' needs two crossing lines.", wrong: "For 'x', just draw two lines that cross in the middle." }
+            },
+            'y': {
+                strokes: [
+                    [{ x: 20, y: 20 }, { x: 50, y: 50 }],
+                    [{ x: 80, y: 20 }, { x: 20, y: 80 }]
+                ], tolerance: 30, feedback: { incomplete: "The letter 'y' needs a short line and a long line.", wrong: "Draw a small slanted line, then a long one that crosses it." }
+            },
             'z': { strokes: [[{ x: 20, y: 20 }, { x: 80, y: 20 }, { x: 20, y: 80 }, { x: 80, y: 80 }]], tolerance: 30, feedback: { incomplete: "A 'z' needs a line on top, a slanted line, and a line on the bottom.", wrong: "For 'z', draw 'zig-zag-zig'!" } },
 
-            'A': { strokes: [
-                [{ x: 50, y: 10 }, { x: 20, y: 90 }],
-                [{ x: 50, y: 10 }, { x: 80, y: 90 }],
-                [{ x: 35, y: 60 }, { x: 65, y: 60 }]
-            ], tolerance: 25, feedback: { incomplete: "The letter 'A' needs two slanted lines and one across the middle.", wrong: "Remember the pointy top of the 'A', like a mountain with a bridge." } },
-            'B': { strokes: [
-                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
-                [{ x: 20, y: 10 }, { x: 60, y: 20 }, { x: 60, y: 40 }, { x: 20, y: 50 }],
-                [{ x: 20, y: 50 }, { x: 70, y: 60 }, { x: 70, y: 80 }, { x: 20, y: 90 }]
-            ], tolerance: 30, feedback: { incomplete: "A 'B' needs a straight line and two round bumps on the side.", wrong: "Draw a line down, then add a small bump on top and a big bump on the bottom." } },
+            'A': {
+                strokes: [
+                    [{ x: 50, y: 10 }, { x: 20, y: 90 }],
+                    [{ x: 50, y: 10 }, { x: 80, y: 90 }],
+                    [{ x: 35, y: 60 }, { x: 65, y: 60 }]
+                ], tolerance: 25, feedback: { incomplete: "The letter 'A' needs two slanted lines and one across the middle.", wrong: "Remember the pointy top of the 'A', like a mountain with a bridge." }
+            },
+            'B': {
+                strokes: [
+                    [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                    [{ x: 20, y: 10 }, { x: 60, y: 20 }, { x: 60, y: 40 }, { x: 20, y: 50 }],
+                    [{ x: 20, y: 50 }, { x: 70, y: 60 }, { x: 70, y: 80 }, { x: 20, y: 90 }]
+                ], tolerance: 30, feedback: { incomplete: "A 'B' needs a straight line and two round bumps on the side.", wrong: "Draw a line down, then add a small bump on top and a big bump on the bottom." }
+            },
             'C': { strokes: [[{ x: 80, y: 20 }, { x: 40, y: 10 }, { x: 10, y: 50 }, { x: 40, y: 90 }, { x: 80, y: 80 }]], tolerance: 35, feedback: { incomplete: "Keep going! Make a nice big curve for the 'C'.", wrong: "That's not quite a 'C'. Try starting at the top and curving around." } },
-            'D': { strokes: [
-                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
-                [{ x: 20, y: 10 }, { x: 80, y: 30 }, { x: 80, y: 70 }, { x: 20, y: 90 }]
-            ], tolerance: 30, feedback: { incomplete: "Now draw the big curve to finish the 'D'.", wrong: "For 'D', draw a straight line down, then a big curve from top to bottom." } },
-            'E': { strokes: [
-                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
-                [{ x: 20, y: 10 }, { x: 80, y: 10 }],
-                [{ x: 20, y: 50 }, { x: 70, y: 50 }],
-                [{ x: 20, y: 90 }, { x: 80, y: 90 }]
-            ], tolerance: 25, feedback: { incomplete: "An 'E' needs three lines going to the right.", wrong: "Draw a line down, then add a line at the top, middle, and bottom." } },
-            'F': { strokes: [
-                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
-                [{ x: 20, y: 10 }, { x: 80, y: 10 }],
-                [{ x: 20, y: 50 }, { x: 70, y: 50 }]
-            ], tolerance: 25, feedback: { incomplete: "An 'F' is like an 'E' but without the bottom line.", wrong: "Draw a line down, then add a line at the top and in the middle." } },
-            'G': { strokes: [
-                [{ x: 80, y: 20 }, { x: 40, y: 10 }, { x: 10, y: 50 }, { x: 40, y: 90 }, { x: 80, y: 80 }, { x: 80, y: 50 }],
-                [{ x: 50, y: 50 }, { x: 80, y: 50 }]
-            ], tolerance: 35, feedback: { incomplete: "A 'G' is a big curve with a little line inside.", wrong: "Draw a big 'C', then give it a small line pointing inwards." } },
-            'H': { strokes: [
-                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
-                [{ x: 80, y: 10 }, { x: 80, y: 90 }],
-                [{ x: 20, y: 50 }, { x: 80, y: 50 }]
-            ], tolerance: 25, feedback: { incomplete: "An 'H' needs two tall lines and one across the middle.", wrong: "Draw two straight lines, then connect them in the middle." } },
-            'I': { strokes: [
-                [{ x: 50, y: 10 }, { x: 50, y: 90 }],
-                [{ x: 30, y: 10 }, { x: 70, y: 10 }],
-                [{ x: 30, y: 90 }, { x: 70, y: 90 }]
-            ], tolerance: 25, feedback: { incomplete: "An 'I' is a tall line with a hat and shoes.", wrong: "For 'I', draw a tall line with a small line across the top and bottom." } },
+            'D': {
+                strokes: [
+                    [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                    [{ x: 20, y: 10 }, { x: 80, y: 30 }, { x: 80, y: 70 }, { x: 20, y: 90 }]
+                ], tolerance: 30, feedback: { incomplete: "Now draw the big curve to finish the 'D'.", wrong: "For 'D', draw a straight line down, then a big curve from top to bottom." }
+            },
+            'E': {
+                strokes: [
+                    [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                    [{ x: 20, y: 10 }, { x: 80, y: 10 }],
+                    [{ x: 20, y: 50 }, { x: 70, y: 50 }],
+                    [{ x: 20, y: 90 }, { x: 80, y: 90 }]
+                ], tolerance: 25, feedback: { incomplete: "An 'E' needs three lines going to the right.", wrong: "Draw a line down, then add a line at the top, middle, and bottom." }
+            },
+            'F': {
+                strokes: [
+                    [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                    [{ x: 20, y: 10 }, { x: 80, y: 10 }],
+                    [{ x: 20, y: 50 }, { x: 70, y: 50 }]
+                ], tolerance: 25, feedback: { incomplete: "An 'F' is like an 'E' but without the bottom line.", wrong: "Draw a line down, then add a line at the top and in the middle." }
+            },
+            'G': {
+                strokes: [
+                    [{ x: 80, y: 20 }, { x: 40, y: 10 }, { x: 10, y: 50 }, { x: 40, y: 90 }, { x: 80, y: 80 }, { x: 80, y: 50 }],
+                    [{ x: 50, y: 50 }, { x: 80, y: 50 }]
+                ], tolerance: 35, feedback: { incomplete: "A 'G' is a big curve with a little line inside.", wrong: "Draw a big 'C', then give it a small line pointing inwards." }
+            },
+            'H': {
+                strokes: [
+                    [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                    [{ x: 80, y: 10 }, { x: 80, y: 90 }],
+                    [{ x: 20, y: 50 }, { x: 80, y: 50 }]
+                ], tolerance: 25, feedback: { incomplete: "An 'H' needs two tall lines and one across the middle.", wrong: "Draw two straight lines, then connect them in the middle." }
+            },
+            'I': {
+                strokes: [
+                    [{ x: 50, y: 10 }, { x: 50, y: 90 }],
+                    [{ x: 30, y: 10 }, { x: 70, y: 10 }],
+                    [{ x: 30, y: 90 }, { x: 70, y: 90 }]
+                ], tolerance: 25, feedback: { incomplete: "An 'I' is a tall line with a hat and shoes.", wrong: "For 'I', draw a tall line with a small line across the top and bottom." }
+            },
             'J': { strokes: [[{ x: 80, y: 10 }, { x: 80, y: 70 }, { x: 60, y: 90 }, { x: 20, y: 80 }]], tolerance: 30, feedback: { incomplete: "A 'J' is a line down with a hook at the bottom.", wrong: "Draw a line down, and give it a hook at the bottom, like a fish hook." } },
-            'K': { strokes: [
-                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
-                [{ x: 80, y: 10 }, { x: 20, y: 50 }],
-                [{ x: 20, y: 50 }, { x: 80, y: 90 }]
-            ], tolerance: 30, feedback: { incomplete: "A 'K' needs a tall line and two slanted 'legs'.", wrong: "Draw a tall line, then have two slanted lines kick out from the middle." } },
+            'K': {
+                strokes: [
+                    [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                    [{ x: 80, y: 10 }, { x: 20, y: 50 }],
+                    [{ x: 20, y: 50 }, { x: 80, y: 90 }]
+                ], tolerance: 30, feedback: { incomplete: "A 'K' needs a tall line and two slanted 'legs'.", wrong: "Draw a tall line, then have two slanted lines kick out from the middle." }
+            },
             'L': { strokes: [[{ x: 20, y: 10 }, { x: 20, y: 90 }, { x: 80, y: 90 }]], tolerance: 25, feedback: { incomplete: "An 'L' needs a line down, and then a line across the bottom.", wrong: "Try drawing a straight line down, then a straight line to the right." } },
             'M': { strokes: [[{ x: 10, y: 90 }, { x: 10, y: 10 }, { x: 50, y: 70 }, { x: 90, y: 10 }, { x: 90, y: 90 }]], tolerance: 35, feedback: { incomplete: "An 'M' has four straight lines. Down, down, up, down!", wrong: "Think of jagged mountains for 'M': down, slant down, slant up, then straight down." } },
             'N': { strokes: [[{ x: 20, y: 90 }, { x: 20, y: 10 }, { x: 80, y: 90 }, { x: 80, y: 10 }]], tolerance: 30, feedback: { incomplete: "An 'N' has three straight lines.", wrong: "For 'N', draw a line down, then a long slant down, then a line straight up." } },
             'O': { strokes: [[{ x: 80, y: 50 }, { x: 50, y: 10 }, { x: 20, y: 50 }, { x: 50, y: 90 }, { x: 80, y: 50 }]], tolerance: 30, feedback: { incomplete: "Keep going all the way around to finish the 'O'!", wrong: "Try to draw a simple, round circle or oval for the 'O'." } },
-            'P': { strokes: [
-                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
-                [{ x: 20, y: 10 }, { x: 70, y: 20 }, { x: 70, y: 40 }, { x: 20, y: 50 }]
-            ], tolerance: 30, feedback: { incomplete: "Now add the bump at the top to finish the 'P'!", wrong: "Draw a line down, then add a bump on the top half." } },
-            'Q': { strokes: [
-                [{ x: 80, y: 50 }, { x: 50, y: 10 }, { x: 20, y: 50 }, { x: 50, y: 90 }, { x: 80, y: 50 }],
-                [{ x: 60, y: 70 }, { x: 90, y: 90 }]
-            ], tolerance: 30, feedback: { incomplete: "Great circle! Now add the little tail for the 'Q'.", wrong: "For 'Q', draw a big 'O', then give it a small slanted tail at the bottom." } },
-            'R': { strokes: [
-                [{ x: 20, y: 10 }, { x: 20, y: 90 }],
-                [{ x: 20, y: 10 }, { x: 70, y: 20 }, { x: 70, y: 40 }, { x: 20, y: 50 }],
-                [{ x: 40, y: 50 }, { x: 80, y: 90 }]
-            ], tolerance: 30, feedback: { incomplete: "An 'R' has a bump and a leg!", wrong: "Draw a 'P', then give it a slanted leg to stand on." } },
+            'P': {
+                strokes: [
+                    [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                    [{ x: 20, y: 10 }, { x: 70, y: 20 }, { x: 70, y: 40 }, { x: 20, y: 50 }]
+                ], tolerance: 30, feedback: { incomplete: "Now add the bump at the top to finish the 'P'!", wrong: "Draw a line down, then add a bump on the top half." }
+            },
+            'Q': {
+                strokes: [
+                    [{ x: 80, y: 50 }, { x: 50, y: 10 }, { x: 20, y: 50 }, { x: 50, y: 90 }, { x: 80, y: 50 }],
+                    [{ x: 60, y: 70 }, { x: 90, y: 90 }]
+                ], tolerance: 30, feedback: { incomplete: "Great circle! Now add the little tail for the 'Q'.", wrong: "For 'Q', draw a big 'O', then give it a small slanted tail at the bottom." }
+            },
+            'R': {
+                strokes: [
+                    [{ x: 20, y: 10 }, { x: 20, y: 90 }],
+                    [{ x: 20, y: 10 }, { x: 70, y: 20 }, { x: 70, y: 40 }, { x: 20, y: 50 }],
+                    [{ x: 40, y: 50 }, { x: 80, y: 90 }]
+                ], tolerance: 30, feedback: { incomplete: "An 'R' has a bump and a leg!", wrong: "Draw a 'P', then give it a slanted leg to stand on." }
+            },
             'S': { strokes: [[{ x: 80, y: 20 }, { x: 20, y: 40 }, { x: 80, y: 60 }, { x: 20, y: 80 }]], tolerance: 35, feedback: { incomplete: "Keep curving! An 'S' is like a big snake.", wrong: "Try making a curvy, snake-like line for the 'S'." } },
-            'T': { strokes: [
-                [{ x: 10, y: 10 }, { x: 90, y: 10 }],
-                [{ x: 50, y: 10 }, { x: 50, y: 90 }]
-            ], tolerance: 25, feedback: { incomplete: "Now add the tall line down from the middle of the 'T'.", wrong: "Draw a line across the top, then a line down from the middle." } },
+            'T': {
+                strokes: [
+                    [{ x: 10, y: 10 }, { x: 90, y: 10 }],
+                    [{ x: 50, y: 10 }, { x: 50, y: 90 }]
+                ], tolerance: 25, feedback: { incomplete: "Now add the tall line down from the middle of the 'T'.", wrong: "Draw a line across the top, then a line down from the middle." }
+            },
             'U': { strokes: [[{ x: 20, y: 10 }, { x: 20, y: 70 }, { x: 50, y: 90 }, { x: 80, y: 70 }, { x: 80, y: 10 }]], tolerance: 30, feedback: { incomplete: "Make sure you curve at the bottom like a big smile!", wrong: "A 'U' is like a big cup or a smile shape." } },
             'V': { strokes: [[{ x: 10, y: 10 }, { x: 50, y: 90 }, { x: 90, y: 10 }]], tolerance: 30, feedback: { incomplete: "A 'V' needs two straight, slanted lines.", wrong: "For 'V', draw a slanted line down, and another one up!" } },
             'W': { strokes: [[{ x: 10, y: 10 }, { x: 30, y: 90 }, { x: 50, y: 30 }, { x: 70, y: 90 }, { x: 90, y: 10 }]], tolerance: 35, feedback: { incomplete: "Keep going! A 'W' has four straight lines.", wrong: "A 'W' is like two 'V' shapes right next to each other." } },
-            'X': { strokes: [
-                [{ x: 10, y: 10 }, { x: 90, y: 90 }],
-                [{ x: 90, y: 10 }, { x: 10, y: 90 }]
-            ], tolerance: 30, feedback: { incomplete: "An 'X' needs two crossing lines. 'X' marks the spot!", wrong: "For 'X', just draw two big lines that cross in the middle." } },
-            'Y': { strokes: [
-                [{ x: 10, y: 10 }, { x: 50, y: 50 }],
-                [{ x: 90, y: 10 }, { x: 50, y: 50 }],
-                [{ x: 50, y: 50 }, { x: 50, y: 90 }]
-            ], tolerance: 30, feedback: { incomplete: "A 'Y' needs the 'V' shape at the top and a line down.", wrong: "Draw a small 'V' at the top, then a straight line down from its point." } },
+            'X': {
+                strokes: [
+                    [{ x: 10, y: 10 }, { x: 90, y: 90 }],
+                    [{ x: 90, y: 10 }, { x: 10, y: 90 }]
+                ], tolerance: 30, feedback: { incomplete: "An 'X' needs two crossing lines. 'X' marks the spot!", wrong: "For 'X', just draw two big lines that cross in the middle." }
+            },
+            'Y': {
+                strokes: [
+                    [{ x: 10, y: 10 }, { x: 50, y: 50 }],
+                    [{ x: 90, y: 10 }, { x: 50, y: 50 }],
+                    [{ x: 50, y: 50 }, { x: 50, y: 90 }]
+                ], tolerance: 30, feedback: { incomplete: "A 'Y' needs the 'V' shape at the top and a line down.", wrong: "Draw a small 'V' at the top, then a straight line down from its point." }
+            },
             'Z': { strokes: [[{ x: 10, y: 10 }, { x: 90, y: 10 }, { x: 10, y: 90 }, { x: 90, y: 90 }]], tolerance: 30, feedback: { incomplete: "A 'Z' needs a line on top, a slanted line, and a line on the bottom.", wrong: "For 'Z', draw 'zig-zag-zig'!" } }
         };
 
@@ -5661,7 +5836,7 @@
         // Settings controls
         function setPhonicsMode(mode) {
             phonicsEnabled = mode === 'on';
-            try { localStorage.setItem('letterLearningPhonics', phonicsEnabled ? 'on' : 'off'); } catch (e) {}
+            try { localStorage.setItem('letterLearningPhonics', phonicsEnabled ? 'on' : 'off'); } catch (e) { }
             const onBtn = document.getElementById('phonicsOn');
             const offBtn = document.getElementById('phonicsOff');
             if (onBtn && offBtn) {
@@ -6365,7 +6540,7 @@
                 if (savedPhonics) {
                     phonicsEnabled = savedPhonics === 'on';
                 }
-            } catch (e) {}
+            } catch (e) { }
             setPhonicsMode(phonicsEnabled ? 'on' : 'off');
             const voiceToggle = document.getElementById('voiceToggle');
             if (voiceToggle) voiceToggle.checked = !!voiceRecordingEnabled;
@@ -6505,7 +6680,7 @@
                         // Limit stored recordings and free memory
                         if (recordings.length > 10) {
                             const toRemove = recordings.splice(0, recordings.length - 10);
-                            toRemove.forEach(r => { try { URL.revokeObjectURL(r.url); } catch (e) {} });
+                            toRemove.forEach(r => { try { URL.revokeObjectURL(r.url); } catch (e) { } });
                         }
 
                         // Enable playback buttons
