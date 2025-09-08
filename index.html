@@ -566,6 +566,20 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes sparkle {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) rotate(180deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.8) rotate(360deg) translateY(-50px);
+            }
+        }
 
         .letter-display {
             font-size: 90px;
@@ -3580,21 +3594,43 @@
             }
             
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.rate = 0.85;
-            utterance.pitch = 1.2;
+            utterance.rate = 0.9;  // Slightly slower for clarity
+            utterance.pitch = 1.1;  // More natural pitch
             utterance.volume = 1;
             
-            // Try to get a good English voice
+            // Select the best available voice
             const voices = speechSynthesis.getVoices();
-            const preferredVoices = voices.filter(voice => 
-                voice.lang.startsWith('en-US') || voice.lang.startsWith('en-GB')
-            );
             
-            if (preferredVoices.length > 0) {
-                utterance.voice = preferredVoices[0];
-            } else if (voices.length > 0) {
-                const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
-                if (englishVoice) utterance.voice = englishVoice;
+            // Priority order for natural-sounding voices
+            const voicePriorities = [
+                'Google US English',
+                'Microsoft Zira',
+                'Microsoft David',
+                'Google UK English Female',
+                'Google UK English Male',
+                'Samantha',
+                'Daniel',
+                'Karen',
+                'Moira'
+            ];
+            
+            // Find the best voice
+            let selectedVoice = null;
+            for (const priority of voicePriorities) {
+                selectedVoice = voices.find(v => v.name.includes(priority));
+                if (selectedVoice) break;
+            }
+            
+            // Fallback to any English voice
+            if (!selectedVoice) {
+                selectedVoice = voices.find(v => 
+                    v.lang.startsWith('en-US') && 
+                    (v.name.includes('Google') || v.name.includes('Microsoft'))
+                ) || voices.find(v => v.lang.startsWith('en'));
+            }
+            
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
             }
             
             if (callback) {
@@ -3611,18 +3647,45 @@
             }
             
             cancelSpeech();
-            const utterance = new SpeechSynthesisUtterance(phrase);
-            utterance.rate = 0.95;
-            utterance.pitch = 1.15;
+            
+            // Clean up the phrase for better speech
+            let cleanPhrase = phrase
+                .replace(/[!]+/g, '!')  // Remove excessive exclamation marks
+                .replace(/\.{2,}/g, '. ')  // Replace ellipsis with period
+                .replace(/\s+/g, ' ')  // Normalize whitespace
+                .trim();
+            
+            const utterance = new SpeechSynthesisUtterance(cleanPhrase);
+            utterance.rate = 1.0;  // Normal speed for phrases
+            utterance.pitch = 1.05;  // Natural pitch
             utterance.volume = 1;
             
+            // Use the same voice selection logic
             const voices = speechSynthesis.getVoices();
-            const preferredVoices = voices.filter(voice => 
-                voice.lang.startsWith('en-US') || voice.lang.startsWith('en-GB')
-            );
+            const voicePriorities = [
+                'Google US English',
+                'Microsoft Zira',
+                'Microsoft David',
+                'Google UK English Female',
+                'Samantha',
+                'Daniel'
+            ];
             
-            if (preferredVoices.length > 0) {
-                utterance.voice = preferredVoices[0];
+            let selectedVoice = null;
+            for (const priority of voicePriorities) {
+                selectedVoice = voices.find(v => v.name.includes(priority));
+                if (selectedVoice) break;
+            }
+            
+            if (!selectedVoice) {
+                selectedVoice = voices.find(v => 
+                    v.lang.startsWith('en-US') && 
+                    (v.name.includes('Google') || v.name.includes('Microsoft'))
+                ) || voices.find(v => v.lang.startsWith('en'));
+            }
+            
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
             }
             
             if (callback) {
@@ -4534,7 +4597,8 @@
             
             ctx.beginPath();
             ctx.moveTo(x, y);
-            drawingPoints = [{x, y}];
+            // Keep existing points for multi-stroke drawing
+            drawingPoints.push({x, y, newStroke: true});
         }
 
         function draw(e) {
@@ -4553,6 +4617,7 @@
         function stopDrawing(e) {
             e.preventDefault();
             isDrawing = false;
+            // Don't clear points - allow multiple strokes
         }
 
         function clearCanvas() {
@@ -4569,32 +4634,95 @@
         }
 
         function checkDrawing() {
-            if (drawingPoints.length < 10) {
-                showFeedback('Draw more! ✏️', 'error');
-                speakPhrase('Try drawing the whole letter!');
+            if (drawingPoints.length < 30) {
+                showFeedback('Keep drawing! Add more detail ✏️', 'error');
+                speakPhrase('Try to draw the complete letter with all its parts!');
                 return;
             }
             
-            // Simple validation based on drawing complexity
-            const isValid = drawingPoints.length > 20;
+            // Enhanced validation: check for sufficient coverage and strokes
+            const canvas = document.getElementById('drawCanvas');
+            const bounds = getDrawingBounds();
+            const coverage = (bounds.width * bounds.height) / (canvas.width * canvas.height);
+            
+            // Check if drawing covers enough of the canvas and has enough points
+            const isValid = drawingPoints.length > 50 && coverage > 0.05;
             
             if (isValid) {
                 score += 25;
                 correctAnswers++;
+                correctStreak++;
                 showFeedback('Amazing work! ✨', 'success');
-                speakPhrase('Well done! That looks fantastic!');
+                speakPhrase('Excellent! That\'s a perfect ' + currentLetter + '!');
                 updateScoreDisplay();
                 
-                // Create celebration effect
-                const canvas = document.getElementById('drawCanvas');
-                createConfetti(canvas);
+                // Create celebration overlay without disrupting the view
+                createDrawingCelebration();
                 
-                setTimeout(() => startDrawGame(), 2000);
+                setTimeout(() => {
+                    clearCanvas();
+                    startDrawGame();
+                }, 2500);
             } else {
-                showFeedback('Try again! 🎨', 'error');
-                speakPhrase('Let\'s try once more! You can do it!');
-                clearCanvas();
+                showFeedback('Try to make your letter bigger! 🎨', 'error');
+                speakPhrase('Make sure to draw the complete letter shape!');
             }
+        }
+        
+        function getDrawingBounds() {
+            if (drawingPoints.length === 0) return {width: 0, height: 0};
+            
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            
+            drawingPoints.forEach(point => {
+                if (!point.newStroke) {
+                    minX = Math.min(minX, point.x);
+                    maxX = Math.max(maxX, point.x);
+                    minY = Math.min(minY, point.y);
+                    maxY = Math.max(maxY, point.y);
+                }
+            });
+            
+            return {
+                width: maxX - minX,
+                height: maxY - minY
+            };
+        }
+        
+        function createDrawingCelebration() {
+            // Create overlay celebration that doesn't disrupt the view
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 10000;
+            `;
+            document.body.appendChild(overlay);
+            
+            // Add celebration elements
+            for (let i = 0; i < 15; i++) {
+                const star = document.createElement('div');
+                star.textContent = '⭐';
+                star.style.cssText = `
+                    position: absolute;
+                    font-size: ${20 + Math.random() * 30}px;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    animation: sparkle 1s ease-out forwards;
+                    animation-delay: ${Math.random() * 0.5}s;
+                `;
+                overlay.appendChild(star);
+            }
+            
+            // Remove overlay after animation
+            setTimeout(() => {
+                overlay.remove();
+            }, 2000);
         }
 
         function showFeedback(message, type) {
@@ -4609,7 +4737,15 @@
         }
 
         function openSettings() {
-            document.getElementById('settingsModal').style.display = 'flex';
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = 'flex';
+            
+            // Close modal when clicking outside
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    closeSettings();
+                }
+            };
         }
 
         function closeSettings() {
@@ -4757,13 +4893,37 @@
             }
         }
 
-        // Initialize speech synthesis
+        // Initialize speech synthesis with better voice loading
+        let voicesLoaded = false;
         if (speechSupported) {
-            // Load voices
-            speechSynthesis.getVoices();
-            speechSynthesis.onvoiceschanged = () => {
-                speechSynthesis.getVoices();
+            // Function to ensure voices are loaded
+            const loadVoices = () => {
+                const voices = speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    voicesLoaded = true;
+                    console.log('Speech voices loaded:', voices.length, 'voices available');
+                }
+                return voices;
             };
+            
+            // Initial load attempt
+            loadVoices();
+            
+            // Listen for voice changes (some browsers load asynchronously)
+            speechSynthesis.onvoiceschanged = () => {
+                loadVoices();
+            };
+            
+            // Force voice loading on some browsers
+            if (!voicesLoaded) {
+                const silentUtterance = new SpeechSynthesisUtterance('');
+                silentUtterance.volume = 0;
+                speechSynthesis.speak(silentUtterance);
+                setTimeout(() => {
+                    speechSynthesis.cancel();
+                    loadVoices();
+                }, 100);
+            }
         }
 
         // Achievement System Functions
