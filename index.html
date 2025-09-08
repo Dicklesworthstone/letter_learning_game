@@ -769,6 +769,26 @@
             100% { transform: scale(1.6); opacity: 0; }
         }
 
+        /* Modal body lock */
+        body.modal-open { overflow: hidden; position: fixed; width: 100%; }
+
+        /* Phonics skip button */
+        .phonics-skip {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #9ca3af;
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .bubble, body::before, body::after { animation: none !important; }
+        }
+
         /* Enhanced Options Grid */
         .options {
             display: grid;
@@ -858,7 +878,7 @@
         }
 
         .option-btn.wrong {
-            animation: wrongWobble 0.6s;
+            animation: wrongWobbleRich 0.6s;
             background: var(--error);
             color: white;
             border-color: var(--error);
@@ -871,7 +891,7 @@
             100% { transform: scale(1); }
         }
 
-        @keyframes wrongWobble {
+        @keyframes wrongWobbleRich {
             0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
             15% { transform: translateX(-4px) rotate(-2deg) scale(0.98); }
             30% { transform: translateX(4px) rotate(2deg) scale(0.98); }
@@ -880,6 +900,15 @@
             75% { transform: translateX(-2px) rotate(-0.5deg) scale(1.0); }
             85% { transform: translateX(2px) rotate(0.5deg) scale(1.0); }
         }
+
+        @keyframes wrongWobbleSoft {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(-4px) rotate(-2deg); }
+            75% { transform: translateX(4px) rotate(2deg); }
+        }
+
+        /* Tone it down when reduced motion is enabled */
+        .reduce-motion .option-btn.wrong { animation: wrongWobbleSoft 0.4s; }
 
         /* Celebration Particles (CSS-based) */
         @keyframes celebrationParticle {
@@ -3383,7 +3412,7 @@
             animation: none;
             transition: background-color 0.2s, transform 0.2s;
             border-width: 4px;
-            font-size: 130%;
+            font-size: 110%;
         }
 
         .focus-mode .option-btn {
@@ -4560,6 +4589,7 @@
         let soundEnabled = true;
         let timerDuration = 10;
         let currentTimer = null;
+        let lastDrawTime = 0;
         let timerBarInterval = null;
         let questionStartTime = 0;
         let responseTimes = [];
@@ -5024,8 +5054,17 @@
                 `Here's the sound for ${letterName}: ${sound}${anchor ? ', as in ' + anchor : ''}.`,
                 `${letterName} says: ${sound}${anchor ? ', ' + sound + ', like in the word ' + anchor : ''}.`
             ];
-            const phraseToSpeak = phrases[Math.floor(Math.random() * phrases.length)];
-            speakPhrase(phraseToSpeak, callback);
+            let phraseToSpeak = phrases[Math.floor(Math.random() * phrases.length)];
+            // Improve pacing for basic TTS: break commas into short pauses
+            const textForTTS = phraseToSpeak.replace(/,/g, '. ');
+            const utterance = new SpeechSynthesisUtterance(textForTTS);
+            utterance.rate = 0.8;
+            utterance.pitch = 1.05;
+            utterance.volume = 1;
+            const selectedVoice = getBestVoice();
+            if (selectedVoice) utterance.voice = selectedVoice;
+            utterance.onend = () => { if (callback) callback(); };
+            speechSynthesis.speak(utterance);
         }
 
         function updateScoreDisplay() {
@@ -5034,7 +5073,7 @@
             const displayWrong = currentPlayer ? currentPlayer.roundWrong : roundWrong;
             const displayRound = currentPlayer ? currentPlayer.currentRound : currentRound;
 
-            document.getElementById('scoreDisplay').textContent = displayScore;
+            document.getElementById('scoreDisplay').textContent = Math.max(0, displayScore);
             document.getElementById('correctCount').textContent = displayCorrect;
             document.getElementById('totalCount').textContent = QUESTIONS_PER_ROUND;
             document.getElementById('wrongCount').textContent = displayWrong;
@@ -5093,9 +5132,10 @@
                 if (timeLeft <= 3 && timeLeft > 0) {
                     timerDisplay.className = 'timer-display warning';
                     timerBarFill.classList.add('warning');
-                    // Speak countdown once per second
-                    if (lastSpokenCountdown !== timeLeft) {
+                    // Speak countdown once per second (no overlaps)
+                    if (lastSpokenCountdown !== timeLeft && soundEnabled) {
                         lastSpokenCountdown = timeLeft;
+                        cancelSpeech();
                         speakPhrase(timeLeft.toString());
                     }
                 } else if (timeLeft === 0) {
@@ -5198,7 +5238,7 @@
             const now = Date.now();
             if (now - lastCelebrationTime < 500) { layer.remove(); return; }
             lastCelebrationTime = now;
-            const count = 12;
+            const count = 8;
 
             for (let i = 0; i < count; i++) {
                 const el = document.createElement('span');
@@ -5212,13 +5252,30 @@
                 const dy = Math.sin(angle) * distance - (40 + Math.random() * 40);
                 const rot = (Math.random() * 720 - 360);
 
-                gsap.fromTo(el,
-                    { x: 0, y: 0, scale: 0.6, opacity: 1, rotation: 0 },
-                    { x: dx, y: dy, scale: 1.1, rotation: rot, opacity: 0, duration: 1 + Math.random() * 0.4, ease: 'power2.out' }
-                );
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(el,
+                        { x: 0, y: 0, scale: 0.6, opacity: 1, rotation: 0 },
+                        { x: dx, y: dy, scale: 1.1, rotation: rot, opacity: 0, duration: 1 + Math.random() * 0.4, ease: 'power2.out' }
+                    );
+                } else {
+                    // Fallback animation using requestAnimationFrame
+                    const start = performance.now();
+                    const duration = 1000 + Math.random() * 400;
+                    function step(t) {
+                        const p = Math.min(1, (t - start) / duration);
+                        const ease = 1 - Math.pow(1 - p, 2);
+                        el.style.transform = `translate(${dx * ease}px, ${dy * ease}px) rotate(${rot * ease}deg) scale(${0.6 + 0.5 * ease})`;
+                        el.style.opacity = String(1 - p);
+                        if (p < 1) requestAnimationFrame(step);
+                    }
+                    requestAnimationFrame(step);
+                }
             }
-
-            gsap.delayedCall(1.6, () => layer.remove());
+            if (typeof gsap !== 'undefined') {
+                gsap.delayedCall(1.6, () => layer.remove());
+            } else {
+                setTimeout(() => layer.remove(), 1600);
+            }
         }
 
         function createCustomCelebration(element) {
@@ -5480,10 +5537,12 @@
                     setTimeout(() => startIdentifyGame(), 1200);
                 }
 
-                // Re-enable buttons after transition to next step
-                setTimeout(() => {
-                    document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
-                }, 1500);
+                // Re-enable buttons only if not transitioning into phonics
+                if (!phonicsEnabled) {
+                    setTimeout(() => {
+                        document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
+                    }, 1500);
+                }
 
             } else {
                 clickedButton.classList.add('wrong');
@@ -5546,6 +5605,7 @@
                     <div class="phonics-instruction">What sound does "${currentLetter}" make?</div>
                     <div class="phonics-timer" id="phonicsTimer">3</div>
                     <div class="phonics-letter">${currentLetter}</div>
+                    <button class="phonics-skip" onclick="skipPhonics()" aria-label="Skip phonics">Skip →</button>
                 </div>
             `;
             // Speak the prompt for non-readers
@@ -5556,31 +5616,46 @@
             const timerElement = document.getElementById('phonicsTimer');
 
             // Allow skipping phonics by tapping anywhere in the game area
-            const skipPhonics = () => {
+            const skipPhonicsHandler = () => {
                 if (!waitingForPhonics) return;
                 waitingForPhonics = false;
                 if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
-                gameArea.removeEventListener('click', skipPhonics);
+                gameArea.removeEventListener('click', skipPhonicsHandler);
                 startIdentifyGame();
             };
-            gameArea.addEventListener('click', skipPhonics);
+            gameArea.addEventListener('click', skipPhonicsHandler);
 
             function updatePhonicsTimer() {
                 timeLeft--;
                 if (timeLeft > 0) {
                     timerElement.textContent = timeLeft;
-                    phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
+                    // avoid overlapping with active speech
+                    if (speechSynthesis.speaking) {
+                        phonicsTimer = setTimeout(updatePhonicsTimer, 300);
+                    } else {
+                        phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
+                    }
                 } else {
                     timerElement.innerHTML = '🗣️';  // Speaker icon for pronunciation phase
+                    if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
                     speakPhonetics(currentLetter, () => {
                         waitingForPhonics = false;
-                        gameArea.removeEventListener('click', skipPhonics);
+                        gameArea.removeEventListener('click', skipPhonicsHandler);
                         setTimeout(() => startIdentifyGame(), 2000);
                     });
                 }
             }
 
             phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
+        }
+
+        function skipPhonics() {
+            const gameArea = document.getElementById('gameArea');
+            if (!waitingForPhonics) return;
+            waitingForPhonics = false;
+            if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
+            if (gameArea) gameArea.onclick = null;
+            startIdentifyGame();
         }
 
         // Settings controls
@@ -5598,6 +5673,7 @@
         }
 
         function checkRoundCompletion() {
+            if (waitingForPhonics) return;
             // Check if it's time for a mini-game break
             if (roundCorrect > 0 && roundCorrect % 10 === 0 && Math.random() < 0.5) {
                 showMinigameAnnouncement();
@@ -5933,6 +6009,8 @@
                 }
             };
 
+            document.body.classList.add('modal-open');
+
             // Play celebration sound
             speakPhrase(`Congratulations! You completed round ${currentRound}!`);
         }
@@ -5946,6 +6024,7 @@
             scoreAtRoundStart = score;
 
             document.getElementById('roundModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
             startIdentifyGame();
         }
 
@@ -6423,6 +6502,12 @@
                             timestamp: Date.now()
                         });
 
+                        // Limit stored recordings and free memory
+                        if (recordings.length > 10) {
+                            const toRemove = recordings.splice(0, recordings.length - 10);
+                            toRemove.forEach(r => { try { URL.revokeObjectURL(r.url); } catch (e) {} });
+                        }
+
                         // Enable playback buttons
                         document.getElementById('playBtn').disabled = false;
                         document.getElementById('compareBtn').disabled = false;
@@ -6500,7 +6585,10 @@
                 const v = voices.find(v => v.name.includes(name));
                 if (v) return v;
             }
-            return voices.find(v => v.lang === 'en-US') || voices[0];
+            const englishVoice = voices.find(v => v.lang && v.lang.startsWith('en'));
+            if (englishVoice) return englishVoice;
+            const nonEastAsian = voices.find(v => !v.lang || (!v.lang.includes('zh') && !v.lang.includes('ja') && !v.lang.includes('ko')));
+            return nonEastAsian || voices[0] || null;
         }
         if (speechSupported) {
             speechSynthesis.onvoiceschanged = loadVoices;
@@ -6718,6 +6806,7 @@
             selectedAvatar = '🦁';
             document.getElementById('playerNameInput').value = '';
             document.getElementById('playerModal').style.display = 'flex';
+            document.body.classList.add('modal-open');
             previouslyFocusedElement = document.activeElement;
             setTimeout(() => trapFocus(document.getElementById('playerModal').querySelector('.player-modal-content')), 50);
             // Close when tapping outside modal content
@@ -6744,6 +6833,7 @@
 
         function closePlayerModal() {
             document.getElementById('playerModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
         }
 
         function saveNewPlayer() {
@@ -6899,10 +6989,12 @@
                     closeParentDashboard();
                 }
             };
+            document.body.classList.add('modal-open');
         }
 
         function closeParentDashboard() {
             document.getElementById('parentDashboard').style.display = 'none';
+            document.body.classList.remove('modal-open');
         }
 
         function updateDashboard() {
@@ -7449,6 +7541,7 @@
                         closeStreakModal();
                     }
                 };
+                document.body.classList.add('modal-open');
 
                 // Celebration
                 setTimeout(() => {
@@ -7492,6 +7585,7 @@
 
         function closeStreakModal() {
             document.getElementById('streakModal').style.display = 'none';
+            document.body.classList.remove('modal-open');
         }
 
         // Celebration Customization Functions
