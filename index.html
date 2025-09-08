@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Learn Your Letters!</title>
-    
+
     <!-- Modern Libraries via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        
+
         :root {
             --primary: #6366F1;
             --primary-dark: #4F46E5;
@@ -40,7 +42,7 @@
             --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.15);
             --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
             --shadow-colored: 0 10px 40px -10px var(--primary);
-            
+
             /* Timing functions */
             --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
             --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
@@ -50,7 +52,7 @@
             --radius-lg: 16px;
             --radius-xl: 24px;
             --radius-2xl: 32px;
-            
+
             /* Consistent spacing scale */
             --space-1: 4px;
             --space-2: 8px;
@@ -61,6 +63,7 @@
             --space-8: 32px;
             --space-10: 40px;
         }
+
         * {
             margin: 0;
             padding: 0;
@@ -70,14 +73,18 @@
             -webkit-touch-callout: none;
         }
 
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             width: 100%;
             /* Use dynamic viewport sizing that adapts to iOS browser chrome */
-            min-height: 100vh;   /* Fallback */
-            min-height: 100svh;  /* Small viewport height when toolbars are shown */
-            min-height: 100dvh;  /* Dynamic viewport height */
+            min-height: 100vh;
+            /* Fallback */
+            min-height: 100svh;
+            /* Small viewport height when toolbars are shown */
+            min-height: 100dvh;
+            /* Dynamic viewport height */
             overscroll-behavior: none;
             -webkit-tap-highlight-color: transparent;
         }
@@ -93,10 +100,17 @@
             -moz-osx-font-smoothing: grayscale;
             touch-action: none;
         }
-        
+
         @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
         }
 
         /* Magical floating orbs */
@@ -112,7 +126,7 @@
             animation: floatOrb 20s ease-in-out infinite;
             pointer-events: none;
         }
-        
+
         body::after {
             content: '';
             position: fixed;
@@ -125,11 +139,21 @@
             animation: floatOrb 25s ease-in-out infinite reverse;
             pointer-events: none;
         }
-        
+
         @keyframes floatOrb {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(100px, -50px) scale(1.1); }
-            66% { transform: translate(-50px, 100px) scale(0.9); }
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(100px, -50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-50px, 100px) scale(0.9);
+            }
         }
 
         /* Magical floating bubbles for kids */
@@ -137,45 +161,63 @@
             position: fixed;
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), transparent),
-                        linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.3));
+                linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.3));
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
             pointer-events: none;
             z-index: 0;
             animation: magicalBubbleFloat 20s infinite ease-in-out;
             box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.5),
-                        0 0 20px rgba(168, 85, 247, 0.2);
+                0 0 20px rgba(168, 85, 247, 0.2);
         }
-        
+
         @keyframes magicalBubbleFloat {
-            0%, 100% { 
+
+            0%,
+            100% {
                 transform: translateY(100vh) translateX(0) scale(0.8) rotate(0deg);
                 opacity: 0;
             }
+
             10% {
                 opacity: 0.7;
             }
-            50% { 
+
+            50% {
                 transform: translateY(-100vh) translateX(100px) scale(1.2) rotate(180deg);
                 opacity: 0.5;
             }
+
             90% {
                 opacity: 0.7;
             }
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0) translateX(0) scale(1); }
-            33% { transform: translateY(-100px) translateX(50px) scale(1.1); }
-            66% { transform: translateY(50px) translateX(-50px) scale(0.9); }
+
+            0%,
+            100% {
+                transform: translateY(0) translateX(0) scale(1);
+            }
+
+            33% {
+                transform: translateY(-100px) translateX(50px) scale(1.1);
+            }
+
+            66% {
+                transform: translateY(50px) translateX(-50px) scale(0.9);
+            }
         }
 
         .container {
             width: 100%;
             /* Allow container to grow/shrink with dynamic viewport without forcing a fixed height */
-            min-height: 100vh;   /* Fallback */
-            min-height: 100svh;  /* Small viewport */
-            min-height: 100dvh;  /* Dynamic viewport */
+            min-height: 100vh;
+            /* Fallback */
+            min-height: 100svh;
+            /* Small viewport */
+            min-height: 100dvh;
+            /* Dynamic viewport */
             display: flex;
             flex-direction: column;
             background: rgba(255, 255, 255, 0.85);
@@ -185,7 +227,7 @@
             z-index: 1;
             overflow: hidden;
             box-shadow: inset 0 0 200px rgba(255, 255, 255, 0.5),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
         .header {
@@ -205,7 +247,7 @@
             z-index: 50;
             position: relative;
         }
-        
+
         .header::after {
             content: '';
             position: absolute;
@@ -214,14 +256,23 @@
             right: 0;
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
-            animation: shimmer 3s ease-in-out infinite;
+            animation: shimmerHeader 3s ease-in-out infinite;
         }
-        
-        @keyframes shimmer {
-            0%, 100% { opacity: 0.5; transform: translateX(-100%); }
-            50% { opacity: 1; transform: translateX(100%); }
+
+        @keyframes shimmerHeader {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: translateX(-100%);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateX(100%);
+            }
         }
-        
+
         .header-title {
             flex: 1;
             text-align: center;
@@ -234,10 +285,17 @@
             filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.3));
             animation: titlePulse 4s ease-in-out infinite;
         }
-        
+
         @keyframes titlePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
         }
 
         .settings-btn {
@@ -256,11 +314,11 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 20px rgba(168, 85, 247, 0.2),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
             position: relative;
             overflow: hidden;
         }
-        
+
         .settings-btn::before {
             content: '';
             position: absolute;
@@ -270,7 +328,7 @@
             transform: translateX(-100%);
             transition: transform 0.6s;
         }
-        
+
         .settings-btn:hover::before {
             transform: translateX(100%);
         }
@@ -279,7 +337,7 @@
             transform: rotate(90deg) scale(1.1);
             box-shadow: 0 6px 25px rgba(168, 85, 247, 0.3);
         }
-        
+
         .settings-btn:active {
             transform: rotate(180deg) scale(0.95);
         }
@@ -301,27 +359,44 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
             animation: trophyFloat 3s ease-in-out infinite;
             position: relative;
         }
-        
+
         @keyframes trophyFloat {
-            0%, 100% { transform: translateY(0) rotate(-5deg); }
-            50% { transform: translateY(-5px) rotate(5deg); }
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(-5deg);
+            }
+
+            50% {
+                transform: translateY(-5px) rotate(5deg);
+            }
         }
 
         .badges-btn:hover {
             animation: trophyShake 0.5s ease-in-out;
             box-shadow: 0 6px 25px rgba(251, 191, 36, 0.4);
         }
-        
+
         @keyframes trophyShake {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-10deg); }
-            75% { transform: rotate(10deg); }
+
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+
+            25% {
+                transform: rotate(-10deg);
+            }
+
+            75% {
+                transform: rotate(10deg);
+            }
         }
-        
+
         .badges-btn:active {
             transform: scale(0.95);
         }
@@ -346,8 +421,15 @@
         }
 
         @keyframes badgePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
 
         .mode-selector {
@@ -413,7 +495,7 @@
             gap: 16px;
             font-weight: 600;
             color: var(--gray-700);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             position: relative;
         }
 
@@ -461,9 +543,17 @@
         }
 
         @keyframes starPop {
-            0% { transform: scale(0) rotate(0deg); }
-            50% { transform: scale(1.3) rotate(180deg); }
-            100% { transform: scale(1) rotate(360deg); }
+            0% {
+                transform: scale(0) rotate(0deg);
+            }
+
+            50% {
+                transform: scale(1.3) rotate(180deg);
+            }
+
+            100% {
+                transform: scale(1) rotate(360deg);
+            }
         }
 
         .score-value {
@@ -488,7 +578,8 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            line-height: 1; /* ensure emoji like 🔊 are centered and not clipped */
+            line-height: 1;
+            /* ensure emoji like 🔊 are centered and not clipped */
             font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         }
 
@@ -504,14 +595,33 @@
         }
 
         @keyframes pulse-red {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
         }
 
         .timer-bar {
@@ -548,19 +658,29 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            overflow: auto; /* allow content to scroll if needed rather than being clipped */
+            overflow: auto;
+            /* allow content to scroll if needed rather than being clipped */
             -webkit-overflow-scrolling: touch;
             background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(15px) saturate(150%);
             -webkit-backdrop-filter: blur(15px) saturate(150%);
             border-radius: 24px 24px 0 0;
             box-shadow: inset 0 2px 20px rgba(255, 255, 255, 0.4),
-                        0 -5px 20px rgba(168, 85, 247, 0.1);
+                0 -5px 20px rgba(168, 85, 247, 0.1);
             margin-top: 8px;
         }
 
         /* Make interactive elements feel native on iOS */
-        button, .mode-btn, .option-btn, .sound-btn, .toggle-btn, .settings-btn, .badges-btn, .continue-btn, .player-modal-btn, .start-btn {
+        button,
+        .mode-btn,
+        .option-btn,
+        .sound-btn,
+        .toggle-btn,
+        .settings-btn,
+        .badges-btn,
+        .continue-btn,
+        .player-modal-btn,
+        .start-btn {
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
         }
@@ -572,43 +692,55 @@
             border-radius: 50%;
             background: linear-gradient(135deg, white 0%, var(--gray-50) 100%);
             border: none;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.08), 
-                        0 1px 3px rgba(0,0,0,0.12),
-                        inset 0 -2px 0 rgba(0,0,0,0.04);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08),
+                0 1px 3px rgba(0, 0, 0, 0.12),
+                inset 0 -2px 0 rgba(0, 0, 0, 0.04);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 48px;
-            line-height: 1; /* prevent vertical cropping of emoji */
+            line-height: 1;
+            /* prevent vertical cropping of emoji */
             cursor: pointer;
             transition: all 0.2s var(--ease-spring);
             margin-bottom: var(--space-8);
             position: relative;
             overflow: hidden;
-            color: initial; /* allow native color emoji */
+            color: initial;
+            /* allow native color emoji */
             font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         }
 
         .sound-btn:hover {
             transform: scale(1.05) translateY(-2px);
-            box-shadow: 0 8px 24px rgba(99,102,241,0.25), 
-                        0 2px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25),
+                0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
-        .sound-btn:active { transform: scale(0.95); }
+        .sound-btn:active {
+            transform: scale(0.95);
+        }
 
         .sound-btn.playing {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: initial;
             animation: soundWave 0.8s ease-out;
-            box-shadow: 0 8px 32px rgba(99,102,241,0.35), 
-                        0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.35),
+                0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         @keyframes soundWave {
-            0% { box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2); }
-            50% { box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 0 15px rgba(102, 126, 234, 0.1), 0 0 0 30px rgba(102, 126, 234, 0.05); }
-            100% { box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2); }
+            0% {
+                box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+            }
+
+            50% {
+                box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4), 0 0 0 15px rgba(102, 126, 234, 0.1), 0 0 0 30px rgba(102, 126, 234, 0.05);
+            }
+
+            100% {
+                box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+            }
         }
 
         /* Enhanced Options Grid */
@@ -625,12 +757,13 @@
             /* Make all letter options perfect squares for consistent layout */
             width: 100%;
             aspect-ratio: 1 / 1;
-            min-height: 110px; /* sensible floor for very narrow devices */
+            min-height: 110px;
+            /* sensible floor for very narrow devices */
             font-size: 48px;
             border: 2px solid transparent;
             background: white;
-            background-image: linear-gradient(white, white), 
-                              linear-gradient(135deg, var(--gray-100), var(--gray-200));
+            background-image: linear-gradient(white, white),
+                linear-gradient(135deg, var(--gray-100), var(--gray-200));
             background-origin: border-box;
             background-clip: padding-box, border-box;
             border-radius: var(--radius-lg);
@@ -639,7 +772,7 @@
             font-weight: 700;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
             color: var(--gray-800);
             display: flex;
             align-items: center;
@@ -649,9 +782,9 @@
 
         .option-btn:hover {
             transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 12px 24px rgba(99,102,241,0.15), 0 4px 8px rgba(0,0,0,0.05);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15), 0 4px 8px rgba(0, 0, 0, 0.05);
             background-image: linear-gradient(white, white),
-                              linear-gradient(135deg, var(--primary), var(--primary-dark));
+                linear-gradient(135deg, var(--primary), var(--primary-dark));
         }
 
         .option-btn:before {
@@ -661,7 +794,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, transparent, rgba(99,102,241,0.03));
+            background: linear-gradient(135deg, transparent, rgba(99, 102, 241, 0.03));
             opacity: 0;
             transition: opacity 0.2s ease;
         }
@@ -690,31 +823,56 @@
         }
 
         @keyframes correctBounce {
-            0% { 
+            0% {
                 transform: scale(1);
                 box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
             }
-            25% { 
+
+            25% {
                 transform: scale(0.95);
             }
-            50% { 
+
+            50% {
                 transform: scale(1.1);
                 box-shadow: 0 0 0 20px rgba(16, 185, 129, 0);
             }
-            100% { 
+
+            100% {
                 transform: scale(1);
                 box-shadow: 0 0 0 40px rgba(16, 185, 129, 0);
             }
         }
 
         @keyframes wrongWobble {
-            0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
-            15% { transform: translateX(-10px) rotate(-5deg) scale(0.95); }
-            30% { transform: translateX(10px) rotate(5deg) scale(0.95); }
-            45% { transform: translateX(-8px) rotate(-3deg) scale(0.97); }
-            60% { transform: translateX(8px) rotate(3deg) scale(0.97); }
-            75% { transform: translateX(-4px) rotate(-1deg) scale(0.99); }
-            85% { transform: translateX(4px) rotate(1deg) scale(0.99); }
+
+            0%,
+            100% {
+                transform: translateX(0) rotate(0deg) scale(1);
+            }
+
+            15% {
+                transform: translateX(-10px) rotate(-5deg) scale(0.95);
+            }
+
+            30% {
+                transform: translateX(10px) rotate(5deg) scale(0.95);
+            }
+
+            45% {
+                transform: translateX(-8px) rotate(-3deg) scale(0.97);
+            }
+
+            60% {
+                transform: translateX(8px) rotate(3deg) scale(0.97);
+            }
+
+            75% {
+                transform: translateX(-4px) rotate(-1deg) scale(0.99);
+            }
+
+            85% {
+                transform: translateX(4px) rotate(1deg) scale(0.99);
+            }
         }
 
         /* Celebration Particles (CSS-based) */
@@ -723,26 +881,36 @@
                 transform: translate(0, 0) scale(0) rotate(0deg);
                 opacity: 0;
             }
+
             20% {
                 transform: translate(0, 0) scale(1.2) rotate(90deg);
                 opacity: 1;
             }
+
             100% {
                 transform:
-                    translateX(calc(cos(var(--angle)) * var(--distance)))
-                    translateY(calc(sin(var(--angle)) * var(--distance)))
-                    scale(0.3)
-                    rotate(360deg);
+                    translateX(calc(cos(var(--angle)) * var(--distance))) translateY(calc(sin(var(--angle)) * var(--distance))) scale(0.3) rotate(360deg);
                 opacity: 0;
             }
         }
 
-        .celebration-particle { will-change: transform, opacity; }
+        .celebration-particle {
+            will-change: transform, opacity;
+        }
 
         @keyframes correctPop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.15);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(74, 222, 128, 0);
+            }
         }
 
         /* Draw Mode Styles */
@@ -750,10 +918,10 @@
             position: relative;
             border: 5px solid transparent;
             background: linear-gradient(white, white) padding-box,
-                        linear-gradient(90deg, #667eea, #764ba2) border-box;
+                linear-gradient(90deg, #667eea, #764ba2) border-box;
             border-radius: 25px;
             margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         canvas {
@@ -791,7 +959,7 @@
             border-radius: 20px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .clear-btn {
@@ -806,7 +974,7 @@
 
         .control-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
 
         .control-btn:active {
@@ -826,7 +994,7 @@
             border-radius: var(--radius-xl);
             z-index: 1000;
             display: none;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             letter-spacing: -0.02em;
@@ -843,21 +1011,38 @@
         }
 
         /* Loading skeleton animation */
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
+        @keyframes shimmerSkeleton {
+            0% {
+                background-position: -1000px 0;
+            }
+
+            100% {
+                background-position: 1000px 0;
+            }
         }
+
         .skeleton {
             background: linear-gradient(90deg, var(--gray-100) 0%, var(--gray-50) 50%, var(--gray-100) 100%);
             background-size: 1000px 100%;
-            animation: shimmer 2s infinite;
+            animation: shimmerSkeleton 2s infinite;
             border-radius: var(--radius);
         }
+
         /* Smooth page transitions */
-        .fade-transition { animation: fadeTransition 0.3s ease-out; }
+        .fade-transition {
+            animation: fadeTransition 0.3s ease-out;
+        }
+
         @keyframes fadeTransition {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Info feedback style for subtle hints */
@@ -868,18 +1053,43 @@
         }
 
         @keyframes successPop {
-            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); }
-            50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); }
-            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.2) rotate(10deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            }
         }
 
         @keyframes errorShake {
-            0% { transform: translate(-50%, -50%) scale(0); }
-            20% { transform: translate(-50%, -50%) scale(1.1) rotate(-5deg); }
-            40% { transform: translate(-48%, -50%) scale(1) rotate(5deg); }
-            60% { transform: translate(-52%, -50%) scale(1) rotate(-5deg); }
-            80% { transform: translate(-49%, -50%) scale(1) rotate(2deg); }
-            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+            }
+
+            20% {
+                transform: translate(-50%, -50%) scale(1.1) rotate(-5deg);
+            }
+
+            40% {
+                transform: translate(-48%, -50%) scale(1) rotate(5deg);
+            }
+
+            60% {
+                transform: translate(-52%, -50%) scale(1) rotate(-5deg);
+            }
+
+            80% {
+                transform: translate(-49%, -50%) scale(1) rotate(2deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            }
         }
 
         .instruction {
@@ -892,22 +1102,40 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         @keyframes fadeOut {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(10px); }
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(10px);
+            }
         }
+
         @keyframes sparkle {
             0% {
                 opacity: 0;
                 transform: scale(0) rotate(0deg);
             }
+
             50% {
                 opacity: 1;
                 transform: scale(1.2) rotate(180deg);
             }
+
             100% {
                 opacity: 0;
                 transform: scale(0.8) rotate(360deg) translateY(-50px);
@@ -926,8 +1154,15 @@
         }
 
         @keyframes letterFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
         }
 
         .start-screen {
@@ -969,8 +1204,15 @@
         }
 
         @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
         }
 
         /* Enhanced Settings Modal */
@@ -994,12 +1236,13 @@
         }
 
         @keyframes modalFadeIn {
-            from { 
+            from {
                 opacity: 0;
                 backdrop-filter: blur(0px);
                 -webkit-backdrop-filter: blur(0px);
             }
-            to { 
+
+            to {
                 opacity: 1;
                 backdrop-filter: blur(12px);
                 -webkit-backdrop-filter: blur(12px);
@@ -1014,18 +1257,19 @@
             max-width: 480px;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
             animation: modalSlideUp 0.3s var(--ease-out-expo);
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
         }
 
         @keyframes modalSlideUp {
-            from { 
+            from {
                 transform: translateY(20px) scale(0.98);
                 opacity: 0;
             }
-            to { 
+
+            to {
                 transform: translateY(0) scale(1);
                 opacity: 1;
             }
@@ -1046,7 +1290,9 @@
             letter-spacing: -0.02em;
         }
 
-        .settings-body { padding: 30px; }
+        .settings-body {
+            padding: 30px;
+        }
 
         .settings-section {
             background: white;
@@ -1072,16 +1318,22 @@
             list-style: none;
             cursor: pointer;
         }
-        .advanced-settings summary::-webkit-details-marker { display: none; }
+
+        .advanced-settings summary::-webkit-details-marker {
+            display: none;
+        }
+
         .advanced-settings summary::after {
             content: '▶️';
             position: absolute;
-            right: 0; top: 50%;
+            right: 0;
+            top: 50%;
             transform: translateY(-50%) scale(0.7);
             transition: transform 0.2s;
             font-size: 16px;
         }
-        .advanced-settings[open] > summary::after {
+
+        .advanced-settings[open]>summary::after {
             transform: translateY(-50%) scale(0.7) rotate(90deg);
         }
 
@@ -1097,7 +1349,9 @@
             border-radius: 14px;
         }
 
-        .setting-group { margin-bottom: 20px; }
+        .setting-group {
+            margin-bottom: 20px;
+        }
 
         .setting-label {
             font-weight: 500;
@@ -1110,14 +1364,23 @@
         }
 
         /* New Settings Styles */
-        .toggle-group { display: flex; gap: 6px; }
-        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .toggle-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
         .theme-button {
             padding: 16px;
             background: white;
             border: 2px solid transparent;
-            background-image: linear-gradient(white, white), 
-                              linear-gradient(135deg, var(--gray-100), var(--gray-200));
+            background-image: linear-gradient(white, white),
+                linear-gradient(135deg, var(--gray-100), var(--gray-200));
             background-origin: border-box;
             background-clip: padding-box, border-box;
             border-radius: var(--radius-lg);
@@ -1126,15 +1389,18 @@
             transition: all 0.2s var(--ease-spring);
             position: relative;
         }
+
         .theme-button:hover {
             transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
         }
+
         .theme-button.active {
             background-image: linear-gradient(white, white),
-                              linear-gradient(135deg, var(--primary), var(--primary-dark));
-            box-shadow: 0 4px 12px rgba(99,102,241,0.15);
+                linear-gradient(135deg, var(--primary), var(--primary-dark));
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
         }
+
         .theme-button.active:after {
             content: '✓';
             position: absolute;
@@ -1152,19 +1418,77 @@
             font-weight: 600;
             animation: checkIn 0.3s var(--ease-spring);
         }
+
         @keyframes checkIn {
-            from { transform: scale(0) rotate(-180deg); }
-            to { transform: scale(1) rotate(0); }
+            from {
+                transform: scale(0) rotate(-180deg);
+            }
+
+            to {
+                transform: scale(1) rotate(0);
+            }
         }
-        .theme-icon { font-size: 28px; margin-bottom: 6px; }
-        .theme-name { font-size: 12px; font-weight: 500; color: #6b7280; }
-        .theme-button.active .theme-name { color: #667eea; font-weight: 600; }
-        .toggle-switch { position: relative; width: 48px; height: 24px; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .toggle-switch-label { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #e5e7eb; transition: all 0.3s; border-radius: 24px; }
-        .toggle-switch-label:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: all 0.3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .toggle-switch input:checked + .toggle-switch-label { background: #667eea; }
-        .toggle-switch input:checked + .toggle-switch-label:before { transform: translateX(24px); }
+
+        .theme-icon {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .theme-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .theme-button.active .theme-name {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-switch-label {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #e5e7eb;
+            transition: all 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-switch-label:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: all 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch input:checked+.toggle-switch-label {
+            background: #667eea;
+        }
+
+        .toggle-switch input:checked+.toggle-switch-label:before {
+            transform: translateX(24px);
+        }
 
         .toggle-btn {
             padding: 10px 20px;
@@ -1269,12 +1593,12 @@
             font-weight: 600;
             margin: 15px 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .github-link:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
             background: linear-gradient(135deg, #1f2937, #111827);
         }
 
@@ -1299,7 +1623,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(10px);
             display: none;
             align-items: center;
@@ -1317,18 +1641,19 @@
             max-width: 480px;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
             animation: achievementSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes achievementSlideIn {
-            from { 
-                transform: translateY(100px) scale(0.8); 
-                opacity: 0; 
+            from {
+                transform: translateY(100px) scale(0.8);
+                opacity: 0;
             }
-            to { 
-                transform: translateY(0) scale(1); 
-                opacity: 1; 
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
             }
         }
 
@@ -1366,7 +1691,7 @@
             padding: 15px;
             border-radius: 20px;
             background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             position: relative;
@@ -1403,9 +1728,17 @@
         }
 
         @keyframes badgeUnlock {
-            0% { transform: scale(0) rotate(0deg); }
-            50% { transform: scale(1.2) rotate(180deg); }
-            100% { transform: scale(1) rotate(360deg); }
+            0% {
+                transform: scale(0) rotate(0deg);
+            }
+
+            50% {
+                transform: scale(1.2) rotate(180deg);
+            }
+
+            100% {
+                transform: scale(1) rotate(360deg);
+            }
         }
 
         .badge-name {
@@ -1493,7 +1826,7 @@
             background: linear-gradient(135deg, #ffffff, #f9fafb);
             padding: 20px 25px;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             display: none;
             align-items: center;
             gap: 15px;
@@ -1514,23 +1847,32 @@
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
             border-radius: 20px;
             z-index: -1;
-            animation: shimmer 2s linear infinite;
+            animation: shimmerNotification 2s linear infinite;
         }
 
-        @keyframes shimmer {
-            0% { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
-            50% { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-            100% { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        @keyframes shimmerNotification {
+            0% {
+                background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            }
+
+            50% {
+                background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            }
+
+            100% {
+                background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            }
         }
 
         @keyframes notificationSlide {
-            from { 
-                transform: translateX(400px) scale(0.8); 
-                opacity: 0; 
+            from {
+                transform: translateX(400px) scale(0.8);
+                opacity: 0;
             }
-            to { 
-                transform: translateX(0) scale(1); 
-                opacity: 1; 
+
+            to {
+                transform: translateX(0) scale(1);
+                opacity: 1;
             }
         }
 
@@ -1540,10 +1882,23 @@
         }
 
         @keyframes celebrateIcon {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            25% { transform: scale(1.2) rotate(10deg); }
-            50% { transform: scale(1.1) rotate(-10deg); }
-            75% { transform: scale(1.15) rotate(5deg); }
+
+            0%,
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            25% {
+                transform: scale(1.2) rotate(10deg);
+            }
+
+            50% {
+                transform: scale(1.1) rotate(-10deg);
+            }
+
+            75% {
+                transform: scale(1.15) rotate(5deg);
+            }
         }
 
         .achievement-notification-content {
@@ -1570,11 +1925,13 @@
                 transform: translateX(50%);
                 animation: notificationSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
+
             @keyframes notificationSlide {
                 from {
                     transform: translate(50%, -150px) scale(0.8);
                     opacity: 0;
                 }
+
                 to {
                     transform: translate(50%, 0) scale(1);
                     opacity: 1;
@@ -1587,12 +1944,12 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(255,255,255,0.9);
+            background: rgba(255, 255, 255, 0.9);
             padding: 6px 12px;
             border-radius: 15px;
             font-size: 12px;
             font-weight: 600;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .difficulty-label {
@@ -1632,7 +1989,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(10px);
             display: none;
             align-items: center;
@@ -1650,17 +2007,18 @@
             max-width: 420px;
             text-align: center;
             animation: roundSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         }
 
         @keyframes roundSlideIn {
-            from { 
-                transform: translateY(-50px) scale(0.9); 
-                opacity: 0; 
+            from {
+                transform: translateY(-50px) scale(0.9);
+                opacity: 0;
             }
-            to { 
-                transform: translateY(0) scale(1); 
-                opacity: 1; 
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
             }
         }
 
@@ -1668,12 +2026,12 @@
             font-size: 32px;
             font-weight: bold;
             margin-bottom: 25px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .round-stats {
             margin-bottom: 30px;
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.15);
             padding: 20px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
@@ -1697,7 +2055,7 @@
         }
 
         .problem-letters {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 25px;
@@ -1741,17 +2099,18 @@
             padding: 30px;
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
             border-radius: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         @keyframes phonicsSlideIn {
-            from { 
-                opacity: 0; 
-                transform: scale(0.9); 
+            from {
+                opacity: 0;
+                transform: scale(0.9);
             }
-            to { 
-                opacity: 1; 
-                transform: scale(1); 
+
+            to {
+                opacity: 1;
+                transform: scale(1);
             }
         }
 
@@ -1771,13 +2130,21 @@
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            line-height: 1; /* keep emoji centered when we swap to 🔊 */
+            line-height: 1;
+            /* keep emoji centered when we swap to 🔊 */
             font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         }
 
         @keyframes phonicsCount {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
 
         .phonics-letter {
@@ -1792,8 +2159,15 @@
         }
 
         @keyframes letterPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
         }
 
         /* Mobile Responsiveness */
@@ -1802,13 +2176,13 @@
                 font-size: 36px;
                 padding: 20px;
             }
-            
+
             .sound-btn {
                 width: 120px;
                 height: 120px;
                 font-size: 60px;
             }
-            
+
             .letter-display {
                 font-size: 70px;
             }
@@ -1816,18 +2190,58 @@
 
         /* Ultra-narrow devices */
         @media (max-width: 320px) {
-            .header { font-size: 18px; padding: 10px 12px; }
-            .mode-btn { font-size: 14px; padding: 10px; }
-            .option-btn { font-size: 30px; padding: 16px; }
-            .sound-btn { width: 100px; height: 100px; font-size: 50px; }
-            .letter-display { font-size: 60px; }
-            .timer-display { font-size: 22px; }
-            .start-btn { font-size: 20px; padding: 16px 36px; }
-            .stars { font-size: 20px; }
-            .score-value { font-size: 18px; }
+            .header {
+                font-size: 18px;
+                padding: 10px 12px;
+            }
+
+            .mode-btn {
+                font-size: 14px;
+                padding: 10px;
+            }
+
+            .option-btn {
+                font-size: 30px;
+                padding: 16px;
+            }
+
+            .sound-btn {
+                width: 100px;
+                height: 100px;
+                font-size: 50px;
+            }
+
+            .letter-display {
+                font-size: 60px;
+            }
+
+            .timer-display {
+                font-size: 22px;
+            }
+
+            .start-btn {
+                font-size: 20px;
+                padding: 16px 36px;
+            }
+
+            .stars {
+                font-size: 20px;
+            }
+
+            .score-value {
+                font-size: 18px;
+            }
+
             /* Layout fixes for very small screens */
-            .score-panel { justify-content: space-between; }
-            .difficulty-indicator { width: 100%; margin-top: 8px; justify-content: center; }
+            .score-panel {
+                justify-content: space-between;
+            }
+
+            .difficulty-indicator {
+                width: 100%;
+                margin-top: 8px;
+                justify-content: center;
+            }
         }
 
         /* Multiplayer Mode Styles */
@@ -1841,13 +2255,20 @@
             display: none;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @keyframes slideDown {
-            from { transform: translateY(-100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .player-list {
@@ -1886,8 +2307,15 @@
         }
 
         @keyframes playerPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
         }
 
         .player-avatar {
@@ -1923,8 +2351,15 @@
         }
 
         @keyframes turnBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         .add-player-btn {
@@ -1954,7 +2389,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(10px);
             display: none;
             align-items: center;
@@ -1969,13 +2404,20 @@
             border-radius: 30px;
             width: 90%;
             max-width: 400px;
-            box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
             animation: modalBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes modalBounce {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .player-modal-title {
@@ -2061,7 +2503,7 @@
 
         .player-modal-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         /* Letter Formation Guide Styles */
@@ -2090,7 +2532,9 @@
         }
 
         @keyframes drawStroke {
-            to { stroke-dashoffset: 0; }
+            to {
+                stroke-dashoffset: 0;
+            }
         }
 
         .stroke-number {
@@ -2105,13 +2549,20 @@
             font-size: 14px;
             font-weight: bold;
             position: absolute;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             animation: numberPulse 2s infinite;
         }
 
         @keyframes numberPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
         }
 
         .formation-controls {
@@ -2157,8 +2608,13 @@
         }
 
         @keyframes dashboardSlide {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
+            from {
+                transform: translateX(100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
         }
 
         .dashboard-header {
@@ -2168,7 +2624,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
         .dashboard-title {
@@ -2186,7 +2642,7 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
             width: 40px;
@@ -2198,7 +2654,7 @@
         }
 
         .dashboard-close:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.3);
             transform: scale(1.1);
         }
 
@@ -2213,7 +2669,7 @@
             border-radius: 20px;
             padding: 25px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
 
         .dashboard-section-title {
@@ -2311,7 +2767,7 @@
         .heatmap-cell:hover {
             transform: scale(1.2);
             z-index: 10;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .heatmap-legend {
@@ -2411,7 +2867,7 @@
 
         .theme-option:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .theme-option.active {
@@ -2447,7 +2903,7 @@
             background: white;
             padding: 8px 15px;
             border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             font-size: 14px;
             font-weight: 600;
             color: #764ba2;
@@ -2455,8 +2911,15 @@
         }
 
         @keyframes associationBounce {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-5px); }
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-5px);
+            }
         }
 
         .association-icon {
@@ -2527,7 +2990,8 @@
             border-radius: 20px;
             overflow: hidden;
             margin-top: 60px;
-            touch-action: none; /* Prevent page scroll while dragging */
+            touch-action: none;
+            /* Prevent page scroll while dragging */
         }
 
         .rain-basket {
@@ -2544,7 +3008,7 @@
             color: white;
             font-weight: bold;
             transition: left 0.1s;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .falling-letter {
@@ -2560,12 +3024,17 @@
             align-items: center;
             justify-content: center;
             animation: letterFall linear;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         @keyframes letterFall {
-            from { transform: translateY(-60px) rotate(0deg); }
-            to { transform: translateY(460px) rotate(360deg); }
+            from {
+                transform: translateY(-60px) rotate(0deg);
+            }
+
+            to {
+                transform: translateY(460px) rotate(360deg);
+            }
         }
 
         .rain-target-letter {
@@ -2599,7 +3068,7 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             transform-style: preserve-3d;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .memory-card:hover {
@@ -2640,9 +3109,17 @@
         }
 
         @keyframes matchCelebration {
-            0% { transform: scale(1) rotateY(180deg); }
-            50% { transform: scale(1.2) rotateY(180deg) rotate(10deg); }
-            100% { transform: scale(1) rotateY(180deg); }
+            0% {
+                transform: scale(1) rotateY(180deg);
+            }
+
+            50% {
+                transform: scale(1.2) rotateY(180deg) rotate(10deg);
+            }
+
+            100% {
+                transform: scale(1) rotateY(180deg);
+            }
         }
 
         /* Voice Recording Styles */
@@ -2685,9 +3162,17 @@
         }
 
         @keyframes recordPulse {
-            0% { box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3); }
-            50% { box-shadow: 0 5px 40px rgba(239, 68, 68, 0.6); }
-            100% { box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3); }
+            0% {
+                box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 5px 40px rgba(239, 68, 68, 0.6);
+            }
+
+            100% {
+                box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3);
+            }
         }
 
         .recording-indicator {
@@ -2703,8 +3188,15 @@
         }
 
         @keyframes recordBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
         }
 
         .voice-controls {
@@ -2750,13 +3242,13 @@
             background: white;
             border-radius: 15px;
             margin-bottom: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             transition: all 0.3s;
         }
 
         .recording-item:hover {
             transform: translateX(5px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .recording-info {
@@ -2809,15 +3301,20 @@
             background: linear-gradient(135deg, #ffffff, #f9fafb);
             padding: 40px;
             border-radius: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             text-align: center;
             z-index: 5000;
             animation: announcementPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes announcementPop {
-            from { transform: translate(-50%, -50%) scale(0); }
-            to { transform: translate(-50%, -50%) scale(1); }
+            from {
+                transform: translate(-50%, -50%) scale(0);
+            }
+
+            to {
+                transform: translate(-50%, -50%) scale(1);
+            }
         }
 
         .minigame-announcement-title {
@@ -2843,8 +3340,13 @@
         }
 
         @keyframes iconSpin {
-            from { transform: rotate(0deg) scale(0); }
-            to { transform: rotate(360deg) scale(1); }
+            from {
+                transform: rotate(0deg) scale(0);
+            }
+
+            to {
+                transform: rotate(360deg) scale(1);
+            }
         }
 
         /* Focus Mode Styles */
@@ -2897,9 +3399,19 @@
         }
 
         @keyframes focusWrongShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
         }
 
         .focus-mode .sound-btn {
@@ -2976,7 +3488,7 @@
             background: white;
             border-radius: 50%;
             transition: transform 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .focus-switch.active .focus-switch-thumb {
@@ -3003,8 +3515,15 @@
         }
 
         @keyframes streakFloat {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-5px); }
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(-5px);
+            }
         }
 
         .streak-icon {
@@ -3013,9 +3532,19 @@
         }
 
         @keyframes flameDance {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            25% { transform: scale(1.1) rotate(-5deg); }
-            75% { transform: scale(1.1) rotate(5deg); }
+
+            0%,
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            25% {
+                transform: scale(1.1) rotate(-5deg);
+            }
+
+            75% {
+                transform: scale(1.1) rotate(5deg);
+            }
         }
 
         .streak-number {
@@ -3032,7 +3561,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0, 0, 0, 0.9);
             display: none;
             align-items: center;
             justify-content: center;
@@ -3049,8 +3578,13 @@
         }
 
         @keyframes streakModalBounce {
-            from { transform: scale(0) rotate(0deg); }
-            to { transform: scale(1) rotate(360deg); }
+            from {
+                transform: scale(0) rotate(0deg);
+            }
+
+            to {
+                transform: scale(1) rotate(360deg);
+            }
         }
 
         .streak-milestone-icon {
@@ -3060,8 +3594,17 @@
         }
 
         @keyframes milestoneGlow {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5)); }
-            50% { transform: scale(1.1); filter: drop-shadow(0 0 40px rgba(251, 191, 36, 0.8)); }
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5));
+            }
+
+            50% {
+                transform: scale(1.1);
+                filter: drop-shadow(0 0 40px rgba(251, 191, 36, 0.8));
+            }
         }
 
         .streak-milestone-title {
@@ -3115,8 +3658,15 @@
         }
 
         @keyframes todayPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.15);
+            }
         }
 
         /* Celebration Customization Styles */
@@ -3146,7 +3696,7 @@
 
         .celebration-option:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         .celebration-option.selected {
@@ -3195,9 +3745,20 @@
         }
 
         @keyframes animalBounce {
-            0% { transform: scale(0) rotate(0deg); opacity: 0; }
-            50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
-            100% { transform: scale(0) rotate(360deg); opacity: 0; }
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.5) rotate(180deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+            }
         }
 
         .celebration-vehicles {
@@ -3209,11 +3770,12 @@
         }
 
         @keyframes vehicleDrive {
-            from { 
+            from {
                 left: -100px;
                 transform: translateY(-50%) rotate(0deg);
             }
-            to { 
+
+            to {
                 left: calc(100% + 100px);
                 transform: translateY(-50%) rotate(360deg);
             }
@@ -3228,12 +3790,13 @@
         }
 
         @keyframes spaceFloat {
-            0% { 
+            0% {
                 bottom: 50%;
                 opacity: 1;
                 transform: translateX(-50%) scale(1);
             }
-            100% { 
+
+            100% {
                 bottom: 100%;
                 opacity: 0;
                 transform: translateX(-50%) scale(0.5);
@@ -3249,10 +3812,23 @@
         }
 
         @keyframes dinoStomp {
-            0%, 100% { transform: scale(1) translateY(0); }
-            25% { transform: scale(1.2) translateY(-20px) rotate(-10deg); }
-            50% { transform: scale(1.3) translateY(0) rotate(0deg); }
-            75% { transform: scale(1.2) translateY(-20px) rotate(10deg); }
+
+            0%,
+            100% {
+                transform: scale(1) translateY(0);
+            }
+
+            25% {
+                transform: scale(1.2) translateY(-20px) rotate(-10deg);
+            }
+
+            50% {
+                transform: scale(1.3) translateY(0) rotate(0deg);
+            }
+
+            75% {
+                transform: scale(1.2) translateY(-20px) rotate(10deg);
+            }
         }
 
         .celebration-hearts {
@@ -3270,9 +3846,11 @@
                 opacity: 1;
                 transform: translateX(-50%) scale(0);
             }
+
             50% {
                 transform: translateX(-50%) scale(1.2);
             }
+
             100% {
                 bottom: 80%;
                 opacity: 0;
@@ -3291,76 +3869,83 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
-        
+
         /* Final iPhone optimizations for perfect fit */
         @supports (-webkit-touch-callout: none) {
+
             /* iOS-specific styles */
             .container {
                 height: -webkit-fill-available;
             }
-            
+
             .game-area {
                 -webkit-overflow-scrolling: none;
                 overflow: hidden;
             }
-            
+
             /* Ensure buttons are large enough for kids */
             .option-btn {
                 min-height: 60px;
                 min-width: 60px;
             }
         }
-        
+
         /* iPhone landscape mode */
         @media (max-height: 450px) and (orientation: landscape) {
             .header {
                 padding: 8px 12px;
                 padding-top: calc(8px + env(safe-area-inset-top, 0px));
             }
-            
+
             .header-title {
                 font-size: 14px;
             }
-            
+
             .game-area {
                 padding: 8px;
             }
-            
+
             .letter-display {
                 font-size: min(35vh, 90px);
                 margin: 4px 0;
             }
-            
-            .options-grid {
+
+            .options {
                 grid-template-columns: repeat(4, 1fr);
                 gap: 8px;
             }
-            
+
             .option-btn {
                 height: min(30vh, 65px);
                 font-size: min(10vh, 30px);
             }
-            
+
             .sound-btn {
                 width: 44px;
                 height: 44px;
                 font-size: 22px;
             }
-            
+
             .score-panel {
                 padding: 6px 10px;
                 margin-bottom: 6px;
             }
-            
+
             .mode-selector {
                 padding: 6px 10px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -3369,9 +3954,10 @@
                 <span class="badge-count" id="badgeCount">0</span>
             </button>
             <div class="header-title">Letter Learning</div>
-            <button class="settings-btn" onclick="openSettings()" id="settingsBtn" aria-label="Open settings (hold for Parent Dashboard)">⚙️</button>
+            <button class="settings-btn" onclick="openSettings()" id="settingsBtn"
+                aria-label="Open settings (hold for Parent Dashboard)">⚙️</button>
         </div>
-        
+
         <!-- Player Selector (Multiplayer Mode) -->
         <div class="player-selector" id="playerSelector">
             <div class="player-list" id="playerList">
@@ -3382,12 +3968,14 @@
                 <span>Add Player</span>
             </button>
         </div>
-        
+
         <div class="mode-selector">
-            <button class="mode-btn active" onclick="setMode('identify', this)" aria-pressed="true" aria-label="Find letters mode">
+            <button class="mode-btn active" onclick="setMode('identify', this)" aria-pressed="true"
+                aria-label="Find letters mode">
                 <span>Find Letters</span>
             </button>
-            <button class="mode-btn" onclick="setMode('draw', this)" aria-pressed="false" aria-label="Draw letters mode">
+            <button class="mode-btn" onclick="setMode('draw', this)" aria-pressed="false"
+                aria-label="Draw letters mode">
                 <span>Draw Letters</span>
             </button>
         </div>
@@ -3399,7 +3987,8 @@
             </div>
             <div class="score-right">
                 <div class="score-value">Score: <span id="scoreDisplay">0</span></div>
-                <div><span id="correctCount">0</span>/<span id="totalCount">15</span> | ❌ <span id="wrongCount">0</span></div>
+                <div><span id="correctCount">0</span>/<span id="totalCount">15</span> | ❌ <span id="wrongCount">0</span>
+                </div>
             </div>
             <div class="difficulty-indicator" id="difficultyIndicator">
                 <span class="difficulty-label">Difficulty:</span>
@@ -3425,7 +4014,8 @@
                 <p>🔊 Make sure your volume is turned up</p>
                 <p>⭐ Earn stars and points as you play</p>
                 <p>🎯 Complete rounds to unlock new challenges</p>
-                <button class="start-btn" onclick="startIdentifyGame(true)" aria-label="Start the game">Let's Start!</button>
+                <button class="start-btn" onclick="startIdentifyGame(true)" aria-label="Start the game">Let's
+                    Start!</button>
             </div>
         </div>
 
@@ -3447,7 +4037,8 @@
                 <div class="streak-calendar" id="streakCalendar">
                     <!-- Calendar will be generated here -->
                 </div>
-                <button class="continue-btn" onclick="closeStreakModal()" aria-label="Close streak milestone">Keep Going!</button>
+                <button class="continue-btn" onclick="closeStreakModal()" aria-label="Close streak milestone">Keep
+                    Going!</button>
             </div>
         </div>
 
@@ -3461,23 +4052,30 @@
                         <div class="setting-group">
                             <label class="setting-label">Timer</label>
                             <div class="toggle-group">
-                                <button class="toggle-btn" id="timerOff" onclick="setTimerMode('off')" aria-pressed="false" aria-label="Turn timer off">Off</button>
-                                <button class="toggle-btn active" id="timerOn" onclick="setTimerMode('on')" aria-pressed="true" aria-label="Turn timer on">On</button>
+                                <button class="toggle-btn" id="timerOff" onclick="setTimerMode('off')"
+                                    aria-pressed="false" aria-label="Turn timer off">Off</button>
+                                <button class="toggle-btn active" id="timerOn" onclick="setTimerMode('on')"
+                                    aria-pressed="true" aria-label="Turn timer on">On</button>
                             </div>
                         </div>
                         <div class="setting-group">
                             <label class="setting-label">Letters</label>
                             <div class="toggle-group">
-                                <button class="toggle-btn" id="caseLower" onclick="setCaseMode('lower')" aria-pressed="false" aria-label="Use lowercase letters">abc</button>
-                                <button class="toggle-btn" id="caseUpper" onclick="setCaseMode('upper')" aria-pressed="false" aria-label="Use uppercase letters">ABC</button>
-                                <button class="toggle-btn active" id="caseMixed" onclick="setCaseMode('mixed')" aria-pressed="true" aria-label="Use both cases">Both</button>
+                                <button class="toggle-btn" id="caseLower" onclick="setCaseMode('lower')"
+                                    aria-pressed="false" aria-label="Use lowercase letters">abc</button>
+                                <button class="toggle-btn" id="caseUpper" onclick="setCaseMode('upper')"
+                                    aria-pressed="false" aria-label="Use uppercase letters">ABC</button>
+                                <button class="toggle-btn active" id="caseMixed" onclick="setCaseMode('mixed')"
+                                    aria-pressed="true" aria-label="Use both cases">Both</button>
                             </div>
                         </div>
                         <div class="setting-group">
                             <label class="setting-label">Sound</label>
                             <div class="toggle-group">
-                                <button class="toggle-btn active" id="soundOn" onclick="setSoundMode('on')" aria-pressed="true" aria-label="Turn sound on">On</button>
-                                <button class="toggle-btn" id="soundOff" onclick="setSoundMode('off')" aria-pressed="false" aria-label="Turn sound off">Off</button>
+                                <button class="toggle-btn active" id="soundOn" onclick="setSoundMode('on')"
+                                    aria-pressed="true" aria-label="Turn sound on">On</button>
+                                <button class="toggle-btn" id="soundOff" onclick="setSoundMode('off')"
+                                    aria-pressed="false" aria-label="Turn sound off">Off</button>
                             </div>
                         </div>
                     </div>
@@ -3485,9 +4083,18 @@
                     <div class="settings-section">
                         <div class="settings-section-title">Visual Theme</div>
                         <div class="theme-grid">
-                            <button class="theme-button active" onclick="setVisualTheme('classic')"><div class="theme-icon">🔤</div><div class="theme-name">Classic</div></button>
-                            <button class="theme-button" onclick="setVisualTheme('animals')"><div class="theme-icon">🐾</div><div class="theme-name">Animals</div></button>
-                            <button class="theme-button" onclick="setVisualTheme('colors')"><div class="theme-icon">🎨</div><div class="theme-name">Colors</div></button>
+                            <button class="theme-button active" onclick="setVisualTheme('classic')">
+                                <div class="theme-icon">🔤</div>
+                                <div class="theme-name">Classic</div>
+                            </button>
+                            <button class="theme-button" onclick="setVisualTheme('animals')">
+                                <div class="theme-icon">🐾</div>
+                                <div class="theme-name">Animals</div>
+                            </button>
+                            <button class="theme-button" onclick="setVisualTheme('colors')">
+                                <div class="theme-icon">🎨</div>
+                                <div class="theme-name">Colors</div>
+                            </button>
                         </div>
                     </div>
 
@@ -3503,30 +4110,36 @@
                         <div class="setting-group">
                             <label class="setting-label">Accessibility</label>
                             <div class="accessibility-options">
-                                <label class="checkbox-label"><input type="checkbox" id="focusModeCheck" onchange="toggleFocusMode()"><span> Focus Mode</span></label>
-                                <label class="checkbox-label"><input type="checkbox" id="highContrastCheck" onchange="toggleHighContrast()"><span> High Contrast</span></label>
-                                <label class="checkbox-label"><input type="checkbox" id="reduceMotionCheck" onchange="toggleReduceMotion()"><span> Reduce Motion</span></label>
+                                <label class="checkbox-label"><input type="checkbox" id="focusModeCheck"
+                                        onchange="toggleFocusMode()"><span> Focus Mode</span></label>
+                                <label class="checkbox-label"><input type="checkbox" id="highContrastCheck"
+                                        onchange="toggleHighContrast()"><span> High Contrast</span></label>
+                                <label class="checkbox-label"><input type="checkbox" id="reduceMotionCheck"
+                                        onchange="toggleReduceMotion()"><span> Reduce Motion</span></label>
                             </div>
                         </div>
                     </details>
 
                     <button class="close-settings" onclick="closeSettings()">Done</button>
                 </div>
-                
+
                 <!-- About Section -->
                 <div class="about-section">
                     <div class="about-divider"></div>
                     <div class="about-content">
                         <div class="about-title">💝 About This Game</div>
                         <div class="about-text">
-                            This game was created with love by <strong>Jeffrey Emanuel</strong> for his own children and is made freely available to all families.
+                            This game was created with love by <strong>Jeffrey Emanuel</strong> for his own children and
+                            is made freely available to all families.
                         </div>
                         <div class="about-text">
                             We believe every child deserves access to quality educational tools.
                         </div>
-                        <a href="https://github.com/Dicklesworthstone/letter_learning_game" target="_blank" class="github-link">
+                        <a href="https://github.com/Dicklesworthstone/letter_learning_game" target="_blank"
+                            class="github-link">
                             <svg class="github-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                <path
+                                    d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                             </svg>
                             <span>View Source Code on GitHub</span>
                         </a>
@@ -3545,7 +4158,7 @@
                     <div class="achievement-title">🏆 Your Achievements</div>
                     <div class="achievement-subtitle">Keep playing to unlock them all!</div>
                 </div>
-                
+
                 <div class="achievement-stats">
                     <div class="stat-row">
                         <span class="stat-label">Total Stars Earned:</span>
@@ -3564,12 +4177,13 @@
                         <span class="stat-value" id="totalPlayTime">0 min</span>
                     </div>
                 </div>
-                
+
                 <div class="badges-grid" id="badgesGrid">
                     <!-- Badges will be dynamically added here -->
                 </div>
-                
-                <button class="close-achievements" onclick="closeAchievements()" aria-label="Close achievements">Continue Playing</button>
+
+                <button class="close-achievements" onclick="closeAchievements()"
+                    aria-label="Close achievements">Continue Playing</button>
             </div>
         </div>
 
@@ -3586,7 +4200,7 @@
         <div class="player-modal" id="playerModal">
             <div class="player-modal-content">
                 <div class="player-modal-title">Create New Player</div>
-                
+
                 <div class="avatar-grid" id="avatarGrid">
                     <div class="avatar-option" data-avatar="🦁">🦁</div>
                     <div class="avatar-option" data-avatar="🐻">🐻</div>
@@ -3599,9 +4213,10 @@
                     <div class="avatar-option" data-avatar="🌟">🌟</div>
                     <div class="avatar-option" data-avatar="🚀">🚀</div>
                 </div>
-                
-                <input type="text" class="player-name-input" id="playerNameInput" placeholder="Enter player name" maxlength="15">
-                
+
+                <input type="text" class="player-name-input" id="playerNameInput" placeholder="Enter player name"
+                    maxlength="15">
+
                 <div class="player-modal-buttons">
                     <button class="player-modal-btn player-modal-cancel" onclick="closePlayerModal()">Cancel</button>
                     <button class="player-modal-btn player-modal-save" onclick="saveNewPlayer()">Create Player</button>
@@ -3616,7 +4231,7 @@
                 <div class="dashboard-subtitle">Track progress and get insights for all players</div>
                 <button class="dashboard-close" onclick="closeParentDashboard()" aria-label="Close dashboard">✕</button>
             </div>
-            
+
             <div class="dashboard-content">
                 <!-- Player Progress Section -->
                 <div class="dashboard-section">
@@ -3628,7 +4243,7 @@
                         <!-- Player stats will be added here -->
                     </div>
                 </div>
-                
+
                 <!-- Letter Performance Heatmap -->
                 <div class="dashboard-section">
                     <div class="dashboard-section-title">
@@ -3644,7 +4259,7 @@
                         <span>Mastered</span>
                     </div>
                 </div>
-                
+
                 <!-- Insights & Recommendations -->
                 <div class="dashboard-section">
                     <div class="dashboard-section-title">
@@ -3655,7 +4270,7 @@
                         <!-- Insights will be added here -->
                     </ul>
                 </div>
-                
+
                 <!-- Activity Recommendations -->
                 <div class="dashboard-section">
                     <div class="dashboard-section-title">
@@ -3691,7 +4306,8 @@
                     <div class="problem-letters-title">Letters to practice:</div>
                     <div class="problem-letters-list" id="problemLettersList">None - Perfect! 🌟</div>
                 </div>
-                <button class="continue-btn" onclick="startNextRound()" aria-label="Continue to the next round">Continue to Round <span id="nextRoundNum">2</span> →</button>
+                <button class="continue-btn" onclick="startNextRound()" aria-label="Continue to the next round">Continue
+                    to Round <span id="nextRoundNum">2</span> →</button>
             </div>
         </div>
     </div>
@@ -3825,13 +4441,13 @@
             'g': { icon: '🍇', word: 'Grapes' },
             'h': { icon: '🏠', word: 'House' },
             'i': { icon: '🍨', word: 'Ice cream' },
-            'j': { icon: '🧺', word: 'Juice' },
-            'k': { icon: '🥘', word: 'Koala' },
+            'j': { icon: '🧃', word: 'Juice' },
+            'k': { icon: '🐨', word: 'Koala' },
             'l': { icon: '🦁', word: 'Lion' },
             'm': { icon: '🌙', word: 'Moon' },
             'n': { icon: '🥜', word: 'Nut' },
             'o': { icon: '🦉', word: 'Owl' },
-            'p': { icon: '🍉', word: 'Pizza' },
+            'p': { icon: '🍕', word: 'Pizza' },
             'q': { icon: '👑', word: 'Queen' },
             'r': { icon: '🌈', word: 'Rainbow' },
             's': { icon: '☀️', word: 'Sun' },
@@ -3892,35 +4508,65 @@
         // Letter collections
         const lowerLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
         const upperLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        
-        // Phonetic sounds spelled out for primitive TTS systems
+
+        // Phonetic sounds spelled out for primitive TTS systems (natural pacing + anchor word)
         const phoneticSounds = {
             'a': 'ah, ah, ah, as in apple',
             'b': 'buh, buh, buh, as in ball',
             'c': 'kuh, kuh, kuh, as in cat',
             'd': 'duh, duh, duh, as in dog',
             'e': 'eh, eh, eh, as in egg',
-            'f': 'fff, fff, fff, as in fish',
+            'f': 'fuh, fuh, fuh, as in fish',
             'g': 'guh, guh, guh, as in goat',
             'h': 'huh, huh, huh, as in hat',
             'i': 'ih, ih, ih, as in igloo',
             'j': 'juh, juh, juh, as in jump',
             'k': 'kuh, kuh, kuh, as in kite',
-            'l': 'lll, lll, lll, as in lion',
+            'l': 'luh, luh, luh, as in lion',
             'm': 'mmm, mmm, mmm, as in moon',
-            'n': 'nnn, nnn, nnn, as in nose',
+            'n': 'nuh, nuh, nuh, as in nose',
             'o': 'aw, aw, aw, as in octopus',
             'p': 'puh, puh, puh, as in pig',
             'q': 'kwuh, kwuh, kwuh, as in queen',
-            'r': 'rrr, rrr, rrr, as in rabbit',
+            'r': 'ruh, ruh, ruh, as in rabbit',
             's': 'sss, sss, sss, as in snake',
             't': 'tuh, tuh, tuh, as in turtle',
             'u': 'uh, uh, uh, as in umbrella',
-            'v': 'vvv, vvv, vvv, as in violin',
+            'v': 'vuh, vuh, vuh, as in violin',
             'w': 'wuh, wuh, wuh, as in whale',
             'x': 'ks, ks, ks, as in fox',
             'y': 'yuh, yuh, yuh, as in yellow',
-            'z': 'zzz, zzz, zzz, as in zebra'
+            'z': 'zuh, zuh, zuh, as in zebra'
+        };
+
+        // Letter names spelled to coerce clear pronunciation on basic TTS engines
+        const letterNamePronunciations = {
+            'a': 'ay',
+            'b': 'bee',
+            'c': 'see',
+            'd': 'dee',
+            'e': 'ee',
+            'f': 'eff',
+            'g': 'gee',
+            'h': 'aitch',
+            'i': 'eye',
+            'j': 'jay',
+            'k': 'kay',
+            'l': 'ell',
+            'm': 'em',
+            'n': 'en',
+            'o': 'oh',
+            'p': 'pee',
+            'q': 'cue',
+            'r': 'ar',
+            's': 'ess',
+            't': 'tee',
+            'u': 'yoo',
+            'v': 'vee',
+            'w': 'double you',
+            'x': 'ex',
+            'y': 'why',
+            'z': 'zee'
         };
 
         function getLetterCollection() {
@@ -3931,61 +4577,61 @@
 
         function getRandomLetter() {
             let letters = getLetterCollection();
-            
+
             // Adaptive difficulty algorithm
             updateAdaptivePool(letters);
-            
+
             // Use adaptive pool if available
             if (adaptivePool.length > 0) {
                 const selected = adaptivePool[Math.floor(Math.random() * adaptivePool.length)];
-                
+
                 // Track recent letters (keep last 3)
                 recentLetters.push(selected.toLowerCase());
                 if (recentLetters.length > 3) recentLetters.shift();
-                
+
                 return selected;
             }
-            
+
             // Fallback to random selection
             const selected = letters[Math.floor(Math.random() * letters.length)];
             recentLetters.push(selected.toLowerCase());
             if (recentLetters.length > 3) recentLetters.shift();
-            
+
             return selected;
         }
 
         function updateAdaptivePool(availableLetters) {
             adaptivePool = [];
-            
+
             // Calculate difficulty weights for each letter
             const letterWeights = {};
-            
+
             availableLetters.forEach(letter => {
                 const key = letter.toLowerCase();
                 const perf = letterPerformance[key] || { correct: 0, total: 0, avgTime: 0 };
-                
+
                 // Calculate success rate (0-1)
                 const successRate = perf.total > 0 ? perf.correct / perf.total : 0.5;
-                
+
                 // Calculate weight based on performance
                 let weight = 1;
-                
+
                 // Letters with low success rate get higher weight
                 if (successRate < 0.3) weight = 5;
                 else if (successRate < 0.5) weight = 3;
                 else if (successRate < 0.7) weight = 2;
                 else if (successRate > 0.9 && perf.total > 3) weight = 0.5;
-                
+
                 // Increase weight for letters with errors
                 if (letterErrors[key]) {
                     weight += letterErrors[key] * 0.5;
                 }
-                
+
                 // Decrease weight for recently used letters
                 if (recentLetters.includes(key)) {
                     weight *= 0.3;
                 }
-                
+
                 // Adjust based on current difficulty level
                 if (difficultyLevel <= 2) {
                     // Easy mode: focus on easier letters
@@ -3994,10 +4640,10 @@
                     // Hard mode: focus on challenging letters
                     if (successRate < 0.5) weight *= 1.5;
                 }
-                
+
                 letterWeights[letter] = weight;
             });
-            
+
             // Build weighted pool
             availableLetters.forEach(letter => {
                 const weight = Math.ceil(letterWeights[letter]);
@@ -4005,7 +4651,7 @@
                     adaptivePool.push(letter);
                 }
             });
-            
+
             // Ensure minimum pool size
             if (adaptivePool.length < 10) {
                 adaptivePool = [...availableLetters];
@@ -4017,29 +4663,29 @@
             if (!letterPerformance[key]) {
                 letterPerformance[key] = { correct: 0, total: 0, avgTime: 0, times: [] };
             }
-            
+
             const perf = letterPerformance[key];
             perf.total++;
             if (correct) {
                 perf.correct++;
                 perf.times.push(responseTime);
-                
+
                 // Keep only last 10 times
                 if (perf.times.length > 10) perf.times.shift();
-                
+
                 // Calculate average time
                 perf.avgTime = perf.times.reduce((a, b) => a + b, 0) / perf.times.length;
-                
+
                 // Check for mastery (>90% success rate with at least 5 attempts)
                 if (perf.total >= 5 && (perf.correct / perf.total) > 0.9) {
                     lettersMastered.add(key);
                     checkAchievement('mastery', lettersMastered.size);
                 }
             }
-            
+
             // Update difficulty level based on overall performance
             updateDifficultyLevel();
-            
+
             // Save progress
             saveGameData();
         }
@@ -4050,23 +4696,23 @@
                 difficultyLevel = 1;
                 return;
             }
-            
+
             let totalCorrect = 0;
             let totalAttempts = 0;
             totalPerf.forEach(perf => {
                 totalCorrect += perf.correct;
                 totalAttempts += perf.total;
             });
-            
+
             const overallSuccess = totalAttempts > 0 ? totalCorrect / totalAttempts : 0;
-            
+
             // Adjust difficulty based on success rate and rounds
             if (overallSuccess > 0.85 && currentRound > 2) difficultyLevel = 5;
             else if (overallSuccess > 0.75 && currentRound > 1) difficultyLevel = 4;
             else if (overallSuccess > 0.65) difficultyLevel = 3;
             else if (overallSuccess > 0.5) difficultyLevel = 2;
             else difficultyLevel = 1;
-            
+
             // Update UI
             updateDifficultyIndicator();
         }
@@ -4093,7 +4739,7 @@
 
         function cancelSpeech() {
             if (speechSupported) {
-                try { speechSynthesis.cancel(); } catch (e) {}
+                try { speechSynthesis.cancel(); } catch (e) { }
             }
         }
 
@@ -4102,61 +4748,30 @@
                 if (callback) callback();
                 return;
             }
-            
+
             cancelSpeech();
-            
-            // Improved pronunciation for letter names
+
+            // Improved pronunciation for letter names using unified map
             let textToSpeak = letter;
             const lowerLetter = letter.toLowerCase();
-            
-            // Letter names spelled phonetically for primitive TTS
-            const specialPronunciations = {
-                'a': 'ay',
-                'b': 'bee',
-                'c': 'see',
-                'd': 'dee',
-                'e': 'ee',
-                'f': 'eff',
-                'g': 'jee',
-                'h': 'aych',
-                'i': 'eye',
-                'j': 'jay',
-                'k': 'kay',
-                'l': 'ell',
-                'm': 'em',
-                'n': 'en',
-                'o': 'oh',
-                'p': 'pee',
-                'q': 'kyoo',
-                'r': 'are',
-                's': 'ess',
-                't': 'tee',
-                'u': 'you',
-                'v': 'vee',
-                'w': 'double you',
-                'x': 'ecks',
-                'y': 'why',
-                'z': 'zee'
-            };
-            
-            if (specialPronunciations[lowerLetter]) {
-                textToSpeak = specialPronunciations[lowerLetter];
+            if (letterNamePronunciations[lowerLetter]) {
+                textToSpeak = letterNamePronunciations[lowerLetter];
             }
-            
+
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.rate = 0.75;  // Slower for young children
+            utterance.rate = 0.7;  // Slower for young children
             utterance.pitch = 1.1;  // Friendly pitch
             utterance.volume = 1;
-            
+
             const selectedVoice = getBestVoice();
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
             }
-            
+
             if (callback) {
                 utterance.onend = callback;
             }
-            
+
             speechSynthesis.speak(utterance);
         }
 
@@ -4165,30 +4780,30 @@
                 if (callback) callback();
                 return;
             }
-            
+
             cancelSpeech();
-            
+
             // Clean up the phrase for better speech
             let cleanPhrase = phrase
                 .replace(/[!]+/g, '!')  // Remove excessive exclamation marks
                 .replace(/\.{2,}/g, '. ')  // Replace ellipsis with period
                 .replace(/\s+/g, ' ')  // Normalize whitespace
                 .trim();
-            
+
             const utterance = new SpeechSynthesisUtterance(cleanPhrase);
-            utterance.rate = 1.0;  // Normal speed for phrases
+            utterance.rate = 0.95;  // Slightly slower for clarity
             utterance.pitch = 1.05;  // Natural pitch
             utterance.volume = 1;
-            
+
             const selectedVoice = getBestVoice();
             if (selectedVoice) {
                 utterance.voice = selectedVoice;
             }
-            
+
             if (callback) {
                 utterance.onend = callback;
             }
-            
+
             speechSynthesis.speak(utterance);
         }
 
@@ -4197,91 +4812,48 @@
                 if (callback) callback();
                 return;
             }
-            
-            // Get the letter name pronunciation from speakLetter's list
-            const specialPronunciations = {
-                'a': 'ay',
-                'b': 'bee',
-                'c': 'see',
-                'd': 'dee',
-                'e': 'ee',
-                'f': 'eff',
-                'g': 'jee',
-                'h': 'aych',
-                'i': 'eye',
-                'j': 'jay',
-                'k': 'kay',
-                'l': 'ell',
-                'm': 'em',
-                'n': 'en',
-                'o': 'oh',
-                'p': 'pee',
-                'q': 'kyoo',
-                'r': 'are',
-                's': 'ess',
-                't': 'tee',
-                'u': 'you',
-                'v': 'vee',
-                'w': 'double you',
-                'x': 'ecks',
-                'y': 'why',
-                'z': 'zee'
-            };
-            
+
             const phoneticSound = phoneticSounds[letter.toLowerCase()];
             if (phoneticSound) {
                 cancelSpeech();
-                
+
                 // Step 1: Tell the child what letter it is - spell it phonetically
-                const letterSound = specialPronunciations[letter.toLowerCase()] || letter;
+                const letterSound = letterNamePronunciations[letter.toLowerCase()] || letter;
                 const letterName = letter.toUpperCase();
-                speakPhrase(`This is the letter ${letterSound}. ${letterSound}`, () => {
-                    // Pause for processing
+                speakPhrase(`This is the letter ${letterSound}.`, () => {
                     setTimeout(() => {
-                        // Step 2: Ask them to make the sound
-                        speakPhrase(`Can you make the ${letterSound} sound? Try it!`, () => {
-                            // Give child 3 seconds to try
+                        speakPhrase(`Can you make the ${letterSound} sound?`, () => {
+                            // Give child time to try
                             setTimeout(() => {
-                                // Step 3: Say "Good try" encouragingly
-                                speakPhrase(`Good try!`, () => {
-                                    // Small pause
+                                speakPhrase(`Good try.`, () => {
                                     setTimeout(() => {
-                                        // Step 4: Demonstrate the sound clearly
                                         speakPhrase(`Listen. The letter ${letterSound} makes this sound.`, () => {
-                                            // Pause before sound
                                             setTimeout(() => {
-                                                // Step 5: Say the phonetic sound slowly
                                                 const utterance = new SpeechSynthesisUtterance(phoneticSound);
-                                                utterance.rate = 0.6;  // Very slow for clarity
+                                                utterance.rate = 0.55;  // Very slow for clarity
                                                 utterance.pitch = 1.1;
                                                 utterance.volume = 1;
-                                                
                                                 const selectedVoice = getBestVoice();
                                                 if (selectedVoice) {
                                                     utterance.voice = selectedVoice;
                                                 }
-                                                
                                                 utterance.onend = () => {
-                                                    // Final pause
                                                     setTimeout(() => {
-                                                        // Step 6: Encourage repetition
-                                                        speakPhrase(`Now you try! Say the ${letterSound} sound!`, () => {
-                                                            // Give time for child to repeat
+                                                        speakPhrase(`Now you try. Say the ${letterSound} sound.`, () => {
                                                             setTimeout(() => {
                                                                 speakPhrase(`Great job!`, callback);
-                                                            }, 2000);
+                                                            }, 2200);
                                                         });
-                                                    }, 800);
+                                                    }, 900);
                                                 };
-                                                
                                                 speechSynthesis.speak(utterance);
-                                            }, 500);
+                                            }, 600);
                                         });
-                                    }, 300);
+                                    }, 400);
                                 });
-                            }, 3000);  // 3 seconds for child to try
+                            }, 3200);
                         });
-                    }, 800);  // Initial pause after letter name
+                    }, 900);
                 });
             } else {
                 if (callback) callback();
@@ -4293,18 +4865,18 @@
             const displayCorrect = currentPlayer ? currentPlayer.roundCorrect : roundCorrect;
             const displayWrong = currentPlayer ? currentPlayer.roundWrong : roundWrong;
             const displayRound = currentPlayer ? currentPlayer.currentRound : currentRound;
-            
+
             document.getElementById('scoreDisplay').textContent = displayScore;
             document.getElementById('correctCount').textContent = displayCorrect;
             document.getElementById('totalCount').textContent = QUESTIONS_PER_ROUND;
             document.getElementById('wrongCount').textContent = displayWrong;
             document.getElementById('roundNumber').textContent = displayRound;
-            
+
             // Update stars with animation
             const starCount = Math.min(5, Math.floor(displayScore / 100));
             const starsDisplay = document.getElementById('starsDisplay');
             starsDisplay.innerHTML = '';
-            
+
             for (let i = 0; i < 5; i++) {
                 const star = document.createElement('span');
                 star.className = 'star';
@@ -4321,35 +4893,35 @@
 
         function startTimer() {
             if (!timerEnabled) return;
-            
+
             clearTimer();
-            
+
             const duration = currentRound === 1 ? timerDuration : Math.max(5, timerDuration - 2);
             let timeLeft = duration;
             let lastSpokenCountdown = null;
-            
+
             const timerDisplay = document.getElementById('timerDisplay');
             const timerBar = document.getElementById('timerBar');
             const timerBarFill = document.getElementById('timerBarFill');
-            
+
             timerBar.style.display = 'block';
             timerBarFill.style.width = '100%';
             timerBarFill.className = 'timer-bar-fill';
-            
+
             timerDisplay.innerHTML = `⏱️ <span>${timeLeft}</span>`;
             timerDisplay.className = 'timer-display';
-            
+
             let startTime = Date.now();
-            
+
             currentTimer = setInterval(() => {
                 const elapsed = (Date.now() - startTime) / 1000;
                 timeLeft = Math.max(0, Math.ceil(duration - elapsed));
-                
+
                 const percentage = ((duration - elapsed) / duration) * 100;
                 timerBarFill.style.width = Math.max(0, percentage) + '%';
-                
+
                 timerDisplay.innerHTML = `⏱️ <span>${timeLeft}</span>`;
-                
+
                 if (timeLeft <= 3 && timeLeft > 0) {
                     timerDisplay.className = 'timer-display warning';
                     timerBarFill.classList.add('warning');
@@ -4362,7 +4934,7 @@
                     timerDisplay.className = 'timer-display critical';
                     timerBarFill.classList.add('critical');
                 }
-                
+
                 if (timeLeft <= 0) {
                     clearTimer();
                     timerDisplay.innerHTML = "⏰ Time's up!";
@@ -4411,7 +4983,7 @@
 
         function handleTimeUp() {
             if (waitingForPhonics) return;
-            
+
             roundWrong++;
             wrongAnswers++;
             totalQuestions++;
@@ -4447,18 +5019,18 @@
             for (let i = 0; i < count; i++) {
                 const el = document.createElement('span');
                 el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                el.style.cssText = `position:absolute; left:${originX}px; top:${originY}px; will-change:transform,opacity; font-size:${24 + Math.random()*14}px;`;
+                el.style.cssText = `position:absolute; left:${originX}px; top:${originY}px; will-change:transform,opacity; font-size:${24 + Math.random() * 14}px;`;
                 layer.appendChild(el);
 
                 const angle = (Math.PI * 2) * (i / count) + (Math.random() * 0.6 - 0.3);
                 const distance = 100 + Math.random() * 150;
                 const dx = Math.cos(angle) * distance;
-                const dy = Math.sin(angle) * distance - (40 + Math.random()*40);
-                const rot = (Math.random()*720 - 360);
+                const dy = Math.sin(angle) * distance - (40 + Math.random() * 40);
+                const rot = (Math.random() * 720 - 360);
 
                 gsap.fromTo(el,
                     { x: 0, y: 0, scale: 0.6, opacity: 1, rotation: 0 },
-                    { x: dx, y: dy, scale: 1.1, rotation: rot, opacity: 0, duration: 1 + Math.random()*0.4, ease: 'power2.out' }
+                    { x: dx, y: dy, scale: 1.1, rotation: rot, opacity: 0, duration: 1 + Math.random() * 0.4, ease: 'power2.out' }
                 );
             }
 
@@ -4483,7 +5055,7 @@
             flash.style.zIndex = '999';
             flash.style.animation = 'fadeIn 0.3s';
             document.body.appendChild(flash);
-            
+
             setTimeout(() => {
                 if (flash.parentNode) {
                     flash.parentNode.removeChild(flash);
@@ -4494,7 +5066,7 @@
         function setMode(mode, buttonEl) {
             if (currentMode === mode) return;
             currentMode = mode;
-            
+
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
                 btn.setAttribute('aria-pressed', 'false');
@@ -4532,7 +5104,7 @@
             currentLetter = getRandomLetter();
             const letters = (currentLetter === currentLetter.toLowerCase()) ? lowerLetters : upperLetters; // distractors in same case as target
             const options = [currentLetter];
-            
+
             // Generate 3 different options from a filtered pool
             const letterPool = letters.filter(l => l !== currentLetter);
             while (options.length < 4) {
@@ -4541,12 +5113,12 @@
                     options.push(letter);
                 }
             }
-            
+
             // Shuffle options
             options.sort(() => Math.random() - 0.5);
-            
+
             const gameArea = document.getElementById('gameArea');
-            
+
             // Add visual theme enhancements
             let optionsHTML = '';
             if (currentTheme === 'colors') {
@@ -4558,11 +5130,11 @@
                 }).join('');
             } else if (currentTheme === 'animals') {
                 // Show with associations
-                optionsHTML = options.map(letter => 
+                optionsHTML = options.map(letter =>
                     `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')" style="position: relative;" aria-label="Choose letter ${letter}">
                         ${letter}
-                        ${letter.toLowerCase() === currentLetter.toLowerCase() ? 
-                            `<div class="letter-association">
+                        ${letter.toLowerCase() === currentLetter.toLowerCase() ?
+                        `<div class="letter-association">
                                 <span class="association-icon">${letterAssociations[letter.toLowerCase()]?.icon || '⭐'}</span>
                                 <span>${letterAssociations[letter.toLowerCase()]?.word || letter}</span>
                             </div>` : ''}
@@ -4570,37 +5142,40 @@
                 ).join('');
             } else {
                 // Classic mode
-                optionsHTML = options.map(letter => 
+                optionsHTML = options.map(letter =>
                     `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')" aria-label="Choose letter ${letter}">${letter}</button>`
                 ).join('');
             }
-            
+
             gameArea.innerHTML = `
                 <div class="instruction">Tap the speaker, then find the letter!</div>
                 <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">🔊</button>
                 <div class="options">${optionsHTML}</div>
                 ${voiceRecordingEnabled ? getVoiceRecorderHTML() : ''}
             `;
-            
+
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
-            
+
             questionStartTime = Date.now();
             startTimer();
-            
-            // Automatically play the letter sound
+
+            // Automatically play the letter sound with natural pacing
             const thisQuestionLetter = currentLetter;
+            const letterNameSpoken = letterNamePronunciations[thisQuestionLetter.toLowerCase()] || thisQuestionLetter;
             speakPromptTimeout = setTimeout(() => {
+                const afterPrompt = () => {
+                    speakLetterTimeout = setTimeout(() => {
+                        speakLetter(thisQuestionLetter);
+                    }, 1000);
+                };
                 if (currentTheme === 'animals' && letterAssociations[thisQuestionLetter.toLowerCase()]) {
                     const assoc = letterAssociations[thisQuestionLetter.toLowerCase()];
-                    speakPhrase(`Find the letter ${thisQuestionLetter} for ${assoc.word}`);
+                    speakPhrase(`Find the letter ${letterNameSpoken} for ${assoc.word}.`, afterPrompt);
                 } else {
-                    speakPhrase(`Find the letter`);
+                    speakPhrase(`Find the letter ${letterNameSpoken}.`, afterPrompt);
                 }
-                speakLetterTimeout = setTimeout(() => {
-                    speakLetter(thisQuestionLetter);
-                }, 800);
-            }, 400);
+            }, 300);
         }
 
         function getVoiceRecorderHTML() {
@@ -4635,9 +5210,9 @@
             if (waitingForPhonics) return;
             if (isAnswering) return;
             isAnswering = true;
-            
+
             const clickedButton = document.querySelector(`.option-btn[data-letter="${letter}"]`);
-            
+
             if (letter === currentLetter) {
                 clearTimer();
                 clickedButton.classList.add('correct');
@@ -4647,16 +5222,16 @@
                 const responseTime = (Date.now() - questionStartTime) / 1000;
                 responseTimes.push(responseTime);
                 totalQuestions++;
-                
+
                 // Update correct answer streak
                 correctStreak++;
                 if (correctStreak > bestStreak) {
                     bestStreak = correctStreak;
                 }
-                
+
                 // Check streak achievements
                 checkAchievement('streak', correctStreak);
-                
+
                 // Award points based on speed
                 let points = 20;
                 if (responseTime < 2) {
@@ -4668,18 +5243,18 @@
                 } else if (responseTime < 5) {
                     points = 30;
                 }
-                
+
                 score += points;
-                
+
                 // Check score achievements
                 checkAchievement('score', score);
                 checkAchievement('correct', correctAnswers);
-                
+
                 // Update letter performance
                 updateLetterPerformance(currentLetter, true, responseTime);
-                
+
                 showFeedback(`Excellent! +${points} 🎉`, 'success');
-                
+
                 // Use GSAP for celebration animation if available
                 if (typeof gsap !== 'undefined') {
                     gsap.from(clickedButton, {
@@ -4688,12 +5263,12 @@
                         ease: "back.out(1.7)"
                     });
                 }
-                
+
                 speakPhrase('Excellent! That\'s correct!');
-                
+
                 // Start phonics phase (track timeout so it can be cancelled)
                 phonicsPhaseTimeout = setTimeout(() => startPhonicsPhase(), 1500);
-                
+
             } else {
                 clickedButton.classList.add('wrong');
                 roundWrong++;
@@ -4701,23 +5276,23 @@
                 totalQuestions++;
                 score = Math.max(0, score - 15);
                 trackLetterError(currentLetter);
-                
+
                 // Reset correct answer streak
                 correctStreak = 0;
-                
+
                 // Update letter performance
                 updateLetterPerformance(currentLetter, false, 0);
-                
+
                 showFeedback('Try again! 💪', 'error');
                 createWrongEffect();
                 speakPhrase('Not quite. Try again!');
-                
+
                 setTimeout(() => {
                     clickedButton.classList.remove('wrong');
                     isAnswering = false;
                 }, 1000);
             }
-            
+
             updateScoreDisplay();
             checkRoundCompletion();
         }
@@ -4735,24 +5310,27 @@
                     <div class="phonics-letter">${currentLetter}</div>
                 </div>
             `;
-            
+            // Speak the prompt for non-readers
+            const promptName = letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter;
+            speakPhrase(`What sound does ${promptName} make?`);
+
             let timeLeft = 3;
             const timerElement = document.getElementById('phonicsTimer');
-            
+
             function updatePhonicsTimer() {
                 timeLeft--;
                 if (timeLeft > 0) {
                     timerElement.textContent = timeLeft;
                     phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
                 } else {
-                    timerElement.innerHTML = '🔊';  // Speaker emoji
+                    timerElement.innerHTML = '🗣️';  // Speaker icon for pronunciation phase
                     speakPhonetics(currentLetter, () => {
                         waitingForPhonics = false;
                         setTimeout(() => startIdentifyGame(), 2000);
                     });
                 }
             }
-            
+
             phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
         }
 
@@ -4769,10 +5347,10 @@
         function showMinigameAnnouncement() {
             clearAllTimers();
             cancelSpeech();
-            
+
             const games = ['letterRain', 'memoryMatch'];
             const selectedGame = games[Math.floor(Math.random() * games.length)];
-            
+
             const gameInfo = {
                 letterRain: {
                     title: 'Letter Rain!',
@@ -4785,9 +5363,9 @@
                     icon: '🧠'
                 }
             };
-            
+
             const info = gameInfo[selectedGame];
-            
+
             const announcement = document.createElement('div');
             announcement.className = 'minigame-announcement';
             announcement.innerHTML = `
@@ -4795,11 +5373,11 @@
                 <div class="minigame-announcement-title">${info.title}</div>
                 <div class="minigame-announcement-subtitle">${info.subtitle}</div>
             `;
-            
+
             document.body.appendChild(announcement);
-            
+
             speakPhrase(`Time for a fun break! Let's play ${info.title}`);
-            
+
             setTimeout(() => {
                 announcement.remove();
                 if (selectedGame === 'letterRain') {
@@ -4814,7 +5392,7 @@
             currentMinigame = 'letterRain';
             minigameScore = 0;
             const targetLetter = getRandomLetter();
-            
+
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = `
                 <div class="minigame-container">
@@ -4831,15 +5409,15 @@
                     </div>
                 </div>
             `;
-            
+
             // Set up controls
             const gameAreaEl = document.getElementById('rainGameArea');
             gameAreaEl.addEventListener('mousemove', moveBasket);
             gameAreaEl.addEventListener('touchmove', moveBasket, { passive: false });
-            
+
             // Start spawning letters
             startRainGame(targetLetter);
-            
+
             // Start timer
             startMinigameTimer(30, () => endLetterRain());
         }
@@ -4848,7 +5426,7 @@
             const gameArea = document.getElementById('rainGameArea');
             const basket = document.getElementById('rainBasket');
             const rect = gameArea.getBoundingClientRect();
-            
+
             let x;
             if (e.touches) {
                 e.preventDefault(); // avoid scrolling while dragging
@@ -4856,7 +5434,7 @@
             } else {
                 x = e.clientX - rect.left;
             }
-            
+
             const percentage = (x / rect.width) * 100;
             basket.style.left = Math.max(5, Math.min(85, percentage)) + '%';
         }
@@ -4865,30 +5443,36 @@
             rainGameInterval = setInterval(() => {
                 const gameArea = document.getElementById('rainGameArea');
                 if (!gameArea) return;
-                
+
                 const letter = document.createElement('div');
                 letter.className = 'falling-letter';
                 letter.textContent = Math.random() < 0.7 ? targetLetter : getRandomLetter();
                 letter.style.left = Math.random() * 80 + 10 + '%';
                 letter.style.animationDuration = (Math.random() * 2 + 3) + 's';
-                
+
                 gameArea.appendChild(letter);
-                
+                // Ensure cleanup after animation completes
+                letter.addEventListener('animationend', () => {
+                    if (letter && letter.parentElement) {
+                        letter.remove();
+                    }
+                });
+
                 // Check for collision
                 const checkCollision = setInterval(() => {
                     if (!letter.parentElement) {
                         clearInterval(checkCollision);
                         return;
                     }
-                    
+
                     const basket = document.getElementById('rainBasket');
                     const letterRect = letter.getBoundingClientRect();
                     const basketRect = basket.getBoundingClientRect();
-                    
+
                     if (letterRect.bottom >= basketRect.top &&
                         letterRect.left < basketRect.right &&
                         letterRect.right > basketRect.left) {
-                        
+
                         if (letter.textContent === targetLetter) {
                             minigameScore += 10;
                             document.getElementById('minigameScore').textContent = minigameScore;
@@ -4898,7 +5482,7 @@
                             minigameScore = Math.max(0, minigameScore - 5);
                             document.getElementById('minigameScore').textContent = minigameScore;
                         }
-                        
+
                         letter.remove();
                         clearInterval(checkCollision);
                     } else if (letterRect.top > window.innerHeight) {
@@ -4912,10 +5496,10 @@
         function endLetterRain() {
             clearInterval(rainGameInterval);
             currentMinigame = null;
-            
+
             showFeedback(`Great job! Score: ${minigameScore}`, 'success');
             speakPhrase(`Nice work! You scored ${minigameScore} points!`);
-            
+
             setTimeout(() => startIdentifyGame(), 3000);
         }
 
@@ -4924,7 +5508,7 @@
             minigameScore = 0;
             matchedPairs = 0;
             flippedCards = [];
-            
+
             // Create pairs of letters
             const letters = [];
             for (let i = 0; i < 8; i++) {
@@ -4932,7 +5516,7 @@
                 letters.push(letter, letter);
             }
             letters.sort(() => Math.random() - 0.5);
-            
+
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = `
                 <div class="minigame-container">
@@ -4953,7 +5537,7 @@
                     </div>
                 </div>
             `;
-            
+
             startMinigameTimer(45, () => endMemoryMatch());
         }
 
@@ -4961,13 +5545,13 @@
             if (flippedCards.length >= 2) return;
             if (card.classList.contains('flipped')) return;
             if (card.classList.contains('matched')) return;
-            
+
             card.classList.add('flipped');
             flippedCards.push(card);
-            
+
             if (flippedCards.length === 2) {
                 const [card1, card2] = flippedCards;
-                
+
                 if (card1.dataset.letter === card2.dataset.letter) {
                     // Match!
                     setTimeout(() => {
@@ -4976,9 +5560,9 @@
                         matchedPairs++;
                         minigameScore = matchedPairs;
                         document.getElementById('minigameScore').textContent = minigameScore;
-                        
+
                         speakLetter(card1.dataset.letter);
-                        
+
                         if (matchedPairs === 8) {
                             endMemoryMatch();
                         }
@@ -4990,7 +5574,7 @@
                         card2.classList.remove('flipped');
                     }, 1000);
                 }
-                
+
                 setTimeout(() => {
                     flippedCards = [];
                 }, 1000);
@@ -5000,10 +5584,10 @@
         function endMemoryMatch() {
             clearInterval(minigameTimer);
             currentMinigame = null;
-            
+
             showFeedback(`Excellent! ${matchedPairs} matches!`, 'success');
             speakPhrase(`Great memory! You found ${matchedPairs} pairs!`);
-            
+
             setTimeout(() => startIdentifyGame(), 3000);
         }
 
@@ -5011,15 +5595,15 @@
             let timeLeft = duration;
             const timerEl = document.getElementById('minigameTime');
             const timerContainer = document.getElementById('minigameTimer');
-            
+
             minigameTimer = setInterval(() => {
                 timeLeft--;
                 timerEl.textContent = timeLeft;
-                
+
                 if (timeLeft <= 5) {
                     timerContainer.classList.add('warning');
                 }
-                
+
                 if (timeLeft <= 0) {
                     clearInterval(minigameTimer);
                     callback();
@@ -5030,37 +5614,37 @@
         function showRoundCompletion() {
             clearAllTimers();
             cancelSpeech();
-            
+
             // Calculate stats
-            const avgTime = responseTimes.length > 0 ? 
+            const avgTime = responseTimes.length > 0 ?
                 (responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length).toFixed(1) : 0;
-            const accuracy = (roundCorrect + roundWrong) > 0 ? 
+            const accuracy = (roundCorrect + roundWrong) > 0 ?
                 Math.round((roundCorrect / (roundCorrect + roundWrong)) * 100) : 0;
             const scoreGained = Math.max(0, score - scoreAtRoundStart);
-            
+
             // Update rounds completed
             roundsCompleted++;
             checkAchievement('rounds', roundsCompleted);
-            
+
             // Check for perfect round
             if (roundWrong === 0 && roundCorrect >= 50) {
                 checkAchievement('perfect', 1);
             }
-            
+
             // Identify problem letters (those with 2+ errors)
             problemLetters = Object.entries(letterErrors)
                 .filter(([letter, errors]) => errors >= 2)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5)
                 .map(([letter]) => letter);
-            
+
             // Update modal content
             document.getElementById('completedRound').textContent = currentRound;
             document.getElementById('avgTime').textContent = avgTime;
             document.getElementById('accuracy').textContent = accuracy;
             document.getElementById('scoreGained').textContent = scoreGained;
             document.getElementById('nextRoundNum').textContent = currentRound + 1;
-            
+
             const problemList = document.getElementById('problemLettersList');
             if (problemLetters.length > 0) {
                 // Format letters based on current case setting
@@ -5073,11 +5657,11 @@
             } else {
                 problemList.innerHTML = 'None - Perfect! 🌟';
             }
-            
+
             // Show modal with animation
             const modal = document.getElementById('roundModal');
             modal.style.display = 'flex';
-            
+
             // Play celebration sound
             speakPhrase(`Congratulations! You completed round ${currentRound}!`);
         }
@@ -5089,7 +5673,7 @@
             responseTimes = [];
             letterErrors = {};
             scoreAtRoundStart = score;
-            
+
             document.getElementById('roundModal').style.display = 'none';
             startIdentifyGame();
         }
@@ -5102,7 +5686,7 @@
             clearAllTimers();
             cancelSpeech();
             currentLetter = getRandomLetter();
-            
+
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = `
                 <div class="instruction">Draw the letter: <span class="letter-display">${currentLetter}</span></div>
@@ -5122,18 +5706,18 @@
                     <button class="control-btn check-btn" onclick="checkDrawing()">Check ✓</button>
                 </div>
             `;
-            
+
             setupCanvas();
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
-            
+
             speakPhrase(`Draw the letter ${currentLetter}`);
         }
 
         function showFormationGuide() {
             const guide = document.getElementById('formationGuide');
             const letterData = letterFormations[currentLetter.toLowerCase()];
-            
+
             if (!letterData) {
                 // Fallback for letters without formation data
                 guide.innerHTML = `
@@ -5143,16 +5727,16 @@
                 `;
                 return;
             }
-            
+
             guide.innerHTML = '';
-            
+
             letterData.forEach((stroke, index) => {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', stroke.path);
                 path.setAttribute('class', 'stroke-path stroke-animated');
                 path.style.animationDelay = `${index * 2}s`;
                 guide.appendChild(path);
-                
+
                 // Add stroke number (with safety check)
                 const pathMatch = stroke.path.match(/M\s*(\d+)\s+(\d+)/);
                 if (pathMatch) {
@@ -5166,7 +5750,7 @@
                     guide.parentElement.appendChild(number);
                 }
             });
-            
+
             speakPhrase(`Watch how to write ${currentLetter}`);
         }
 
@@ -5189,7 +5773,7 @@
             canvas.addEventListener('touchstart', startDrawing, { passive: false });
             canvas.addEventListener('touchmove', draw, { passive: false });
             canvas.addEventListener('touchend', stopDrawing, { passive: false });
-            
+
             // Mouse events
             canvas.addEventListener('mousedown', startDrawing);
             canvas.addEventListener('mousemove', draw);
@@ -5203,24 +5787,24 @@
             const rect = e.target.getBoundingClientRect();
             const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
             const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-            
+
             ctx.beginPath();
             ctx.moveTo(x, y);
             // Keep existing points for multi-stroke drawing
-            drawingPoints.push({x, y, newStroke: true});
+            drawingPoints.push({ x, y, newStroke: true });
         }
 
         function draw(e) {
             if (!isDrawing) return;
             e.preventDefault();
-            
+
             const rect = e.target.getBoundingClientRect();
             const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
             const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-            
+
             ctx.lineTo(x, y);
             ctx.stroke();
-            drawingPoints.push({x, y});
+            drawingPoints.push({ x, y });
         }
 
         function stopDrawing(e) {
@@ -5233,7 +5817,7 @@
             const canvas = document.getElementById('drawCanvas');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawingPoints = [];
-            
+
             // Add clear animation
             const container = document.querySelector('.canvas-container');
             container.style.animation = 'shake 0.3s';
@@ -5248,23 +5832,23 @@
                 speakPhrase('Try to draw the complete letter with all its parts!');
                 return;
             }
-            
+
             // Enhanced validation: check for sufficient coverage and strokes
             const canvas = document.getElementById('drawCanvas');
             const bounds = getDrawingBounds();
             const coverage = (bounds.width * bounds.height) / (canvas.width * canvas.height);
-            
+
             // Check if drawing covers enough of the canvas and has enough points
             const isValid = drawingPoints.length > 50 && coverage > 0.05;
-            
+
             if (isValid) {
                 // Practice-only feedback (no scoring in draw mode)
                 showFeedback('Great tracing! Let\'s try another! ✨', 'success');
                 speakPhrase('Great practice! Now let\'s draw the next letter.');
-                
+
                 // Create celebration overlay without disrupting the view
                 createDrawingCelebration();
-                
+
                 setTimeout(() => {
                     startDrawGame();
                 }, 2500);
@@ -5273,13 +5857,13 @@
                 speakPhrase('Make sure to draw the complete letter shape!');
             }
         }
-        
+
         function getDrawingBounds() {
-            if (drawingPoints.length === 0) return {width: 0, height: 0};
-            
+            if (drawingPoints.length === 0) return { width: 0, height: 0 };
+
             let minX = Infinity, maxX = -Infinity;
             let minY = Infinity, maxY = -Infinity;
-            
+
             drawingPoints.forEach(point => {
                 if (!point.newStroke) {
                     minX = Math.min(minX, point.x);
@@ -5288,13 +5872,13 @@
                     maxY = Math.max(maxY, point.y);
                 }
             });
-            
+
             return {
                 width: maxX - minX,
                 height: maxY - minY
             };
         }
-        
+
         function createDrawingCelebration() {
             // Create overlay celebration that doesn't disrupt the view
             const overlay = document.createElement('div');
@@ -5308,7 +5892,7 @@
                 z-index: 10000;
             `;
             document.body.appendChild(overlay);
-            
+
             // Add celebration elements
             for (let i = 0; i < 15; i++) {
                 const star = document.createElement('div');
@@ -5323,7 +5907,7 @@
                 `;
                 overlay.appendChild(star);
             }
-            
+
             // Remove overlay after animation
             setTimeout(() => {
                 overlay.remove();
@@ -5335,7 +5919,7 @@
             feedback.textContent = message;
             feedback.className = 'feedback ' + type;
             feedback.style.display = 'block';
-            
+
             setTimeout(() => {
                 feedback.style.display = 'none';
             }, 2000);
@@ -5354,12 +5938,12 @@
             if (hc) hc.checked = !!highContrastEnabled;
             const rm = document.getElementById('reduceMotionCheck');
             if (rm) rm.checked = !!reduceMotionEnabled;
-            
+
             // Trap focus within modal content
             setTimeout(() => trapFocus(modal.querySelector('.settings-content')), 50);
 
             // Close modal when clicking outside
-            modal.onclick = function(e) {
+            modal.onclick = function (e) {
                 if (e.target === modal) {
                     closeSettings();
                 }
@@ -5385,6 +5969,10 @@
             const activeBtn = document.getElementById('timer' + (mode === 'on' ? 'On' : 'Off'));
             activeBtn.classList.add('active');
             activeBtn.setAttribute('aria-pressed', 'true');
+            // If turning timer off mid-question, clear any running timers
+            if (!timerEnabled) {
+                clearAllTimers();
+            }
         }
 
         function setCaseMode(mode) {
@@ -5393,9 +5981,9 @@
                 btn.classList.remove('active');
                 btn.setAttribute('aria-pressed', 'false');
             });
-            
-            const btnId = mode === 'lower' ? 'caseLower' : 
-                         mode === 'upper' ? 'caseUpper' : 'caseMixed';
+
+            const btnId = mode === 'lower' ? 'caseLower' :
+                mode === 'upper' ? 'caseUpper' : 'caseMixed';
             const activeBtn = document.getElementById(btnId);
             activeBtn.classList.add('active');
             activeBtn.setAttribute('aria-pressed', 'true');
@@ -5427,10 +6015,10 @@
                     option.classList.add('active');
                 }
             });
-            
+
             // Save preference
             localStorage.setItem('letterLearningTheme', theme);
-            
+
             // If in game, refresh with new theme
             if (document.getElementById('gameArea').innerHTML.includes('option-btn')) {
                 startIdentifyGame();
@@ -5451,42 +6039,42 @@
                 alert('Voice recording is not supported on this device');
                 return;
             }
-            
+
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
-                    
+
                     mediaRecorder.ondataavailable = event => {
                         audioChunks.push(event.data);
                     };
-                    
+
                     mediaRecorder.onstop = () => {
                         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                         const audioUrl = URL.createObjectURL(audioBlob);
-                        
+
                         recordings.push({
                             letter: currentLetter,
                             url: audioUrl,
                             timestamp: Date.now()
                         });
-                        
+
                         // Enable playback buttons
                         document.getElementById('playBtn').disabled = false;
                         document.getElementById('compareBtn').disabled = false;
-                        
+
                         // Stop all tracks
                         stream.getTracks().forEach(track => track.stop());
                     };
-                    
+
                     mediaRecorder.start();
                     isRecording = true;
-                    
+
                     const recordBtn = document.getElementById('recordBtn');
                     recordBtn.classList.add('recording');
                     recordBtn.innerHTML = '<span id="recordIcon">🔴</span><div class="recording-indicator"></div>';
                     recordBtn.setAttribute('aria-label', 'Stop recording');
-                    
+
                     speakPhrase('Recording started. Say the letter!');
                 })
                 .catch(err => {
@@ -5499,12 +6087,12 @@
             if (mediaRecorder && mediaRecorder.state !== 'inactive') {
                 mediaRecorder.stop();
                 isRecording = false;
-                
+
                 const recordBtn = document.getElementById('recordBtn');
                 recordBtn.classList.remove('recording');
                 recordBtn.innerHTML = '<span id="recordIcon">🎤</span>';
                 recordBtn.setAttribute('aria-label', 'Start recording');
-                
+
                 speakPhrase('Recording saved!');
             }
         }
@@ -5579,16 +6167,16 @@
 
         function unlockAchievement(achievement) {
             if (unlockedAchievements.has(achievement.id)) return;
-            
+
             unlockedAchievements.add(achievement.id);
             achievementProgress[achievement.id] = achievement.requirement;
-            
+
             // Show notification
             showAchievementNotification(achievement);
-            
+
             // Save progress
             saveGameData();
-            
+
             // Update badge count
             updateBadgeCount();
         }
@@ -5612,25 +6200,25 @@
         function openAchievements() {
             const modal = document.getElementById('achievementModal');
             const grid = document.getElementById('badgesGrid');
-            
+
             // Update stats
             updateAchievementStats();
-            
+
             // Clear grid
             grid.innerHTML = '';
-            
+
             // Add all achievements
             ACHIEVEMENTS.forEach(achievement => {
                 const badge = createBadgeElement(achievement);
                 grid.appendChild(badge);
             });
-            
+
             previouslyFocusedElement = document.activeElement;
             modal.style.display = 'flex';
             // Trap focus inside the modal content
             setTimeout(() => trapFocus(modal.querySelector('.achievement-content')), 50);
             // Close when tapping/clicking outside of the content
-            modal.onclick = function(e) {
+            modal.onclick = function (e) {
                 if (e.target === modal) {
                     closeAchievements();
                 }
@@ -5646,39 +6234,39 @@
         function createBadgeElement(achievement) {
             const isUnlocked = unlockedAchievements.has(achievement.id);
             const progress = achievementProgress[achievement.id] || 0;
-            
+
             const badge = document.createElement('div');
             badge.className = `badge-item ${isUnlocked ? 'unlocked' : 'locked'}`;
-            
+
             const icon = document.createElement('div');
             icon.className = 'badge-icon';
             icon.textContent = achievement.icon;
-            
+
             const name = document.createElement('div');
             name.className = 'badge-name';
             name.textContent = achievement.name;
-            
+
             const description = document.createElement('div');
             description.className = 'badge-description';
             description.textContent = achievement.description;
-            
+
             badge.appendChild(icon);
             badge.appendChild(name);
             badge.appendChild(description);
-            
+
             // Add progress bar if not unlocked
             if (!isUnlocked && progress > 0) {
                 const progressBar = document.createElement('div');
                 progressBar.className = 'badge-progress';
-                
+
                 const fill = document.createElement('div');
                 fill.className = 'badge-progress-fill';
                 fill.style.width = `${(progress / achievement.requirement) * 100}%`;
-                
+
                 progressBar.appendChild(fill);
                 badge.appendChild(progressBar);
             }
-            
+
             // Add hover effect
             badge.addEventListener('mouseenter', () => {
                 if (isUnlocked && typeof gsap !== 'undefined') {
@@ -5689,7 +6277,7 @@
                     });
                 }
             });
-            
+
             badge.addEventListener('mouseleave', () => {
                 if (isUnlocked && typeof gsap !== 'undefined') {
                     gsap.to(badge, {
@@ -5699,7 +6287,7 @@
                     });
                 }
             });
-            
+
             return badge;
         }
 
@@ -5707,10 +6295,10 @@
             // Calculate total play time
             const currentSessionTime = Math.floor((Date.now() - sessionStartTime) / 60000);
             const totalTime = totalPlayTime + currentSessionTime;
-            
+
             // Check time achievements
             checkAchievement('time', totalTime);
-            
+
             // Update UI
             document.getElementById('totalStarsEarned').textContent = Math.floor(score / 20);
             document.getElementById('lettersMastered').textContent = `${lettersMastered.size}/26`;
@@ -5759,14 +6347,14 @@
             selectedAvatar = '🦁';
             document.getElementById('playerNameInput').value = '';
             document.getElementById('playerModal').style.display = 'flex';
-            
+
             // Set up avatar selection
             document.querySelectorAll('.avatar-option').forEach(option => {
                 option.classList.remove('selected');
                 if (option.dataset.avatar === selectedAvatar) {
                     option.classList.add('selected');
                 }
-                option.onclick = function() {
+                option.onclick = function () {
                     document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
                     this.classList.add('selected');
                     selectedAvatar = this.dataset.avatar;
@@ -5784,7 +6372,7 @@
                 alert('Please enter a player name');
                 return;
             }
-            
+
             const newPlayer = {
                 id: Date.now(),
                 name: name,
@@ -5806,18 +6394,18 @@
                 celebrationType: 'fireworks',
                 createdAt: Date.now()
             };
-            
+
             players.push(newPlayer);
             savePlayers();
-            
+
             if (!multiplayerMode) {
                 multiplayerMode = true;
                 document.getElementById('playerSelector').style.display = 'flex';
             }
-            
+
             updatePlayerDisplay();
             closePlayerModal();
-            
+
             // Switch to new player
             switchToPlayer(players.length - 1);
         }
@@ -5825,14 +6413,14 @@
         function updatePlayerDisplay() {
             const playerList = document.getElementById('playerList');
             playerList.innerHTML = '';
-            
+
             players.forEach((player, index) => {
                 const chip = document.createElement('div');
                 chip.className = 'player-chip';
                 if (index === currentPlayerIndex) {
                     chip.classList.add('active');
                 }
-                
+
                 chip.innerHTML = `
                     <div class="player-avatar">${player.avatar}</div>
                     <div>
@@ -5841,7 +6429,7 @@
                     </div>
                     ${index === currentPlayerIndex ? '<div class="player-turn-indicator"></div>' : ''}
                 `;
-                
+
                 chip.onclick = () => switchToPlayer(index);
                 playerList.appendChild(chip);
             });
@@ -5853,25 +6441,25 @@
                 if (currentPlayer) {
                     saveCurrentPlayerState();
                 }
-                
+
                 // Switch to new player
                 currentPlayerIndex = index;
                 currentPlayer = players[index];
-                
+
                 // Load new player's state
                 loadPlayerState(currentPlayer);
-                
+
                 // Update UI
                 updatePlayerDisplay();
                 updateScoreDisplay();
                 updateBadgeCount();
                 updateDifficultyLevel();
-                
+
                 // Announce player switch
                 if (currentPlayer) {
                     speakPhrase(`Now playing: ${currentPlayer.name}`);
                 }
-                
+
                 // If in game, restart for new player
                 if (document.getElementById('gameArea').innerHTML.includes('option-btn')) {
                     startIdentifyGame();
@@ -5881,7 +6469,7 @@
 
         function saveCurrentPlayerState() {
             if (!currentPlayer) return;
-            
+
             currentPlayer.score = score;
             currentPlayer.correctAnswers = correctAnswers;
             currentPlayer.wrongAnswers = wrongAnswers;
@@ -5896,7 +6484,7 @@
             currentPlayer.speedAnswers = speedAnswers;
             currentPlayer.roundsCompleted = roundsCompleted;
             currentPlayer.celebrationType = celebrationType;
-            
+
             savePlayers();
         }
 
@@ -5937,7 +6525,7 @@
         function updatePlayerStats() {
             const grid = document.getElementById('playerStatsGrid');
             grid.innerHTML = '';
-            
+
             const allPlayers = multiplayerMode ? players : [{
                 name: 'Player',
                 avatar: '🌟',
@@ -5948,14 +6536,14 @@
                 bestStreak,
                 totalPlayTime
             }];
-            
+
             allPlayers.forEach(player => {
                 const card = document.createElement('div');
                 card.className = 'player-stat-card';
-                
+
                 const accuracy = (player.correctAnswers + player.wrongAnswers) > 0 ?
                     Math.round((player.correctAnswers / (player.correctAnswers + player.wrongAnswers)) * 100) : 0;
-                
+
                 card.innerHTML = `
                     <div class="player-stat-header">
                         <div class="player-stat-avatar">${player.avatar || '🌟'}</div>
@@ -5980,7 +6568,7 @@
                         </div>
                     </div>
                 `;
-                
+
                 grid.appendChild(card);
             });
         }
@@ -5988,18 +6576,18 @@
         function updateLetterHeatmap() {
             const heatmap = document.getElementById('letterHeatmap');
             heatmap.innerHTML = '';
-            
+
             const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
-            
+
             letters.forEach(letter => {
                 const cell = document.createElement('div');
                 cell.className = 'heatmap-cell';
                 cell.textContent = letter.toUpperCase();
-                
+
                 // Calculate performance across all players
                 let totalCorrect = 0;
                 let totalAttempts = 0;
-                
+
                 if (multiplayerMode) {
                     players.forEach(player => {
                         const perf = player.letterPerformance[letter];
@@ -6015,9 +6603,9 @@
                         totalAttempts = perf.total;
                     }
                 }
-                
+
                 const successRate = totalAttempts > 0 ? totalCorrect / totalAttempts : 0.5;
-                
+
                 // Color based on performance
                 let color;
                 if (totalAttempts === 0) {
@@ -6029,13 +6617,13 @@
                 } else {
                     color = '#4ade80'; // Green for mastered
                 }
-                
+
                 cell.style.background = color;
                 cell.style.color = successRate > 0.5 ? 'white' : '#374151';
-                
+
                 // Add tooltip on hover
                 cell.title = `${letter.toUpperCase()}: ${Math.round(successRate * 100)}% success rate (${totalAttempts} attempts)`;
-                
+
                 heatmap.appendChild(cell);
             });
         }
@@ -6043,9 +6631,9 @@
         function updateInsights() {
             const insightsList = document.getElementById('insightsList');
             insightsList.innerHTML = '';
-            
+
             const insights = generateInsights();
-            
+
             insights.forEach(insight => {
                 const item = document.createElement('li');
                 item.className = 'insight-item';
@@ -6062,17 +6650,17 @@
 
         function generateInsights() {
             const insights = [];
-            
+
             // Analyze letter confusion patterns
             const confusedPairs = [['b', 'd'], ['p', 'q'], ['m', 'n'], ['v', 'w']];
             confusedPairs.forEach(([letter1, letter2]) => {
                 const perf1 = letterPerformance[letter1];
                 const perf2 = letterPerformance[letter2];
-                
+
                 if (perf1 && perf2) {
                     const success1 = perf1.total > 0 ? perf1.correct / perf1.total : 1;
                     const success2 = perf2.total > 0 ? perf2.correct / perf2.total : 1;
-                    
+
                     if (success1 < 0.7 && success2 < 0.7) {
                         insights.push({
                             icon: '⚠️',
@@ -6082,11 +6670,11 @@
                     }
                 }
             });
-            
+
             // Speed analysis
             const avgResponseTime = responseTimes.length > 0 ?
                 responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
-            
+
             if (avgResponseTime > 5) {
                 insights.push({
                     icon: '⏱️',
@@ -6100,7 +6688,7 @@
                     description: 'Excellent letter recognition speed! Ready for more challenging activities like word building.'
                 });
             }
-            
+
             // Mastery progress
             const masteryPercent = Math.round((lettersMastered.size / 26) * 100);
             if (masteryPercent > 75) {
@@ -6110,7 +6698,7 @@
                     description: `${lettersMastered.size} of 26 letters mastered. Time to start focusing on writing and phonics!`
                 });
             }
-            
+
             if (insights.length === 0) {
                 insights.push({
                     icon: '👍',
@@ -6118,16 +6706,16 @@
                     description: 'Regular practice is key. Try to play for at least 10 minutes each day.'
                 });
             }
-            
+
             return insights;
         }
 
         function updateRecommendations() {
             const recommendationsList = document.getElementById('recommendationsList');
             recommendationsList.innerHTML = '';
-            
+
             const recommendations = generateRecommendations();
-            
+
             recommendations.forEach(rec => {
                 const card = document.createElement('div');
                 card.className = 'recommendation-card';
@@ -6144,12 +6732,12 @@
 
         function generateRecommendations() {
             const recs = [];
-            
+
             // Identify problem letters
             const strugglingLetters = Object.entries(letterPerformance)
                 .filter(([letter, perf]) => perf.total > 2 && (perf.correct / perf.total) < 0.6)
                 .map(([letter]) => letter);
-            
+
             if (strugglingLetters.length > 0) {
                 recs.push({
                     icon: '📝',
@@ -6157,7 +6745,7 @@
                     text: `Focus on: ${strugglingLetters.map(l => l.toUpperCase()).join(', ')}. Try tracing them in sand or shaving cream for tactile learning.`
                 });
             }
-            
+
             // Time-based recommendations
             const currentHour = new Date().getHours();
             if (currentHour < 12) {
@@ -6179,7 +6767,7 @@
                     text: 'End the day with a letter-focused story. Point out and trace letters as you read together.'
                 });
             }
-            
+
             // Achievement-based recommendations
             if (unlockedAchievements.size < 3) {
                 recs.push({
@@ -6188,14 +6776,14 @@
                     text: 'Encourage achievement hunting! Set small goals like "get 5 in a row" to unlock new badges.'
                 });
             }
-            
+
             return recs;
         }
 
         // Save/Load Functions
         function saveGameData() {
             const today = new Date().toDateString();
-            
+
             const gameData = {
                 score,
                 correctAnswers,
@@ -6222,7 +6810,7 @@
                 currentTheme,
                 voiceRecordingEnabled
             };
-            
+
             localStorage.setItem('letterLearningGameData', JSON.stringify(gameData));
         }
 
@@ -6231,7 +6819,7 @@
             if (saved) {
                 try {
                     const gameData = JSON.parse(saved);
-                    
+
                     // Restore game state
                     score = gameData.score || 0;
                     correctAnswers = gameData.correctAnswers || 0;
@@ -6245,12 +6833,12 @@
                     speedAnswers = gameData.speedAnswers || 0;
                     totalPlayTime = gameData.totalPlayTime || 0;
                     roundsCompleted = gameData.roundsCompleted || 0;
-                    
+
                     // Restore streak data
                     lastPlayDate = gameData.lastPlayDate;
                     streakHistory = gameData.streakHistory || [];
                     currentStreak = gameData.currentStreak || 0;
-                    
+
                     // Restore settings
                     focusModeEnabled = gameData.focusModeEnabled || false;
                     highContrastEnabled = gameData.highContrastEnabled || false;
@@ -6258,10 +6846,10 @@
                     celebrationType = gameData.celebrationType || 'fireworks';
                     currentTheme = gameData.currentTheme || 'classic';
                     voiceRecordingEnabled = !!gameData.voiceRecordingEnabled;
-                    
+
                     // Check streak continuity
                     checkStreakContinuity();
-                    
+
                     // Apply saved settings
                     if (focusModeEnabled) {
                         document.body.classList.add('focus-mode');
@@ -6278,13 +6866,13 @@
                         const el = document.getElementById('reduceMotionSwitch');
                         if (el) { el.classList.add('active'); el.setAttribute('aria-checked', 'true'); }
                     }
-                    
+
                     // Update UI
                     updateScoreDisplay();
                     updateBadgeCount();
                     updateDifficultyLevel();
                     updateStreakDisplay();
-                    
+
                     // Check if returning player deserves a welcome back
                     if (gameData.lastPlayed) {
                         const hoursSinceLastPlay = (Date.now() - gameData.lastPlayed) / (1000 * 60 * 60);
@@ -6310,7 +6898,7 @@
         function toggleFocusMode() {
             focusModeEnabled = !focusModeEnabled;
             const switchEl = document.getElementById('focusModeSwitch');
-            
+
             if (focusModeEnabled) {
                 document.body.classList.add('focus-mode');
                 if (switchEl) { switchEl.classList.add('active'); switchEl.setAttribute('aria-checked', 'true'); }
@@ -6328,14 +6916,14 @@
                 timerEnabled = previousTimerState;
                 speakPhrase('Focus mode disabled.');
             }
-            
+
             saveGameData();
         }
 
         function toggleHighContrast() {
             highContrastEnabled = !highContrastEnabled;
             const switchEl = document.getElementById('highContrastSwitch');
-            
+
             if (highContrastEnabled) {
                 document.body.style.filter = 'contrast(1.5)';
                 if (switchEl) { switchEl.classList.add('active'); switchEl.setAttribute('aria-checked', 'true'); }
@@ -6343,14 +6931,14 @@
                 document.body.style.filter = 'none';
                 if (switchEl) { switchEl.classList.remove('active'); switchEl.setAttribute('aria-checked', 'false'); }
             }
-            
+
             saveGameData();
         }
 
         function toggleReduceMotion() {
             reduceMotionEnabled = !reduceMotionEnabled;
             const switchEl = document.getElementById('reduceMotionSwitch');
-            
+
             if (reduceMotionEnabled) {
                 // Set all animation durations to nearly instant
                 document.body.style.setProperty('--animation-duration', '0.01s');
@@ -6365,7 +6953,7 @@
                 if (style) style.remove();
                 if (switchEl) { switchEl.classList.remove('active'); switchEl.setAttribute('aria-checked', 'false'); }
             }
-            
+
             saveGameData();
         }
 
@@ -6373,7 +6961,7 @@
         function checkStreakContinuity() {
             const today = new Date().toDateString();
             const yesterday = new Date(Date.now() - 86400000).toDateString();
-            
+
             if (lastPlayDate === today) {
                 // Already played today
                 return;
@@ -6382,12 +6970,12 @@
                 currentStreak++;
                 lastPlayDate = today;
                 streakHistory.push(today);
-                
+
                 // Check for milestones
                 if (streakMilestones.includes(currentStreak)) {
                     showStreakMilestone(currentStreak);
                 }
-                
+
                 updateStreakDisplay();
                 saveGameData();
             } else if (!lastPlayDate) {
@@ -6413,11 +7001,11 @@
         function updateStreakDisplay() {
             const display = document.getElementById('streakDisplay');
             const number = document.getElementById('streakNumber');
-            
+
             if (currentStreak > 1) {
                 display.style.display = 'flex';
                 number.textContent = currentStreak;
-                
+
                 // Add special effects for longer streaks
                 if (currentStreak >= 30) {
                     display.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
@@ -6436,7 +7024,7 @@
             const icon = document.getElementById('milestoneIcon');
             const title = document.getElementById('milestoneTitle');
             const subtitle = document.getElementById('milestoneSubtitle');
-            
+
             // Set milestone content
             const milestoneData = {
                 3: { icon: '🌟', title: '3 Day Streak!', subtitle: 'You\'re building a habit!' },
@@ -6446,26 +7034,26 @@
                 50: { icon: '💎', title: '50 Day Streak!', subtitle: 'Incredible dedication!' },
                 100: { icon: '🌈', title: '100 Day Streak!', subtitle: 'You\'re a legend!' }
             };
-            
+
             const data = milestoneData[days];
             if (data) {
                 icon.textContent = data.icon;
                 title.textContent = data.title;
                 subtitle.textContent = data.subtitle;
-                
+
                 // Generate calendar
                 generateStreakCalendar();
-                
+
                 // Show modal
                 modal.style.display = 'flex';
-                
+
                 // Celebration
                 setTimeout(() => {
                     for (let i = 0; i < 5; i++) {
                         setTimeout(() => createConfetti(), i * 200);
                     }
                 }, 500);
-                
+
                 // Announce achievement
                 speakPhrase(`Wow! ${data.title} ${data.subtitle}`);
             }
@@ -6474,27 +7062,27 @@
         function generateStreakCalendar() {
             const calendar = document.getElementById('streakCalendar');
             calendar.innerHTML = '';
-            
+
             const today = new Date();
             const daysToShow = 28; // Show 4 weeks
-            
+
             for (let i = daysToShow - 1; i >= 0; i--) {
                 const date = new Date(today.getTime() - (i * 86400000));
                 const dateStr = date.toDateString();
                 const day = document.createElement('div');
                 day.className = 'calendar-day';
                 day.textContent = date.getDate();
-                
+
                 if (streakHistory.includes(dateStr)) {
                     day.classList.add('played');
                 } else if (date < today) {
                     day.classList.add('missed');
                 }
-                
+
                 if (dateStr === today.toDateString()) {
                     day.classList.add('today');
                 }
-                
+
                 calendar.appendChild(day);
             }
         }
@@ -6506,17 +7094,17 @@
         // Celebration Customization Functions
         function setCelebration(type) {
             celebrationType = type;
-            
+
             document.querySelectorAll('.celebration-option').forEach(option => {
                 option.classList.remove('selected');
                 if (option.dataset.celebration === type) {
                     option.classList.add('selected');
                 }
             });
-            
+
             // Preview the celebration
             createConfetti();
-            
+
             // Save preference
             saveGameData();
         }
@@ -6527,14 +7115,14 @@
         updateBadgeCount();
         updateDifficultyLevel();
         updateStreakDisplay();
-        
+
         // Load saved theme
         const savedTheme = localStorage.getItem('letterLearningTheme');
         if (savedTheme) {
             currentTheme = savedTheme;
             setVisualTheme(savedTheme);
         }
-        
+
         // Set saved celebration type in UI
         if (celebrationType !== 'fireworks') {
             setCelebration(celebrationType);
@@ -6554,7 +7142,7 @@
         let longPressTimer;
         let hintTimer;
         const settingsBtn = document.getElementById('settingsBtn');
-        
+
         function startPressTimers() {
             // Hint after short press
             hintTimer = setTimeout(() => {
@@ -6569,7 +7157,7 @@
             clearTimeout(hintTimer);
             clearTimeout(longPressTimer);
         }
-        
+
         settingsBtn.addEventListener('touchstart', startPressTimers);
         settingsBtn.addEventListener('touchend', clearPressTimers);
         settingsBtn.addEventListener('mousedown', startPressTimers);
@@ -6628,11 +7216,12 @@
         }
 
         // Prevent pull-to-refresh on mobile
-        document.addEventListener('touchmove', function(e) {
+        document.addEventListener('touchmove', function (e) {
             if (e.touches.length > 1) {
                 e.preventDefault();
             }
         }, { passive: false });
     </script>
 </body>
+
 </html>
