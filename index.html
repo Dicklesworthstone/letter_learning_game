@@ -11,6 +11,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary: #5B3FD8;
+            --primary-dark: #4730B3;
+            --secondary: #FF5E8A;
+            --secondary-dark: #E84771;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            --radius-sm: 6px;
+            --radius: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -21,8 +53,8 @@
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #F0F4F8 0%, #E8ECF1 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -31,11 +63,27 @@
             position: relative;
         }
 
+        /* Add glass morphism background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(91, 63, 216, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 94, 138, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
         /* Animated background bubbles */
         .bubble {
             position: absolute;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(91, 63, 216, 0.1), rgba(255, 94, 138, 0.1));
+            backdrop-filter: blur(10px);
             animation: float 20s infinite ease-in-out;
         }
 
@@ -51,25 +99,26 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 255, 255, 0.95);
             position: relative;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-2xl);
+            border: 1px solid rgba(255, 255, 255, 0.8);
         }
 
         .header {
-            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
-            padding: 12px 15px;
+            background: white;
+            padding: 16px 20px;
             text-align: center;
-            color: white;
-            font-size: 22px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            color: var(--gray-900);
+            font-size: 20px;
+            font-weight: 700;
             position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-sm);
             display: flex;
             justify-content: center;
             align-items: center;
+            border-bottom: 1px solid var(--gray-100);
         }
 
         .settings-btn {
@@ -77,19 +126,26 @@
             right: 15px;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255,255,255,0.25);
-            border: 2px solid rgba(255,255,255,0.5);
-            color: white;
-            font-size: 20px;
-            padding: 6px 12px;
-            border-radius: 10px;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            color: var(--gray-600);
+            font-size: 18px;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .settings-btn:hover {
-            background: rgba(255,255,255,0.35);
-            transform: translateY(-50%) scale(1.1);
+            background: var(--gray-100);
+            border-color: var(--gray-300);
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: var(--shadow-md);
         }
 
         /* Achievement Badge Button */
@@ -98,35 +154,45 @@
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(255,255,255,0.25);
-            border: 2px solid rgba(255,255,255,0.5);
-            color: white;
-            font-size: 20px;
-            padding: 6px 12px;
-            border-radius: 10px;
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            color: var(--gray-600);
+            font-size: 18px;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .badges-btn:hover {
-            background: rgba(255,255,255,0.35);
-            transform: translateY(-50%) scale(1.1);
+            background: var(--gray-100);
+            border-color: var(--gray-300);
+            transform: translateY(-50%) scale(1.05);
+            box-shadow: var(--shadow-md);
         }
 
         .badge-count {
             position: absolute;
-            top: -8px;
-            right: -8px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            top: -6px;
+            right: -6px;
+            background: var(--secondary);
             color: white;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 10px;
-            min-width: 18px;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 5px;
+            border-radius: 999px;
+            min-width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            animation: badgePulse 2s infinite;
+            box-shadow: var(--shadow-sm);
         }
 
         @keyframes badgePulse {
@@ -138,20 +204,21 @@
             display: flex;
             gap: 12px;
             padding: 16px;
-            background: linear-gradient(to bottom, #ffffff, #f9fafb);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-100);
         }
 
         .mode-btn {
             flex: 1;
-            padding: 14px;
-            border: 3px solid #f093fb;
+            padding: 12px 16px;
+            border: 1px solid var(--gray-200);
             background: white;
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: bold;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-700);
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
         }
@@ -164,7 +231,7 @@
             width: 0;
             height: 0;
             border-radius: 50%;
-            background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             transform: translate(-50%, -50%);
             transition: width 0.6s, height 0.6s;
         }
@@ -176,8 +243,9 @@
 
         .mode-btn.active {
             color: white;
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(240, 147, 251, 0.4);
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
         }
 
         .mode-btn span {
@@ -187,22 +255,22 @@
 
         .score-panel {
             padding: 16px 20px;
-            background: linear-gradient(to bottom, #fafafa, #f5f5f5);
+            background: white;
             display: flex;
             justify-content: space-around;
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
-            font-weight: 600;
-            color: #764ba2;
-            border-bottom: 3px solid #f093fb;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            font-weight: 500;
+            color: var(--gray-700);
+            border-bottom: 1px solid var(--gray-100);
         }
 
         .score-left {
             display: flex;
             flex-direction: column;
             gap: 6px;
+            font-size: 14px;
         }
 
         .score-right {
@@ -221,10 +289,14 @@
         .star {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: inline-block;
+            filter: grayscale(1);
+            opacity: 0.3;
         }
 
         .star.filled {
             animation: starPop 0.5s;
+            filter: grayscale(0);
+            opacity: 1;
         }
 
         @keyframes starPop {
@@ -234,9 +306,10 @@
         }
 
         .score-value {
-            font-size: 20px;
-            color: #f5576c;
-            font-weight: bold;
+            font-size: 18px;
+            color: var(--primary);
+            font-weight: 600;
+            letter-spacing: -0.02em;
         }
 
         .timer-display {
@@ -310,36 +383,38 @@
 
         /* Enhanced Sound Button */
         .sound-btn {
-            width: 120px;
-            height: 120px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
             background: white;
-            border: 4px solid #667eea;
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+            border: 2px solid var(--gray-200);
+            box-shadow: var(--shadow-lg);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 60px;
+            font-size: 56px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-bottom: 25px;
+            transition: all 0.2s ease;
+            margin-bottom: 32px;
             position: relative;
             overflow: hidden;
-            color: #667eea;
+            color: var(--gray-400);
         }
 
         .sound-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            transform: scale(1.08);
+            box-shadow: var(--shadow-xl);
+            background: var(--primary);
             color: white;
+            border-color: var(--primary);
         }
 
         .sound-btn:active { transform: scale(0.95); }
 
         .sound-btn.playing {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--primary);
             color: white;
+            border-color: var(--primary);
             animation: soundWave 0.6s;
         }
 
@@ -359,22 +434,24 @@
         }
 
         .option-btn {
-            padding: 25px;
-            font-size: 48px;
-            border: 4px solid #667eea;
+            padding: 28px;
+            font-size: 44px;
+            border: 2px solid var(--gray-200);
             background: white;
-            border-radius: 25px;
+            border-radius: var(--radius-lg);
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: bold;
+            transition: all 0.2s ease;
+            font-weight: 600;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow);
+            color: var(--gray-800);
         }
 
         .option-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
         }
 
         .option-btn:active {
@@ -383,16 +460,16 @@
 
         .option-btn.correct {
             animation: correctBounce 0.8s;
-            background: linear-gradient(135deg, #4ade80, #22c55e);
+            background: var(--success);
             color: white;
-            border-color: #22c55e;
+            border-color: var(--success);
         }
 
         .option-btn.wrong {
             animation: wrongShake 0.6s;
-            background: linear-gradient(135deg, #f87171, #ef4444);
+            background: var(--error);
             color: white;
-            border-color: #ef4444;
+            border-color: var(--error);
         }
 
         @keyframes correctBounce {
@@ -659,8 +736,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(20px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -669,15 +746,16 @@
         }
 
         .settings-content {
-            background: linear-gradient(to bottom, #ffffff, #f9fafb);
+            background: white;
             padding: 0;
-            border-radius: 30px;
+            border-radius: var(--radius-xl);
             width: 90%;
             max-width: 480px;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.25);
+            box-shadow: var(--shadow-2xl);
             animation: slideUp 0.4s;
+            border: 1px solid var(--gray-100);
         }
 
         @keyframes slideUp {
@@ -686,35 +764,38 @@
         }
 
         .settings-header {
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            color: white;
-            padding: 25px 30px;
-            font-size: 24px;
-            font-weight: bold;
+            background: white;
+            color: var(--gray-900);
+            padding: 24px 28px;
+            font-size: 20px;
+            font-weight: 700;
             text-align: center;
-            border-radius: 30px 30px 0 0;
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
             position: sticky;
             top: 0;
             z-index: 10;
+            border-bottom: 1px solid var(--gray-100);
+            letter-spacing: -0.02em;
         }
 
         .settings-body { padding: 30px; }
 
         .settings-section {
             background: white;
-            border-radius: 20px;
+            border-radius: var(--radius-md);
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid var(--gray-100);
         }
 
         .settings-section-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #374151;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-800);
             margin-bottom: 15px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #f3f4f6;
+            border-bottom: 1px solid var(--gray-100);
+            letter-spacing: -0.01em;
         }
 
         /* Advanced settings disclosure polish */
@@ -781,48 +862,49 @@
 
         .toggle-btn {
             padding: 10px 20px;
-            border: 2px solid #e5e7eb;
+            border: 1px solid var(--gray-200);
             background: white;
-            border-radius: 12px;
+            border-radius: var(--radius);
             cursor: pointer;
             margin-right: 8px;
             margin-bottom: 6px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             font-weight: 500;
-            color: #6b7280;
-            font-size: 14px;
+            color: var(--gray-600);
+            font-size: 13px;
+            letter-spacing: -0.01em;
         }
 
         .toggle-btn:hover {
-            border-color: #f093fb;
-            transform: translateY(-2px);
+            background: var(--gray-50);
+            border-color: var(--gray-300);
         }
 
         .toggle-btn.active {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
+            background: var(--primary);
             color: white;
-            border-color: transparent;
-            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+            border-color: var(--primary);
         }
 
         .close-settings {
-            background: linear-gradient(135deg, #4ade80, #22c55e);
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 16px 35px;
-            border-radius: 20px;
-            font-size: 18px;
-            font-weight: bold;
+            padding: 14px 28px;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
             margin-top: 20px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+            transition: all 0.2s ease;
+            letter-spacing: -0.01em;
         }
 
         .close-settings:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
         }
 
         /* About Section Styles */
