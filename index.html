@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Learn Your Letters!</title>
     
     <!-- Modern Libraries via CDN -->
@@ -70,6 +70,12 @@
             -webkit-touch-callout: none;
         }
 
+        html, body {
+            height: 100%;
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
             background: linear-gradient(135deg, #F8FAFF 0%, #EEF2FF 100%);
@@ -128,6 +134,11 @@
             box-shadow: var(--shadow-2xl);
             border: 1px solid rgba(255, 255, 255, 0.8);
             z-index: 1; /* Always above decorative bubbles */
+            overflow: hidden; /* Prevent body scroll bleed */
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            padding-bottom: constant(safe-area-inset-bottom, 0px);
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-top: constant(safe-area-inset-top, 0px);
         }
 
         .header {
@@ -421,6 +432,15 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            overflow-y: auto;               /* Enable inner scrolling on small screens */
+            -webkit-overflow-scrolling: touch; /* Momentum scroll on iOS */
+            overscroll-behavior: contain;   /* Prevent scroll chaining */
+        }
+
+        /* Make interactive elements feel native on iOS */
+        button, .mode-btn, .option-btn, .sound-btn, .toggle-btn, .settings-btn, .badges-btn, .continue-btn, .player-modal-btn, .start-btn {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         /* Enhanced Sound Button */
@@ -844,6 +864,7 @@
             justify-content: center;
             z-index: 12000;
             animation: modalFadeIn 0.2s ease-out;
+            overscroll-behavior: contain;
         }
 
         @keyframes modalFadeIn {
@@ -869,6 +890,8 @@
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
             animation: modalSlideUp 0.3s var(--ease-out-expo);
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
 
         @keyframes modalSlideUp {
@@ -1157,6 +1180,7 @@
             justify-content: center;
             z-index: 4000;
             overflow-y: auto;
+            overscroll-behavior: contain;
         }
 
         .achievement-content {
@@ -1488,6 +1512,7 @@
             align-items: center;
             justify-content: center;
             z-index: 3000;
+            overscroll-behavior: contain;
         }
 
         .round-content {
@@ -1807,6 +1832,7 @@
             align-items: center;
             justify-content: center;
             z-index: 5000;
+            overscroll-behavior: contain;
         }
 
         .player-modal-content {
