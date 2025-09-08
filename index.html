@@ -3881,32 +3881,32 @@
         
         // Phonetic sounds spelled out for primitive TTS systems
         const phoneticSounds = {
-            'a': 'ah. ah. ah. as in apple',
-            'b': 'buh. buh. buh. as in ball',
-            'c': 'kuh. kuh. kuh. as in cat',
-            'd': 'duh. duh. duh. as in dog',
-            'e': 'eh. eh. eh. as in egg',
-            'f': 'ff. ff. ff. as in fish',
-            'g': 'guh. guh. guh. as in goat',
-            'h': 'huh. huh. huh. as in hat',
-            'i': 'ih. ih. ih. as in igloo',
-            'j': 'juh. juh. juh. as in jump',
-            'k': 'kuh. kuh. kuh. as in kite',
-            'l': 'luh. luh. luh. as in lion',
-            'm': 'mm. mm. mm. as in moon',
-            'n': 'nn. nn. nn. as in nose',
-            'o': 'aw. aw. aw. as in octopus',
-            'p': 'puh. puh. puh. as in pig',
-            'q': 'kwuh. kwuh. kwuh. as in queen',
-            'r': 'ruh. ruh. ruh. as in rabbit',
-            's': 'ss. ss. ss. as in snake',
-            't': 'tuh. tuh. tuh. as in turtle',
-            'u': 'uh. uh. uh. as in umbrella',
-            'v': 'vuh. vuh. vuh. as in violin',
-            'w': 'wuh. wuh. wuh. as in whale',
-            'x': 'ks. ks. ks. as in fox',
-            'y': 'yuh. yuh. yuh. as in yellow',
-            'z': 'zz. zz. zz. as in zebra'
+            'a': 'ah, ah, ah, as in apple',
+            'b': 'buh, buh, buh, as in ball',
+            'c': 'kuh, kuh, kuh, as in cat',
+            'd': 'duh, duh, duh, as in dog',
+            'e': 'eh, eh, eh, as in egg',
+            'f': 'fff, fff, fff, as in fish',
+            'g': 'guh, guh, guh, as in goat',
+            'h': 'huh, huh, huh, as in hat',
+            'i': 'ih, ih, ih, as in igloo',
+            'j': 'juh, juh, juh, as in jump',
+            'k': 'kuh, kuh, kuh, as in kite',
+            'l': 'lll, lll, lll, as in lion',
+            'm': 'mmm, mmm, mmm, as in moon',
+            'n': 'nnn, nnn, nnn, as in nose',
+            'o': 'aw, aw, aw, as in octopus',
+            'p': 'puh, puh, puh, as in pig',
+            'q': 'kwuh, kwuh, kwuh, as in queen',
+            'r': 'rrr, rrr, rrr, as in rabbit',
+            's': 'sss, sss, sss, as in snake',
+            't': 'tuh, tuh, tuh, as in turtle',
+            'u': 'uh, uh, uh, as in umbrella',
+            'v': 'vvv, vvv, vvv, as in violin',
+            'w': 'wuh, wuh, wuh, as in whale',
+            'x': 'ks, ks, ks, as in fox',
+            'y': 'yuh, yuh, yuh, as in yellow',
+            'z': 'zzz, zzz, zzz, as in zebra'
         };
 
         function getLetterCollection() {
@@ -4097,32 +4097,32 @@
             
             // Letter names spelled phonetically for primitive TTS
             const specialPronunciations = {
-                'a': 'ay. ay. The letter ay',
-                'b': 'bee. bee. The letter bee',
-                'c': 'see. see. The letter see',
-                'd': 'dee. dee. The letter dee',
-                'e': 'ee. ee. The letter ee',
-                'f': 'eff. eff. The letter eff',
-                'g': 'jee. jee. The letter jee',
-                'h': 'aych. aych. The letter aych',
-                'i': 'eye. eye. The letter eye',
-                'j': 'jay. jay. The letter jay',
-                'k': 'kay. kay. The letter kay',
-                'l': 'ell. ell. The letter ell',
-                'm': 'em. em. The letter em',
-                'n': 'en. en. The letter en',
-                'o': 'oh. oh. The letter oh',
-                'p': 'pee. pee. The letter pee',
-                'q': 'kyoo. kyoo. The letter kyoo',
-                'r': 'are. are. The letter are',
-                's': 'ess. ess. The letter ess',
-                't': 'tee. tee. The letter tee',
-                'u': 'you. you. The letter you',
-                'v': 'vee. vee. The letter vee',
-                'w': 'double you. double you. The letter double you',
-                'x': 'ecks. ecks. The letter ecks',
-                'y': 'why. why. The letter why',
-                'z': 'zee. zee. The letter zee'
+                'a': 'ay',
+                'b': 'bee',
+                'c': 'see',
+                'd': 'dee',
+                'e': 'ee',
+                'f': 'eff',
+                'g': 'jee',
+                'h': 'aych',
+                'i': 'eye',
+                'j': 'jay',
+                'k': 'kay',
+                'l': 'ell',
+                'm': 'em',
+                'n': 'en',
+                'o': 'oh',
+                'p': 'pee',
+                'q': 'kyoo',
+                'r': 'are',
+                's': 'ess',
+                't': 'tee',
+                'u': 'you',
+                'v': 'vee',
+                'w': 'double you',
+                'x': 'ecks',
+                'y': 'why',
+                'z': 'zee'
             };
             
             if (specialPronunciations[lowerLetter]) {
@@ -4184,17 +4184,48 @@
                 return;
             }
             
+            // Get the letter name pronunciation from speakLetter's list
+            const specialPronunciations = {
+                'a': 'ay',
+                'b': 'bee',
+                'c': 'see',
+                'd': 'dee',
+                'e': 'ee',
+                'f': 'eff',
+                'g': 'jee',
+                'h': 'aych',
+                'i': 'eye',
+                'j': 'jay',
+                'k': 'kay',
+                'l': 'ell',
+                'm': 'em',
+                'n': 'en',
+                'o': 'oh',
+                'p': 'pee',
+                'q': 'kyoo',
+                'r': 'are',
+                's': 'ess',
+                't': 'tee',
+                'u': 'you',
+                'v': 'vee',
+                'w': 'double you',
+                'x': 'ecks',
+                'y': 'why',
+                'z': 'zee'
+            };
+            
             const phoneticSound = phoneticSounds[letter.toLowerCase()];
             if (phoneticSound) {
                 cancelSpeech();
                 
-                // Step 1: Tell the child what letter it is
+                // Step 1: Tell the child what letter it is - spell it phonetically
+                const letterSound = specialPronunciations[letter.toLowerCase()] || letter;
                 const letterName = letter.toUpperCase();
-                speakPhrase(`This is the letter ${letterName}`, () => {
+                speakPhrase(`This is the letter ${letterSound}. ${letterSound}`, () => {
                     // Pause for processing
                     setTimeout(() => {
                         // Step 2: Ask them to make the sound
-                        speakPhrase(`Can you make the ${letterName} sound? Try it!`, () => {
+                        speakPhrase(`Can you make the ${letterSound} sound? Try it!`, () => {
                             // Give child 3 seconds to try
                             setTimeout(() => {
                                 // Step 3: Say "Good try" encouragingly
@@ -4202,7 +4233,7 @@
                                     // Small pause
                                     setTimeout(() => {
                                         // Step 4: Demonstrate the sound clearly
-                                        speakPhrase(`Listen. The letter ${letterName} makes this sound.`, () => {
+                                        speakPhrase(`Listen. The letter ${letterSound} makes this sound.`, () => {
                                             // Pause before sound
                                             setTimeout(() => {
                                                 // Step 5: Say the phonetic sound slowly
@@ -4220,7 +4251,7 @@
                                                     // Final pause
                                                     setTimeout(() => {
                                                         // Step 6: Encourage repetition
-                                                        speakPhrase(`Now you try! Say the ${letterName} sound!`, () => {
+                                                        speakPhrase(`Now you try! Say the ${letterSound} sound!`, () => {
                                                             // Give time for child to repeat
                                                             setTimeout(() => {
                                                                 speakPhrase(`Great job!`, callback);
