@@ -9,7 +9,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
         * {
@@ -3421,21 +3420,21 @@
             'i': 'ih as in igloo',
             'j': 'juh as in jump',
             'k': 'kuh as in kite',
-            'l': 'lll as in lion',
+            'l': 'luh as in lion',
             'm': 'mmm as in moon',
-            'n': 'nnn as in nose',
+            'n': 'nuh as in nose',
             'o': 'oh as in octopus',
             'p': 'puh as in pig',
             'q': 'kwuh as in queen',
-            'r': 'rrr as in rabbit',
+            'r': 'ruh as in rabbit',
             's': 'sss as in snake',
             't': 'tuh as in turtle',
             'u': 'uh as in umbrella',
-            'v': 'vvv as in violin',
+            'v': 'vuh as in violin',
             'w': 'wuh as in whale',
             'x': 'ks as in fox',
             'y': 'yuh as in yellow',
-            'z': 'zzz as in zebra'
+            'z': 'zz as in zebra'
         };
 
         function getLetterCollection() {
@@ -3712,7 +3711,20 @@
             
             const phoneticSound = phoneticSounds[letter.toLowerCase()];
             if (phoneticSound) {
-                speakPhrase(`The letter ${letter} makes the sound: ${phoneticSound}`, callback);
+                let safeSound = phoneticSound;
+                // Windows TTS sometimes spells repeated letters; normalize to syllables
+                const ua = navigator.userAgent || '';
+                if (/Windows/i.test(ua)) {
+                    safeSound = safeSound
+                        .replace(/\bnnn\b/gi, 'nuh')
+                        .replace(/\bmmm\b/gi, 'muh')
+                        .replace(/\blll\b/gi, 'luh')
+                        .replace(/\brrr\b/gi, 'ruh')
+                        .replace(/\bvvv\b/gi, 'vuh')
+                        .replace(/\bzzz\b/gi, 'zz')
+                        .replace(/\bsss\b/gi, 'ss');
+                }
+                speakPhrase(`The letter ${letter} makes the sound: ${safeSound}`, callback);
             } else {
                 if (callback) callback();
             }
@@ -5017,35 +5029,14 @@
         }
 
         function showAchievementNotification(achievement) {
-            const notification = document.getElementById('achievementNotification');
-            const icon = document.getElementById('notificationIcon');
-            const title = document.getElementById('notificationTitle');
-            const text = document.getElementById('notificationText');
-            
-            icon.textContent = achievement.icon;
-            title.textContent = 'Achievement Unlocked!';
-            text.textContent = achievement.name;
-            
-            notification.style.display = 'flex';
-            
-            // Animate with GSAP if available
-            if (typeof gsap !== 'undefined') {
-                gsap.from(notification, {
-                    x: 400,
-                    duration: 0.5,
-                    ease: "back.out(1.7)"
-                });
+            // Toasts disabled by request: keep things subtle
+            updateBadgeCount();
+            const badge = document.getElementById('badgeCount');
+            if (badge) {
+                badge.style.transition = 'transform 0.3s';
+                badge.style.transform = 'scale(1.25)';
+                setTimeout(() => { badge.style.transform = ''; }, 300);
             }
-            
-            // Play celebration sound
-            if (soundEnabled) {
-                speakPhrase(`Achievement unlocked: ${achievement.name}!`);
-            }
-            
-            // Hide after 4 seconds
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 4000);
         }
 
         function updateBadgeCount() {
@@ -5070,6 +5061,12 @@
             });
             
             modal.style.display = 'flex';
+            // Close when tapping/clicking outside of the content
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    closeAchievements();
+                }
+            };
         }
 
         function closeAchievements() {
@@ -5746,8 +5743,7 @@
             
             if (focusModeEnabled) {
                 document.body.classList.add('focus-mode');
-                switchEl.classList.add('active');
-                switchEl.setAttribute('aria-checked', 'true');
+                if (switchEl) { switchEl.classList.add('active'); switchEl.setAttribute('aria-checked', 'true'); }
                 // Store current timer state and disable timer in focus mode
                 previousTimerState = timerEnabled;
                 timerEnabled = false;
@@ -5757,8 +5753,7 @@
                 speakPhrase('Focus mode enabled. Simplified interface activated.');
             } else {
                 document.body.classList.remove('focus-mode');
-                switchEl.classList.remove('active');
-                switchEl.setAttribute('aria-checked', 'false');
+                if (switchEl) { switchEl.classList.remove('active'); switchEl.setAttribute('aria-checked', 'false'); }
                 // Restore previous timer state instead of always enabling
                 timerEnabled = previousTimerState;
                 speakPhrase('Focus mode disabled.');
@@ -5773,12 +5768,10 @@
             
             if (highContrastEnabled) {
                 document.body.style.filter = 'contrast(1.5)';
-                switchEl.classList.add('active');
-                switchEl.setAttribute('aria-checked', 'true');
+                if (switchEl) { switchEl.classList.add('active'); switchEl.setAttribute('aria-checked', 'true'); }
             } else {
                 document.body.style.filter = 'none';
-                switchEl.classList.remove('active');
-                switchEl.setAttribute('aria-checked', 'false');
+                if (switchEl) { switchEl.classList.remove('active'); switchEl.setAttribute('aria-checked', 'false'); }
             }
             
             saveGameData();
@@ -5795,14 +5788,12 @@
                 style.id = 'reduce-motion-style';
                 style.textContent = '* { animation-duration: 0.01s !important; transition-duration: 0.01s !important; }';
                 document.head.appendChild(style);
-                switchEl.classList.add('active');
-                switchEl.setAttribute('aria-checked', 'true');
+                if (switchEl) { switchEl.classList.add('active'); switchEl.setAttribute('aria-checked', 'true'); }
             } else {
                 document.body.style.removeProperty('--animation-duration');
                 const style = document.getElementById('reduce-motion-style');
                 if (style) style.remove();
-                switchEl.classList.remove('active');
-                switchEl.setAttribute('aria-checked', 'false');
+                if (switchEl) { switchEl.classList.remove('active'); switchEl.setAttribute('aria-checked', 'false'); }
             }
             
             saveGameData();
@@ -5978,6 +5969,16 @@
         if (celebrationType !== 'fireworks') {
             setCelebration(celebrationType);
         }
+
+        // Sync advanced settings UI to saved values at load
+        const voiceToggleAtLoad = document.getElementById('voiceToggle');
+        if (voiceToggleAtLoad) voiceToggleAtLoad.checked = !!voiceRecordingEnabled;
+        const fmCheckAtLoad = document.getElementById('focusModeCheck');
+        if (fmCheckAtLoad) fmCheckAtLoad.checked = !!focusModeEnabled;
+        const hcCheckAtLoad = document.getElementById('highContrastCheck');
+        if (hcCheckAtLoad) hcCheckAtLoad.checked = !!highContrastEnabled;
+        const rmCheckAtLoad = document.getElementById('reduceMotionCheck');
+        if (rmCheckAtLoad) rmCheckAtLoad.checked = !!reduceMotionEnabled;
 
         // Long press for parent dashboard
         let longPressTimer;
