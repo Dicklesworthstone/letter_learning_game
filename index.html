@@ -658,9 +658,9 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            overflow: auto;
-            /* allow content to scroll if needed rather than being clipped */
-            -webkit-overflow-scrolling: touch;
+            overflow: hidden;
+            /* prevent scrolling; ensure in-view content fits */
+            -webkit-overflow-scrolling: auto;
             background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(15px) saturate(150%);
             -webkit-backdrop-filter: blur(15px) saturate(150%);
@@ -2115,16 +2115,16 @@
         }
 
         .phonics-instruction {
-            font-size: 24px;
+            font-size: clamp(16px, 3.5vh, 24px);
             color: #764ba2;
-            margin-bottom: 25px;
+            margin-bottom: clamp(8px, 2.2vh, 20px);
             font-weight: bold;
         }
 
         .phonics-timer {
-            font-size: 72px;
+            font-size: clamp(42px, 12.5vh, 72px);
             font-weight: bold;
-            margin-bottom: 25px;
+            margin-bottom: clamp(8px, 2.5vh, 20px);
             animation: phonicsCount 1s infinite;
             background: linear-gradient(90deg, #f093fb, #f5576c);
             -webkit-background-clip: text;
@@ -2148,8 +2148,8 @@
         }
 
         .phonics-letter {
-            font-size: 100px;
-            margin-top: 20px;
+            font-size: clamp(56px, 18vh, 100px);
+            margin-top: clamp(6px, 2vh, 20px);
             font-weight: bold;
             background: linear-gradient(90deg, #667eea, #764ba2);
             -webkit-background-clip: text;
@@ -4070,6 +4070,13 @@
                             </div>
                         </div>
                         <div class="setting-group">
+                            <label class="setting-label">Phonics</label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn active" id="phonicsOn" onclick="setPhonicsMode('on')" aria-pressed="true" aria-label="Enable phonics flow">On</button>
+                                <button class="toggle-btn" id="phonicsOff" onclick="setPhonicsMode('off')" aria-pressed="false" aria-label="Disable phonics flow">Off</button>
+                            </div>
+                        </div>
+                        <div class="setting-group">
                             <label class="setting-label">Sound</label>
                             <div class="toggle-group">
                                 <button class="toggle-btn active" id="soundOn" onclick="setSoundMode('on')"
@@ -4116,6 +4123,12 @@
                                         onchange="toggleHighContrast()"><span> High Contrast</span></label>
                                 <label class="checkbox-label"><input type="checkbox" id="reduceMotionCheck"
                                         onchange="toggleReduceMotion()"><span> Reduce Motion</span></label>
+                            </div>
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">Parent & Teacher</label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn" id="openParent" onclick="openParentDashboardViaSettings()" aria-label="Open parent dashboard">Open Parent Dashboard</button>
                             </div>
                         </div>
                     </details>
@@ -4367,6 +4380,7 @@
         let letterErrors = {};
         let problemLetters = [];
         let waitingForPhonics = false;
+        let phonicsEnabled = true; // default on, can be toggled in settings
         let phonicsTimer = null;
         let speakPromptTimeout = null;
         let speakLetterTimeout = null;
@@ -5267,7 +5281,11 @@
                 speakPhrase('Excellent! That\'s correct!');
 
                 // Start phonics phase (track timeout so it can be cancelled)
-                phonicsPhaseTimeout = setTimeout(() => startPhonicsPhase(), 1500);
+                if (phonicsEnabled) {
+                    phonicsPhaseTimeout = setTimeout(() => startPhonicsPhase(), 1500);
+                } else {
+                    setTimeout(() => startIdentifyGame(), 1200);
+                }
 
             } else {
                 clickedButton.classList.add('wrong');
@@ -5298,6 +5316,12 @@
         }
 
         function startPhonicsPhase() {
+            if (!phonicsEnabled) {
+                // Skip phonics entirely when disabled
+                waitingForPhonics = false;
+                setTimeout(() => startIdentifyGame(), 300);
+                return;
+            }
             waitingForPhonics = true;
             clearTimer();
             cancelSpeech();
@@ -5332,6 +5356,20 @@
             }
 
             phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
+        }
+
+        // Settings controls
+        function setPhonicsMode(mode) {
+            phonicsEnabled = mode === 'on';
+            try { localStorage.setItem('letterLearningPhonics', phonicsEnabled ? 'on' : 'off'); } catch (e) {}
+            const onBtn = document.getElementById('phonicsOn');
+            const offBtn = document.getElementById('phonicsOff');
+            if (onBtn && offBtn) {
+                onBtn.classList.toggle('active', phonicsEnabled);
+                onBtn.setAttribute('aria-pressed', String(phonicsEnabled));
+                offBtn.classList.toggle('active', !phonicsEnabled);
+                offBtn.setAttribute('aria-pressed', String(!phonicsEnabled));
+            }
         }
 
         function checkRoundCompletion() {
@@ -5930,6 +5968,13 @@
             previouslyFocusedElement = document.activeElement;
             modal.style.display = 'flex';
             // Sync advanced settings checkboxes if present
+            try {
+                const savedPhonics = localStorage.getItem('letterLearningPhonics');
+                if (savedPhonics) {
+                    phonicsEnabled = savedPhonics === 'on';
+                }
+            } catch (e) {}
+            setPhonicsMode(phonicsEnabled ? 'on' : 'off');
             const voiceToggle = document.getElementById('voiceToggle');
             if (voiceToggle) voiceToggle.checked = !!voiceRecordingEnabled;
             const fm = document.getElementById('focusModeCheck');
@@ -7118,9 +7163,10 @@
 
         // Load saved theme
         const savedTheme = localStorage.getItem('letterLearningTheme');
-        if (savedTheme) {
-            currentTheme = savedTheme;
-            setVisualTheme(savedTheme);
+        const savedPhonics = localStorage.getItem('letterLearningPhonics');
+        if (savedPhonics) {
+            phonicsEnabled = savedPhonics === 'on';
+            setPhonicsMode(phonicsEnabled ? 'on' : 'off');
         }
 
         // Set saved celebration type in UI
@@ -7163,6 +7209,12 @@
         settingsBtn.addEventListener('mousedown', startPressTimers);
         settingsBtn.addEventListener('mouseup', clearPressTimers);
         settingsBtn.addEventListener('mouseleave', clearPressTimers);
+
+        // Convenience: open Parent Dashboard directly from Settings
+        function openParentDashboardViaSettings() {
+            closeSettings();
+            setTimeout(() => openParentDashboard(), 150);
+        }
 
         // Add keyboard support for debugging
         document.addEventListener('keydown', (e) => {
