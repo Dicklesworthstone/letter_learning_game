@@ -717,6 +717,25 @@
             border-bottom: 2px solid #f3f4f6;
         }
 
+        /* Advanced settings disclosure polish */
+        .advanced-settings summary {
+            position: relative;
+            list-style: none;
+            cursor: pointer;
+        }
+        .advanced-settings summary::-webkit-details-marker { display: none; }
+        .advanced-settings summary::after {
+            content: '▶️';
+            position: absolute;
+            right: 0; top: 50%;
+            transform: translateY(-50%) scale(0.7);
+            transition: transform 0.2s;
+            font-size: 16px;
+        }
+        .advanced-settings[open] > summary::after {
+            transform: translateY(-50%) scale(0.7) rotate(90deg);
+        }
+
         /* Compact topbar for quick toggles (e.g., Reduce Motion) */
         .settings-topbar {
             display: flex;
@@ -1414,6 +1433,9 @@
             .start-btn { font-size: 20px; padding: 16px 36px; }
             .stars { font-size: 20px; }
             .score-value { font-size: 18px; }
+            /* Layout fixes for very small screens */
+            .score-panel { justify-content: space-between; }
+            .difficulty-indicator { width: 100%; margin-top: 8px; justify-content: center; }
         }
 
         /* Multiplayer Mode Styles */
@@ -2918,7 +2940,7 @@
             </div>
             <div class="score-right">
                 <div class="score-value">Score: <span id="scoreDisplay">0</span></div>
-                <div><span id="correctCount">0</span>/<span id="totalCount">50</span> | ❌ <span id="wrongCount">0</span></div>
+                <div><span id="correctCount">0</span>/<span id="totalCount">15</span> | ❌ <span id="wrongCount">0</span></div>
             </div>
             <div class="difficulty-indicator" id="difficultyIndicator">
                 <span class="difficulty-label">Difficulty:</span>
@@ -3277,6 +3299,9 @@
         let drawingPoints = [];
         let recentLetters = [];
         let isAnswering = false; // lock input during answer animations
+        let previouslyFocusedElement = null; // for modal focus management
+        const QUESTIONS_PER_ROUND = 15; // shorter, kid-friendly rounds
+        let phonicsPhaseTimeout = null; // track phonics phase start timeout
 
         // Adaptive Difficulty State
         let letterPerformance = {};
@@ -3738,7 +3763,7 @@
             
             document.getElementById('scoreDisplay').textContent = displayScore;
             document.getElementById('correctCount').textContent = displayCorrect;
-            document.getElementById('totalCount').textContent = '50';
+            document.getElementById('totalCount').textContent = QUESTIONS_PER_ROUND;
             document.getElementById('wrongCount').textContent = displayWrong;
             document.getElementById('roundNumber').textContent = displayRound;
             
@@ -3836,6 +3861,10 @@
             if (phonicsTimer) {
                 clearTimeout(phonicsTimer);
                 phonicsTimer = null;
+            }
+            if (phonicsPhaseTimeout) {
+                clearTimeout(phonicsPhaseTimeout);
+                phonicsPhaseTimeout = null;
             }
         }
 
@@ -3965,6 +3994,11 @@
         }
 
         function startIdentifyGame() {
+            // Reset round-specific state when (re)starting this mode
+            roundCorrect = 0;
+            roundWrong = 0;
+            responseTimes = [];
+            scoreAtRoundStart = currentPlayer ? currentPlayer.score : score;
             if (waitingForPhonics) return;
             isAnswering = false;
 
@@ -4132,8 +4166,8 @@
                 
                 speakPhrase('Excellent! That\'s correct!');
                 
-                // Start phonics phase
-                setTimeout(() => startPhonicsPhase(), 1500);
+                // Start phonics phase (track timeout so it can be cancelled)
+                phonicsPhaseTimeout = setTimeout(() => startPhonicsPhase(), 1500);
                 
             } else {
                 clickedButton.classList.add('wrong');
@@ -4201,7 +4235,7 @@
             // Check if it's time for a mini-game break
             if (roundCorrect > 0 && roundCorrect % 10 === 0 && Math.random() < 0.5) {
                 showMinigameAnnouncement();
-            } else if (roundCorrect >= 50 && roundWrong < 5) {
+            } else if (roundCorrect >= QUESTIONS_PER_ROUND) {
                 showRoundCompletion();
             }
         }
@@ -4535,6 +4569,10 @@
         }
 
         function startDrawGame() {
+            // Reset round-specific state when (re)starting this mode
+            roundCorrect = 0;
+            roundWrong = 0;
+            scoreAtRoundStart = currentPlayer ? currentPlayer.score : score;
             clearAllTimers();
             cancelSpeech();
             currentLetter = getRandomLetter();
@@ -4680,7 +4718,7 @@
 
         function checkDrawing() {
             if (drawingPoints.length < 30) {
-                showFeedback('Keep drawing! Add more detail ✏️', 'error');
+                showFeedback('Keep drawing! Add more detail ✏️', 'info');
                 speakPhrase('Try to draw the complete letter with all its parts!');
                 return;
             }
@@ -4694,18 +4732,14 @@
             const isValid = drawingPoints.length > 50 && coverage > 0.05;
             
             if (isValid) {
-                score += 25;
-                correctAnswers++;
-                correctStreak++;
-                showFeedback('Amazing work! ✨', 'success');
-                speakPhrase('Excellent! That\'s a perfect ' + currentLetter + '!');
-                updateScoreDisplay();
+                // Practice-only feedback (no scoring in draw mode)
+                showFeedback('Great tracing! Let\'s try another! ✨', 'success');
+                speakPhrase('Great practice! Now let\'s draw the next letter.');
                 
                 // Create celebration overlay without disrupting the view
                 createDrawingCelebration();
                 
                 setTimeout(() => {
-                    clearCanvas();
                     startDrawGame();
                 }, 2500);
             } else {
@@ -4783,6 +4817,7 @@
 
         function openSettings() {
             const modal = document.getElementById('settingsModal');
+            previouslyFocusedElement = document.activeElement;
             modal.style.display = 'flex';
             // Sync advanced settings checkboxes if present
             const voiceToggle = document.getElementById('voiceToggle');
@@ -4794,6 +4829,9 @@
             const rm = document.getElementById('reduceMotionCheck');
             if (rm) rm.checked = !!reduceMotionEnabled;
             
+            // Trap focus within modal content
+            setTimeout(() => trapFocus(modal.querySelector('.settings-content')), 50);
+
             // Close modal when clicking outside
             modal.onclick = function(e) {
                 if (e.target === modal) {
@@ -4808,6 +4846,7 @@
             setTimeout(() => {
                 modal.style.display = 'none';
                 modal.style.animation = '';
+                if (previouslyFocusedElement) previouslyFocusedElement.focus();
             }, 300);
         }
 
@@ -5060,7 +5099,10 @@
                 grid.appendChild(badge);
             });
             
+            previouslyFocusedElement = document.activeElement;
             modal.style.display = 'flex';
+            // Trap focus inside the modal content
+            setTimeout(() => trapFocus(modal.querySelector('.achievement-content')), 50);
             // Close when tapping/clicking outside of the content
             modal.onclick = function(e) {
                 if (e.target === modal) {
@@ -5070,7 +5112,9 @@
         }
 
         function closeAchievements() {
-            document.getElementById('achievementModal').style.display = 'none';
+            const modal = document.getElementById('achievementModal');
+            modal.style.display = 'none';
+            if (previouslyFocusedElement) previouslyFocusedElement.focus();
         }
 
         function createBadgeElement(achievement) {
@@ -6032,6 +6076,30 @@
                 });
             }
         });
+
+        // Focus trap helper
+        function trapFocus(modal) {
+            if (!modal) return;
+            const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (!focusable || focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            first.focus();
+            modal.addEventListener('keydown', function onKeyDown(e) {
+                if (e.key !== 'Tab') return;
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            });
+        }
 
         // Prevent pull-to-refresh on mobile
         document.addEventListener('touchmove', function(e) {
