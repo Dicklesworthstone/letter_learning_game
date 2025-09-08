@@ -3205,7 +3205,7 @@
 
         // Adaptive Difficulty State
         let letterPerformance = {};
-        let currentStreak = 0;
+        let correctStreak = 0;  // Track consecutive correct answers
         let bestStreak = 0;
         let speedAnswers = 0;
         let sessionStartTime = Date.now();
@@ -3303,6 +3303,7 @@
         let focusModeEnabled = false;
         let highContrastEnabled = false;
         let reduceMotionEnabled = false;
+        let previousTimerState = true;  // Store timer state before focus mode
 
         // Streak System State
         let currentStreak = 0;
@@ -3981,14 +3982,14 @@
                 responseTimes.push(responseTime);
                 totalQuestions++;
                 
-                // Update streak
-                currentStreak++;
-                if (currentStreak > bestStreak) {
-                    bestStreak = currentStreak;
+                // Update correct answer streak
+                correctStreak++;
+                if (correctStreak > bestStreak) {
+                    bestStreak = correctStreak;
                 }
                 
                 // Check streak achievements
-                checkAchievement('streak', currentStreak);
+                checkAchievement('streak', correctStreak);
                 
                 // Award points based on speed
                 let points = 20;
@@ -4035,8 +4036,8 @@
                 score = Math.max(0, score - 15);
                 trackLetterError(currentLetter);
                 
-                // Reset streak
-                currentStreak = 0;
+                // Reset correct answer streak
+                correctStreak = 0;
                 
                 // Update letter performance
                 updateLetterPerformance(currentLetter, false, 0);
@@ -4480,15 +4481,18 @@
                 path.style.animationDelay = `${index * 2}s`;
                 guide.appendChild(path);
                 
-                // Add stroke number
-                const [startX, startY] = stroke.path.match(/M (\d+) (\d+)/).slice(1).map(Number);
-                const number = document.createElement('div');
-                number.className = 'stroke-number';
-                number.textContent = stroke.strokes;
-                number.style.left = `${startX * 5}px`;
-                number.style.top = `${startY * 5}px`;
-                number.style.animationDelay = `${index * 2}s`;
-                guide.parentElement.appendChild(number);
+                // Add stroke number (with safety check)
+                const pathMatch = stroke.path.match(/M\s*(\d+)\s+(\d+)/);
+                if (pathMatch) {
+                    const [startX, startY] = pathMatch.slice(1).map(Number);
+                    const number = document.createElement('div');
+                    number.className = 'stroke-number';
+                    number.textContent = stroke.strokes;
+                    number.style.left = `${startX * 5}px`;
+                    number.style.top = `${startY * 5}px`;
+                    number.style.animationDelay = `${index * 2}s`;
+                    guide.parentElement.appendChild(number);
+                }
             });
             
             speakPhrase(`Watch how to write ${currentLetter}`);
@@ -5013,6 +5017,7 @@
                 speedAnswers: 0,
                 totalPlayTime: 0,
                 roundsCompleted: 0,
+                celebrationType: 'fireworks',
                 createdAt: Date.now()
             };
             
@@ -5077,7 +5082,9 @@
                 updateDifficultyLevel();
                 
                 // Announce player switch
-                speakPhrase(`Now playing: ${currentPlayer.name}`);
+                if (currentPlayer) {
+                    speakPhrase(`Now playing: ${currentPlayer.name}`);
+                }
                 
                 // If in game, restart for new player
                 if (document.getElementById('gameArea').innerHTML.includes('option-btn')) {
@@ -5102,6 +5109,7 @@
             currentPlayer.bestStreak = bestStreak;
             currentPlayer.speedAnswers = speedAnswers;
             currentPlayer.roundsCompleted = roundsCompleted;
+            currentPlayer.celebrationType = celebrationType;
             
             savePlayers();
         }
@@ -5120,6 +5128,7 @@
             bestStreak = player.bestStreak || 0;
             speedAnswers = player.speedAnswers || 0;
             roundsCompleted = player.roundsCompleted || 0;
+            celebrationType = player.celebrationType || 'fireworks';
         }
 
         // Parent Dashboard Functions
@@ -5514,13 +5523,15 @@
             if (focusModeEnabled) {
                 document.body.classList.add('focus-mode');
                 switchEl.classList.add('active');
-                // Disable timer in focus mode
+                // Store current timer state and disable timer in focus mode
+                previousTimerState = timerEnabled;
                 timerEnabled = false;
                 speakPhrase('Focus mode enabled. Simplified interface activated.');
             } else {
                 document.body.classList.remove('focus-mode');
                 switchEl.classList.remove('active');
-                timerEnabled = true;
+                // Restore previous timer state instead of always enabling
+                timerEnabled = previousTimerState;
                 speakPhrase('Focus mode disabled.');
             }
             
