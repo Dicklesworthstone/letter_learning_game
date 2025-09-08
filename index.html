@@ -3545,7 +3545,7 @@
         }
 
         function cancelSpeech() {
-            if (speechSupported && soundEnabled) {
+            if (speechSupported) {
                 try { speechSynthesis.cancel(); } catch (e) {}
             }
         }
@@ -3747,6 +3747,7 @@
             
             const duration = currentRound === 1 ? timerDuration : Math.max(5, timerDuration - 2);
             let timeLeft = duration;
+            let lastSpokenCountdown = null;
             
             const timerDisplay = document.getElementById('timerDisplay');
             const timerBar = document.getElementById('timerBar');
@@ -3773,9 +3774,9 @@
                 if (timeLeft <= 3 && timeLeft > 0) {
                     timerDisplay.className = 'timer-display warning';
                     timerBarFill.classList.add('warning');
-                    
-                    // Speak countdown
-                    if (Math.floor(elapsed) !== Math.floor(elapsed - 1)) {
+                    // Speak countdown once per second
+                    if (lastSpokenCountdown !== timeLeft) {
+                        lastSpokenCountdown = timeLeft;
                         speakPhrase(timeLeft.toString());
                     }
                 } else if (timeLeft === 0) {
@@ -3959,12 +3960,12 @@
                 optionsHTML = options.map(letter => {
                     const isVowel = 'aeiouAEIOU'.includes(letter);
                     const highlightClass = isVowel ? 'vowel-highlight' : 'consonant-highlight';
-                    return `<button class="option-btn" onclick="checkAnswer('${letter}')"><span class="${highlightClass}">${letter}</span></button>`;
+                    return `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')"><span class="${highlightClass}">${letter}</span></button>`;
                 }).join('');
             } else if (currentTheme === 'animals') {
                 // Show with associations
                 optionsHTML = options.map(letter => 
-                    `<button class="option-btn" onclick="checkAnswer('${letter}')" style="position: relative;">
+                    `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')" style="position: relative;">
                         ${letter}
                         ${letter.toLowerCase() === currentLetter.toLowerCase() ? 
                             `<div class="letter-association">
@@ -3976,7 +3977,7 @@
             } else {
                 // Classic mode
                 optionsHTML = options.map(letter => 
-                    `<button class="option-btn" onclick="checkAnswer('${letter}')">${letter}</button>`
+                    `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')">${letter}</button>`
                 ).join('');
             }
             
@@ -4032,8 +4033,7 @@
         function checkAnswer(letter) {
             if (waitingForPhonics) return;
             
-            const buttons = document.querySelectorAll('.option-btn');
-            const clickedButton = Array.from(buttons).find(btn => btn.textContent === letter);
+            const clickedButton = document.querySelector(`.option-btn[data-letter="${letter}"]`);
             
             if (letter === currentLetter) {
                 clearTimer();
@@ -5686,6 +5686,9 @@
                 // Store current timer state and disable timer in focus mode
                 previousTimerState = timerEnabled;
                 timerEnabled = false;
+                // Remove distractions while enabling focus mode
+                clearAllTimers();
+                cancelSpeech();
                 speakPhrase('Focus mode enabled. Simplified interface activated.');
             } else {
                 document.body.classList.remove('focus-mode');
