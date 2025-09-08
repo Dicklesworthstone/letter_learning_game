@@ -592,7 +592,7 @@
         }
 
         .timer-display {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             color: #667eea;
             margin: 10px 0;
@@ -693,18 +693,22 @@
 
         /* When a prominent sound button is present, reserve top space so nothing overlaps it */
         .game-area.with-sound {
-            padding-top: clamp(96px, 22vmin, 150px);
+            /* Minimal top padding – speaker floats over the grid */
+            padding-top: clamp(12px, 2vmin, 20px);
         }
 
         /* Keep speaker visible using a separate composited layer */
         .game-area.with-sound .sound-btn {
             position: absolute;
-            top: 8px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translate(-50%, -58%);
             z-index: 20;
             margin-bottom: 0;
             will-change: transform;
+            /* slightly smaller when floating so letters remain visible */
+            width: clamp(72px, 16vmin, 110px);
+            height: clamp(72px, 16vmin, 110px);
         }
 
         /* Make any clickable/touch-start element avoid tap highlight */
@@ -859,9 +863,11 @@
         .options {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 18px;
+            gap: clamp(10px, 2.6vmin, 18px);
             width: 100%;
             max-width: 360px;
+            /* create space under floating speaker so boxes are never covered */
+            padding-top: clamp(44px, 11vmin, 80px);
         }
 
         .option-btn {
@@ -1103,6 +1109,8 @@
             gap: 12px;
             width: 100%;
             max-width: 350px;
+            /* ensure controls never sit below iOS home bar */
+            margin-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         .control-btn {
@@ -1259,7 +1267,7 @@
             text-align: center;
             font-size: clamp(16px, 2.6vmin, 20px);
             color: #764ba2;
-            margin-bottom: clamp(8px, 2vmin, 16px);
+            margin-bottom: clamp(6px, 1.6vmin, 12px);
             font-weight: 600;
             animation: fadeIn 0.5s;
         }
@@ -1330,26 +1338,31 @@
 
         .start-screen {
             text-align: center;
-            padding: 30px;
+            padding: clamp(12px, 2vh, 24px);
             animation: fadeIn 0.8s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(6px, 1.5vh, 12px);
         }
 
         .start-screen h2 {
             color: #764ba2;
-            margin-bottom: 25px;
-            font-size: 28px;
+            margin-bottom: clamp(8px, 2vh, 12px);
+            font-size: clamp(22px, 3.6vh, 28px);
         }
 
         .start-screen p {
             color: #6b7280;
-            margin-bottom: 20px;
-            line-height: 1.6;
-            font-size: 16px;
+            margin-bottom: clamp(6px, 1.6vh, 10px);
+            line-height: 1.4;
+            font-size: clamp(14px, 2.2vh, 16px);
         }
 
         .start-btn {
-            padding: 20px 50px;
-            font-size: 24px;
+            padding: clamp(14px, 2.4vh, 20px) clamp(28px, 6vh, 50px);
+            font-size: clamp(20px, 3.2vh, 24px);
             background: linear-gradient(135deg, #f093fb, #f5576c);
             color: white;
             border: none;
@@ -2345,17 +2358,17 @@
         @media (max-width: 480px) {
             .option-btn {
                 font-size: 36px;
-                padding: 20px;
+                padding: 16px;
             }
 
             .sound-btn {
-                width: 120px;
-                height: 120px;
-                font-size: 60px;
+                width: 100px;
+                height: 100px;
+                font-size: 48px;
             }
 
             .letter-display {
-                font-size: 70px;
+                font-size: 64px;
             }
         }
 
@@ -5606,8 +5619,8 @@
 
             gameArea.innerHTML = `
                 <div class="instruction">Tap the speaker, then find the letter!</div>
-                <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">🔊</button>
                 <div class="options">${optionsHTML}</div>
+                <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">🔊</button>
                 ${voiceRecordingEnabled ? getVoiceRecorderHTML() : ''}
             `;
             // Reserve space so the floating sound button doesn't overlap content
@@ -6238,10 +6251,10 @@
             const gameArea = document.getElementById('gameArea');
             // Compute space: keep everything fully in view without scrolling
             const headerHeight = 0; // header is outside game-area; padding already applied
-            const reservedTop = Math.max(96, Math.min(window.innerHeight * 0.22, 150));
-            const verticalGutters = reservedTop + 16 /*bottom padding approx*/ + 120 /*controls+labels*/;
-            const maxSquare = Math.min(window.innerWidth - 40, window.innerHeight - verticalGutters);
-            const canvasSize = Math.max(180, Math.min(340, maxSquare));
+            const reservedTop = Math.max(72, Math.min(window.innerHeight * 0.14, 120));
+            const verticalGutters = reservedTop + 12 /*bottom padding*/ + 140 /*controls+labels*/;
+            const maxSquare = Math.min(window.innerWidth - 36, window.innerHeight - verticalGutters);
+            const canvasSize = Math.max(180, Math.min(320, maxSquare));
             gameArea.innerHTML = `
                 <div class="instruction">Trace the letter: <span class="letter-display">${currentLetter}</span></div>
                 <div class="canvas-container">
