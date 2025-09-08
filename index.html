@@ -74,8 +74,10 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            height: 100%;
-            height: 100dvh; /* Dynamic viewport height */
+            /* Use dynamic viewport sizing that adapts to iOS browser chrome */
+            min-height: 100vh;   /* Fallback */
+            min-height: 100svh;  /* Small viewport height when toolbars are shown */
+            min-height: 100dvh;  /* Dynamic viewport height */
             overscroll-behavior: none;
             -webkit-tap-highlight-color: transparent;
         }
@@ -85,7 +87,7 @@
             background: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #fbbf24 100%);
             background-size: 200% 200%;
             animation: gradientShift 15s ease infinite;
-            position: fixed;
+            /* Avoid fixing the body; let it size to the dynamic viewport to prevent clipping under iOS chrome */
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -169,9 +171,11 @@
         }
 
         .container {
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
+            width: 100%;
+            /* Allow container to grow/shrink with dynamic viewport without forcing a fixed height */
+            min-height: 100vh;   /* Fallback */
+            min-height: 100svh;  /* Small viewport */
+            min-height: 100dvh;  /* Dynamic viewport */
             display: flex;
             flex-direction: column;
             background: rgba(255, 255, 255, 0.85);
@@ -197,7 +201,7 @@
             font-weight: 600;
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
             border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-            flex-shrink: 0;
+            flex: 0 0 auto;
             z-index: 50;
             position: relative;
         }
@@ -484,6 +488,8 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            line-height: 1; /* ensure emoji like 🔊 are centered and not clipped */
+            font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         }
 
         .timer-display.warning {
@@ -533,15 +539,17 @@
         }
 
         .game-area {
-            flex: 1;
+            flex: 1 1 auto;
             display: flex;
             flex-direction: column;
             padding: 16px;
+            padding-top: 8px;
             padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
             align-items: center;
             justify-content: center;
             position: relative;
-            overflow: hidden;
+            overflow: auto; /* allow content to scroll if needed rather than being clipped */
+            -webkit-overflow-scrolling: touch;
             background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(15px) saturate(150%);
             -webkit-backdrop-filter: blur(15px) saturate(150%);
@@ -571,6 +579,7 @@
             align-items: center;
             justify-content: center;
             font-size: 48px;
+            line-height: 1; /* prevent vertical cropping of emoji */
             cursor: pointer;
             transition: all 0.2s var(--ease-spring);
             margin-bottom: var(--space-8);
@@ -605,15 +614,18 @@
         /* Enhanced Options Grid */
         .options {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 18px;
             width: 100%;
-            max-width: 320px;
+            max-width: 360px;
         }
 
         .option-btn {
             padding: 0;
-            height: 120px;
+            /* Make all letter options perfect squares for consistent layout */
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            min-height: 110px; /* sensible floor for very narrow devices */
             font-size: 48px;
             border: 2px solid transparent;
             background: white;
@@ -1759,6 +1771,8 @@
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            line-height: 1; /* keep emoji centered when we swap to 🔊 */
+            font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         }
 
         @keyframes phonicsCount {
