@@ -71,36 +71,28 @@
         }
 
         html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
             height: 100%;
+            height: 100dvh; /* Dynamic viewport height */
             overscroll-behavior: none;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #F8FAFF 0%, #EEF2FF 100%);
-            min-height: 100vh;
-            display: block; /* Let the app start at the top naturally */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: fixed; /* Prevent rubber-band scrolling */
             overflow: hidden;
-            position: relative;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            touch-action: none; /* Better touch handling */
         }
 
-        /* Add glass morphism background */
+        /* Remove glass morphism for cleaner look */
         body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(91, 63, 216, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 94, 138, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
+            display: none;
         }
 
         /* Animated background bubbles */
@@ -121,44 +113,36 @@
         }
 
         .container {
-            width: 100%;
-            max-width: 500px;
+            width: 100vw;
             height: 100vh;
-            height: 100dvh; /* iOS stable viewport */
+            height: 100dvh; /* iOS dynamic viewport */
             display: flex;
             flex-direction: column;
-            background: rgba(255, 255, 255, 0.95);
+            background: white;
             position: relative;
-            /* Avoid backdrop-filter here to prevent iOS text blur issues */
-            box-shadow: var(--shadow-2xl);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            z-index: 1; /* Always above decorative bubbles */
-            overflow-y: auto; /* Single scroll container for the app */
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: none;
+            z-index: 1;
+            overflow: hidden; /* No scrolling */
         }
 
         .header {
-            background: linear-gradient(180deg, white 0%, rgba(255,255,255,0.95) 100%);
-            padding: 18px 20px;
-            padding-top: calc(18px + env(safe-area-inset-top, 0px));
-            padding-top: calc(18px + constant(safe-area-inset-top, 0px));
-            text-align: center;
-            color: var(--gray-950);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px 16px;
+            padding-top: calc(12px + env(safe-area-inset-top, 0px));
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
             font-size: 18px;
             font-weight: 600;
-            position: relative;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            letter-spacing: -0.01em;
-            position: sticky;
-            top: 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            flex-shrink: 0;
             z-index: 50;
+        }
+        
+        .header-title {
+            flex: 1;
+            text-align: center;
+            letter-spacing: 0.5px;
         }
 
         .settings-btn {
@@ -3169,16 +3153,81 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Final iPhone optimizations for perfect fit */
+        @supports (-webkit-touch-callout: none) {
+            /* iOS-specific styles */
+            .container {
+                height: -webkit-fill-available;
+            }
+            
+            .game-area {
+                -webkit-overflow-scrolling: none;
+                overflow: hidden;
+            }
+            
+            /* Ensure buttons are large enough for kids */
+            .option-btn {
+                min-height: 60px;
+                min-width: 60px;
+            }
+        }
+        
+        /* iPhone landscape mode */
+        @media (max-height: 450px) and (orientation: landscape) {
+            .header {
+                padding: 8px 12px;
+                padding-top: calc(8px + env(safe-area-inset-top, 0px));
+            }
+            
+            .header-title {
+                font-size: 14px;
+            }
+            
+            .game-area {
+                padding: 8px;
+            }
+            
+            .letter-display {
+                font-size: min(35vh, 90px);
+                margin: 4px 0;
+            }
+            
+            .options-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+            
+            .option-btn {
+                height: min(30vh, 65px);
+                font-size: min(10vh, 30px);
+            }
+            
+            .sound-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 22px;
+            }
+            
+            .score-panel {
+                padding: 6px 10px;
+                margin-bottom: 6px;
+            }
+            
+            .mode-selector {
+                padding: 6px 10px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            🌟 Learn Your Letters! 🌟
             <button class="badges-btn" onclick="openAchievements()" aria-label="Open achievements">
                 🏆
                 <span class="badge-count" id="badgeCount">0</span>
             </button>
+            <div class="header-title">Letter Learning</div>
             <button class="settings-btn" onclick="openSettings()" id="settingsBtn" aria-label="Open settings (hold for Parent Dashboard)">⚙️</button>
         </div>
         
@@ -3232,7 +3281,7 @@
             <div class="start-screen">
                 <h2>Welcome to Letter Learning! 🎉</h2>
                 <p>This fun game helps you learn letters through sounds and interaction!</p>
-                <p>🔊 Make sure your volume is turned up</p>
+                <p>\uD83D\uDD0A Make sure your volume is turned up</p>
                 <p>⭐ Earn stars and points as you play</p>
                 <p>🎯 Complete rounds to unlock new challenges</p>
                 <button class="start-btn" onclick="startIdentifyGame(true)" aria-label="Start the game">Let's Start!</button>
@@ -3703,34 +3752,34 @@
         const lowerLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
         const upperLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         
-        // Improved phonetic sounds
+        // Natural phonetic sounds for TTS - each letter spelled phonetically
         const phoneticSounds = {
-            'a': 'ah as in apple',
-            'b': 'buh as in ball', 
-            'c': 'kuh as in cat',
-            'd': 'duh as in dog',
-            'e': 'eh as in egg',
-            'f': 'ff as in fish',
-            'g': 'guh as in goat',
-            'h': 'huh as in hat',
-            'i': 'ih as in igloo',
-            'j': 'juh as in jump',
-            'k': 'kuh as in kite',
-            'l': 'luh as in lion',
-            'm': 'mm as in moon',
-            'n': 'nuh as in nose',
-            'o': 'oh as in octopus',
-            'p': 'puh as in pig',
-            'q': 'kwuh as in queen',
-            'r': 'ruh as in rabbit',
-            's': 'ss as in snake',
-            't': 'tuh as in turtle',
-            'u': 'uh as in umbrella',
-            'v': 'vuh as in violin',
-            'w': 'wuh as in whale',
-            'x': 'ks as in fox',
-            'y': 'yuh as in yellow',
-            'z': 'zuh as in zebra'
+            'a': 'aah',           // as in apple
+            'b': 'buh',           // as in ball
+            'c': 'kuh',           // as in cat  
+            'd': 'duh',           // as in dog
+            'e': 'eh',            // as in egg
+            'f': 'fff',           // as in fish
+            'g': 'guh',           // as in goat
+            'h': 'huh',           // as in hat
+            'i': 'ih',            // as in igloo
+            'j': 'juh',           // as in jump
+            'k': 'kuh',           // as in kite
+            'l': 'lll',           // as in lion
+            'm': 'mmm',           // as in moon
+            'n': 'nnn',           // as in nose
+            'o': 'ah',            // as in octopus
+            'p': 'puh',           // as in pig
+            'q': 'kwuh',          // as in queen
+            'r': 'rrr',           // as in rabbit
+            's': 'sss',           // as in snake
+            't': 'tuh',           // as in turtle
+            'u': 'uh',            // as in umbrella
+            'v': 'vvv',           // as in violin
+            'w': 'wuh',           // as in whale
+            'x': 'ks',            // as in fox
+            'y': 'yuh',           // as in yellow
+            'z': 'zzz'            // as in zebra
         };
 
         function getLetterCollection() {
@@ -4007,21 +4056,35 @@
             
             const phoneticSound = phoneticSounds[letter.toLowerCase()];
             if (phoneticSound) {
-                let safeSound = phoneticSound;
-                // Windows TTS sometimes spells repeated letters; normalize to syllables
-                const ua = navigator.userAgent || '';
-                if (/Windows/i.test(ua)) {
-                    safeSound = safeSound
-                        .replace(/\bnnn\b/gi, 'nuh')
-                        .replace(/\bmmm\b/gi, 'muh')
-                        .replace(/\blll\b/gi, 'luh')
-                        .replace(/\brrr\b/gi, 'ruh')
-                        .replace(/\bvvv\b/gi, 'vuh')
-                        .replace(/\bzzz\b/gi, 'zuh')
-                        .replace(/\bsss\b/gi, 'ss');
-                }
-                speakPhrase(`What sound does the letter ${letter} make?`);
-                speakPhrase(`The letter ${letter} makes the sound: ${safeSound}`, callback);
+                // First ask the child to say the sound
+                speakPhrase(`Can you say the sound that ${letter} makes?`, () => {
+                    // Give child time to respond
+                    setTimeout(() => {
+                        // Then demonstrate the correct sound with proper pauses
+                        speakPhrase(`Good try! The letter ${letter}`, () => {
+                            setTimeout(() => {
+                                // Speak the phonetic sound separately with slower rate
+                                const utterance = new SpeechSynthesisUtterance(phoneticSound);
+                                utterance.rate = 0.7;  // Much slower for phonetic sound
+                                utterance.pitch = 1.1;
+                                utterance.volume = 1;
+                                
+                                const selectedVoice = getBestVoice();
+                                if (selectedVoice) {
+                                    utterance.voice = selectedVoice;
+                                }
+                                
+                                utterance.onend = () => {
+                                    setTimeout(() => {
+                                        speakPhrase(`${phoneticSound}. That's the ${letter} sound!`, callback);
+                                    }, 500);
+                                };
+                                
+                                speechSynthesis.speak(utterance);
+                            }, 300);
+                        });
+                    }, 2000);  // 2 second pause for child to try saying it
+                });
             } else {
                 if (callback) callback();
             }
@@ -4316,7 +4379,7 @@
             
             gameArea.innerHTML = `
                 <div class="instruction">Tap the speaker, then find the letter!</div>
-                <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">🔊</button>
+                <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">\uD83D\uDD0A</button>
                 <div class="options">${optionsHTML}</div>
                 ${voiceRecordingEnabled ? getVoiceRecorderHTML() : ''}
             `;
@@ -4484,7 +4547,7 @@
                     timerElement.textContent = timeLeft;
                     phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
                 } else {
-                    timerElement.innerHTML = '🔊';
+                    timerElement.innerHTML = '\uD83D\uDD0A';  // Unicode for speaker emoji
                     speakPhonetics(currentLetter, () => {
                         waitingForPhonics = false;
                         setTimeout(() => startIdentifyGame(), 2000);
