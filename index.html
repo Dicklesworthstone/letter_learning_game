@@ -82,28 +82,84 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            position: fixed; /* Prevent rubber-band scrolling */
+            background: linear-gradient(135deg, #a78bfa 0%, #ec4899 50%, #fbbf24 100%);
+            background-size: 200% 200%;
+            animation: gradientShift 15s ease infinite;
+            position: fixed;
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            touch-action: none; /* Better touch handling */
+            touch-action: none;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
-        /* Remove glass morphism for cleaner look */
+        /* Magical floating orbs */
         body::before {
-            display: none;
+            content: '';
+            position: fixed;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -150px;
+            left: -150px;
+            animation: floatOrb 20s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            bottom: -200px;
+            right: -200px;
+            animation: floatOrb 25s ease-in-out infinite reverse;
+            pointer-events: none;
+        }
+        
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(100px, -50px) scale(1.1); }
+            66% { transform: translate(-50px, 100px) scale(0.9); }
         }
 
-        /* Animated background bubbles */
+        /* Magical floating bubbles for kids */
         .bubble {
-            position: absolute;
+            position: fixed;
             border-radius: 50%;
-            background: linear-gradient(135deg, rgba(91, 63, 216, 0.1), rgba(255, 94, 138, 0.1));
-            /* Ensure bubbles never intercept touches or blur UI */
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), transparent),
+                        linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.3));
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             pointer-events: none;
             z-index: 0;
-            animation: float 20s infinite ease-in-out;
+            animation: magicalBubbleFloat 20s infinite ease-in-out;
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.5),
+                        0 0 20px rgba(168, 85, 247, 0.2);
+        }
+        
+        @keyframes magicalBubbleFloat {
+            0%, 100% { 
+                transform: translateY(100vh) translateX(0) scale(0.8) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            50% { 
+                transform: translateY(-100vh) translateX(100px) scale(1.2) rotate(180deg);
+                opacity: 0.5;
+            }
+            90% {
+                opacity: 0.7;
+            }
         }
 
         @keyframes float {
@@ -115,89 +171,155 @@
         .container {
             width: 100vw;
             height: 100vh;
-            height: 100dvh; /* iOS dynamic viewport */
+            height: 100dvh;
             display: flex;
             flex-direction: column;
-            background: white;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
             position: relative;
             z-index: 1;
-            overflow: hidden; /* No scrolling */
+            overflow: hidden;
+            box-shadow: inset 0 0 200px rgba(255, 255, 255, 0.5),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px) saturate(200%);
+            -webkit-backdrop-filter: blur(20px) saturate(200%);
             padding: 12px 16px;
             padding-top: calc(12px + env(safe-area-inset-top, 0px));
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: white;
             font-size: 18px;
             font-weight: 600;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.4);
             flex-shrink: 0;
             z-index: 50;
+            position: relative;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.5; transform: translateX(-100%); }
+            50% { opacity: 1; transform: translateX(100%); }
         }
         
         .header-title {
             flex: 1;
             text-align: center;
             letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #a78bfa, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.3));
+            animation: titlePulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
         }
 
         .settings-btn {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--gray-50);
-            border: 1px solid var(--gray-200);
-            color: var(--gray-600);
-            font-size: 18px;
-            width: 36px;
-            height: 36px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(168, 85, 247, 0.3);
+            font-size: 20px;
+            width: 44px;
+            height: 44px;
             padding: 0;
-            border-radius: var(--radius-md);
+            border-radius: 14px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .settings-btn::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent, rgba(168, 85, 247, 0.3));
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        
+        .settings-btn:hover::before {
+            transform: translateX(100%);
         }
 
         .settings-btn:hover {
-            background: var(--gray-100);
-            border-color: var(--gray-300);
-            transform: translateY(-50%) scale(1.05);
-            box-shadow: var(--shadow-md);
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 6px 25px rgba(168, 85, 247, 0.3);
+        }
+        
+        .settings-btn:active {
+            transform: rotate(180deg) scale(0.95);
         }
 
         /* Achievement Badge Button */
         .badges-btn {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: var(--gray-50);
-            border: 1px solid var(--gray-200);
-            color: var(--gray-600);
-            font-size: 18px;
-            width: 36px;
-            height: 36px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(251, 191, 36, 0.4);
+            font-size: 20px;
+            width: 44px;
+            height: 44px;
             padding: 0;
-            border-radius: var(--radius-md);
+            border-radius: 14px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            animation: trophyFloat 3s ease-in-out infinite;
+            position: relative;
+        }
+        
+        @keyframes trophyFloat {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-5px) rotate(5deg); }
         }
 
         .badges-btn:hover {
-            background: var(--gray-100);
-            border-color: var(--gray-300);
-            transform: translateY(-50%) scale(1.05);
-            box-shadow: var(--shadow-md);
+            animation: trophyShake 0.5s ease-in-out;
+            box-shadow: 0 6px 25px rgba(251, 191, 36, 0.4);
+        }
+        
+        @keyframes trophyShake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+        
+        .badges-btn:active {
+            transform: scale(0.95);
         }
 
         .badge-count {
@@ -414,11 +536,19 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 16px;
+            padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
             align-items: center;
             justify-content: center;
             position: relative;
-            overflow: visible; /* Container handles scrolling */
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px) saturate(150%);
+            -webkit-backdrop-filter: blur(15px) saturate(150%);
+            border-radius: 24px 24px 0 0;
+            box-shadow: inset 0 2px 20px rgba(255, 255, 255, 0.4),
+                        0 -5px 20px rgba(168, 85, 247, 0.1);
+            margin-top: 8px;
         }
 
         /* Make interactive elements feel native on iOS */
@@ -541,7 +671,7 @@
         }
 
         .option-btn.wrong {
-            animation: wrongShake 0.6s;
+            animation: wrongWobble 0.6s;
             background: var(--error);
             color: white;
             border-color: var(--error);
@@ -565,17 +695,14 @@
             }
         }
 
-        @keyframes wrongShake {
-            0%, 100% { transform: translateX(0) rotate(0deg); }
-            10% { transform: translateX(-10px) rotate(-2deg); }
-            20% { transform: translateX(10px) rotate(2deg); }
-            30% { transform: translateX(-8px) rotate(-1deg); }
-            40% { transform: translateX(8px) rotate(1deg); }
-            50% { transform: translateX(-5px) rotate(-0.5deg); }
-            60% { transform: translateX(5px) rotate(0.5deg); }
-            70% { transform: translateX(-3px) rotate(0deg); }
-            80% { transform: translateX(3px) rotate(0deg); }
-            90% { transform: translateX(-1px) rotate(0deg); }
+        @keyframes wrongWobble {
+            0%, 100% { transform: translateX(0) rotate(0deg) scale(1); }
+            15% { transform: translateX(-10px) rotate(-5deg) scale(0.95); }
+            30% { transform: translateX(10px) rotate(5deg) scale(0.95); }
+            45% { transform: translateX(-8px) rotate(-3deg) scale(0.97); }
+            60% { transform: translateX(8px) rotate(3deg) scale(0.97); }
+            75% { transform: translateX(-4px) rotate(-1deg) scale(0.99); }
+            85% { transform: translateX(4px) rotate(1deg) scale(0.99); }
         }
 
         /* Celebration Particles (CSS-based) */
@@ -3281,7 +3408,7 @@
             <div class="start-screen">
                 <h2>Welcome to Letter Learning! 🎉</h2>
                 <p>This fun game helps you learn letters through sounds and interaction!</p>
-                <p>\uD83D\uDD0A Make sure your volume is turned up</p>
+                <p>🔊 Make sure your volume is turned up</p>
                 <p>⭐ Earn stars and points as you play</p>
                 <p>🎯 Complete rounds to unlock new challenges</p>
                 <button class="start-btn" onclick="startIdentifyGame(true)" aria-label="Start the game">Let's Start!</button>
@@ -3752,34 +3879,34 @@
         const lowerLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
         const upperLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         
-        // Natural phonetic sounds for TTS - each letter spelled phonetically
+        // Phonetic sounds spelled out for primitive TTS systems
         const phoneticSounds = {
-            'a': 'aah',           // as in apple
-            'b': 'buh',           // as in ball
-            'c': 'kuh',           // as in cat  
-            'd': 'duh',           // as in dog
-            'e': 'eh',            // as in egg
-            'f': 'fff',           // as in fish
-            'g': 'guh',           // as in goat
-            'h': 'huh',           // as in hat
-            'i': 'ih',            // as in igloo
-            'j': 'juh',           // as in jump
-            'k': 'kuh',           // as in kite
-            'l': 'lll',           // as in lion
-            'm': 'mmm',           // as in moon
-            'n': 'nnn',           // as in nose
-            'o': 'ah',            // as in octopus
-            'p': 'puh',           // as in pig
-            'q': 'kwuh',          // as in queen
-            'r': 'rrr',           // as in rabbit
-            's': 'sss',           // as in snake
-            't': 'tuh',           // as in turtle
-            'u': 'uh',            // as in umbrella
-            'v': 'vvv',           // as in violin
-            'w': 'wuh',           // as in whale
-            'x': 'ks',            // as in fox
-            'y': 'yuh',           // as in yellow
-            'z': 'zzz'            // as in zebra
+            'a': 'ah. ah. ah. as in apple',
+            'b': 'buh. buh. buh. as in ball',
+            'c': 'kuh. kuh. kuh. as in cat',
+            'd': 'duh. duh. duh. as in dog',
+            'e': 'eh. eh. eh. as in egg',
+            'f': 'ff. ff. ff. as in fish',
+            'g': 'guh. guh. guh. as in goat',
+            'h': 'huh. huh. huh. as in hat',
+            'i': 'ih. ih. ih. as in igloo',
+            'j': 'juh. juh. juh. as in jump',
+            'k': 'kuh. kuh. kuh. as in kite',
+            'l': 'luh. luh. luh. as in lion',
+            'm': 'mm. mm. mm. as in moon',
+            'n': 'nn. nn. nn. as in nose',
+            'o': 'aw. aw. aw. as in octopus',
+            'p': 'puh. puh. puh. as in pig',
+            'q': 'kwuh. kwuh. kwuh. as in queen',
+            'r': 'ruh. ruh. ruh. as in rabbit',
+            's': 'ss. ss. ss. as in snake',
+            't': 'tuh. tuh. tuh. as in turtle',
+            'u': 'uh. uh. uh. as in umbrella',
+            'v': 'vuh. vuh. vuh. as in violin',
+            'w': 'wuh. wuh. wuh. as in whale',
+            'x': 'ks. ks. ks. as in fox',
+            'y': 'yuh. yuh. yuh. as in yellow',
+            'z': 'zz. zz. zz. as in zebra'
         };
 
         function getLetterCollection() {
@@ -3968,31 +4095,34 @@
             let textToSpeak = letter;
             const lowerLetter = letter.toLowerCase();
             
-            // Special pronunciations for better clarity
+            // Letter names spelled phonetically for primitive TTS
             const specialPronunciations = {
-                'a': 'ay',
-                'c': 'see',
-                'e': 'ee',
-                'g': 'jee',
-                'h': 'aych',
-                'i': 'eye',
-                'j': 'jay',
-                'k': 'kay',
-                'l': 'ell',
-                'm': 'em',
-                'n': 'en',
-                'o': 'oh',
-                'p': 'pee',
-                'q': 'queue',
-                'r': 'are',
-                's': 'ess',
-                't': 'tee',
-                'u': 'you',
-                'v': 'vee',
-                'w': 'double you',
-                'x': 'ex',
-                'y': 'why',
-                'z': 'zee'
+                'a': 'ay. ay. The letter ay',
+                'b': 'bee. bee. The letter bee',
+                'c': 'see. see. The letter see',
+                'd': 'dee. dee. The letter dee',
+                'e': 'ee. ee. The letter ee',
+                'f': 'eff. eff. The letter eff',
+                'g': 'jee. jee. The letter jee',
+                'h': 'aych. aych. The letter aych',
+                'i': 'eye. eye. The letter eye',
+                'j': 'jay. jay. The letter jay',
+                'k': 'kay. kay. The letter kay',
+                'l': 'ell. ell. The letter ell',
+                'm': 'em. em. The letter em',
+                'n': 'en. en. The letter en',
+                'o': 'oh. oh. The letter oh',
+                'p': 'pee. pee. The letter pee',
+                'q': 'kyoo. kyoo. The letter kyoo',
+                'r': 'are. are. The letter are',
+                's': 'ess. ess. The letter ess',
+                't': 'tee. tee. The letter tee',
+                'u': 'you. you. The letter you',
+                'v': 'vee. vee. The letter vee',
+                'w': 'double you. double you. The letter double you',
+                'x': 'ecks. ecks. The letter ecks',
+                'y': 'why. why. The letter why',
+                'z': 'zee. zee. The letter zee'
             };
             
             if (specialPronunciations[lowerLetter]) {
@@ -4000,8 +4130,8 @@
             }
             
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.rate = 0.9;  // Slightly slower for clarity
-            utterance.pitch = 1.1;  // More natural pitch
+            utterance.rate = 0.75;  // Slower for young children
+            utterance.pitch = 1.1;  // Friendly pitch
             utterance.volume = 1;
             
             const selectedVoice = getBestVoice();
@@ -4056,34 +4186,57 @@
             
             const phoneticSound = phoneticSounds[letter.toLowerCase()];
             if (phoneticSound) {
-                // First ask the child to say the sound
-                speakPhrase(`Can you say the sound that ${letter} makes?`, () => {
-                    // Give child time to respond
+                cancelSpeech();
+                
+                // Step 1: Tell the child what letter it is
+                const letterName = letter.toUpperCase();
+                speakPhrase(`This is the letter ${letterName}`, () => {
+                    // Pause for processing
                     setTimeout(() => {
-                        // Then demonstrate the correct sound with proper pauses
-                        speakPhrase(`Good try! The letter ${letter}`, () => {
+                        // Step 2: Ask them to make the sound
+                        speakPhrase(`Can you make the ${letterName} sound? Try it!`, () => {
+                            // Give child 3 seconds to try
                             setTimeout(() => {
-                                // Speak the phonetic sound separately with slower rate
-                                const utterance = new SpeechSynthesisUtterance(phoneticSound);
-                                utterance.rate = 0.7;  // Much slower for phonetic sound
-                                utterance.pitch = 1.1;
-                                utterance.volume = 1;
-                                
-                                const selectedVoice = getBestVoice();
-                                if (selectedVoice) {
-                                    utterance.voice = selectedVoice;
-                                }
-                                
-                                utterance.onend = () => {
+                                // Step 3: Say "Good try" encouragingly
+                                speakPhrase(`Good try!`, () => {
+                                    // Small pause
                                     setTimeout(() => {
-                                        speakPhrase(`${phoneticSound}. That's the ${letter} sound!`, callback);
-                                    }, 500);
-                                };
-                                
-                                speechSynthesis.speak(utterance);
-                            }, 300);
+                                        // Step 4: Demonstrate the sound clearly
+                                        speakPhrase(`Listen. The letter ${letterName} makes this sound.`, () => {
+                                            // Pause before sound
+                                            setTimeout(() => {
+                                                // Step 5: Say the phonetic sound slowly
+                                                const utterance = new SpeechSynthesisUtterance(phoneticSound);
+                                                utterance.rate = 0.6;  // Very slow for clarity
+                                                utterance.pitch = 1.1;
+                                                utterance.volume = 1;
+                                                
+                                                const selectedVoice = getBestVoice();
+                                                if (selectedVoice) {
+                                                    utterance.voice = selectedVoice;
+                                                }
+                                                
+                                                utterance.onend = () => {
+                                                    // Final pause
+                                                    setTimeout(() => {
+                                                        // Step 6: Encourage repetition
+                                                        speakPhrase(`Now you try! Say the ${letterName} sound!`, () => {
+                                                            // Give time for child to repeat
+                                                            setTimeout(() => {
+                                                                speakPhrase(`Great job!`, callback);
+                                                            }, 2000);
+                                                        });
+                                                    }, 800);
+                                                };
+                                                
+                                                speechSynthesis.speak(utterance);
+                                            }, 500);
+                                        });
+                                    }, 300);
+                                });
+                            }, 3000);  // 3 seconds for child to try
                         });
-                    }, 2000);  // 2 second pause for child to try saying it
+                    }, 800);  // Initial pause after letter name
                 });
             } else {
                 if (callback) callback();
@@ -4379,7 +4532,7 @@
             
             gameArea.innerHTML = `
                 <div class="instruction">Tap the speaker, then find the letter!</div>
-                <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">\uD83D\uDD0A</button>
+                <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">🔊</button>
                 <div class="options">${optionsHTML}</div>
                 ${voiceRecordingEnabled ? getVoiceRecorderHTML() : ''}
             `;
@@ -4547,7 +4700,7 @@
                     timerElement.textContent = timeLeft;
                     phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
                 } else {
-                    timerElement.innerHTML = '\uD83D\uDD0A';  // Unicode for speaker emoji
+                    timerElement.innerHTML = '🔊';  // Speaker emoji
                     speakPhonetics(currentLetter, () => {
                         waitingForPhonics = false;
                         setTimeout(() => startIdentifyGame(), 2000);
