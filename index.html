@@ -577,6 +577,10 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(10px); }
+        }
         @keyframes sparkle {
             0% {
                 opacity: 0;
@@ -663,7 +667,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
+            z-index: 12000;
             animation: fadeIn 0.3s;
         }
 
@@ -690,6 +694,18 @@
             color: #764ba2;
             margin-bottom: 25px;
             text-align: center;
+        }
+
+        /* Compact topbar for quick toggles (e.g., Reduce Motion) */
+        .settings-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 8px 12px;
+            margin: -10px -10px 15px -10px;
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            border-radius: 14px;
         }
 
         .setting-group {
@@ -1344,6 +1360,19 @@
             .letter-display {
                 font-size: 70px;
             }
+        }
+
+        /* Ultra-narrow devices */
+        @media (max-width: 320px) {
+            .header { font-size: 18px; padding: 10px 12px; }
+            .mode-btn { font-size: 14px; padding: 10px; }
+            .option-btn { font-size: 30px; padding: 16px; }
+            .sound-btn { width: 100px; height: 100px; font-size: 50px; }
+            .letter-display { font-size: 60px; }
+            .timer-display { font-size: 22px; }
+            .start-btn { font-size: 20px; padding: 16px 36px; }
+            .stars { font-size: 20px; }
+            .score-value { font-size: 18px; }
         }
 
         /* Multiplayer Mode Styles */
@@ -2815,11 +2844,11 @@
     <div class="container">
         <div class="header">
             🌟 Learn Your Letters! 🌟
-            <button class="badges-btn" onclick="openAchievements()">
+            <button class="badges-btn" onclick="openAchievements()" aria-label="Open achievements">
                 🏆
                 <span class="badge-count" id="badgeCount">0</span>
             </button>
-            <button class="settings-btn" onclick="openSettings()" id="settingsBtn">⚙️</button>
+            <button class="settings-btn" onclick="openSettings()" id="settingsBtn" aria-label="Open settings (hold for Parent Dashboard)">⚙️</button>
         </div>
         
         <!-- Player Selector (Multiplayer Mode) -->
@@ -2827,17 +2856,17 @@
             <div class="player-list" id="playerList">
                 <!-- Player chips will be added here -->
             </div>
-            <button class="add-player-btn" onclick="showAddPlayer()">
+            <button class="add-player-btn" onclick="showAddPlayer()" aria-label="Add player">
                 <span>➕</span>
                 <span>Add Player</span>
             </button>
         </div>
         
         <div class="mode-selector">
-            <button class="mode-btn active" onclick="setMode('identify', this)">
+            <button class="mode-btn active" onclick="setMode('identify', this)" aria-pressed="true" aria-label="Find letters mode">
                 <span>Find Letters</span>
             </button>
-            <button class="mode-btn" onclick="setMode('draw', this)">
+            <button class="mode-btn" onclick="setMode('draw', this)" aria-pressed="false" aria-label="Draw letters mode">
                 <span>Draw Letters</span>
             </button>
         </div>
@@ -2875,11 +2904,11 @@
                 <p>🔊 Make sure your volume is turned up</p>
                 <p>⭐ Earn stars and points as you play</p>
                 <p>🎯 Complete rounds to unlock new challenges</p>
-                <button class="start-btn" onclick="startIdentifyGame()">Let's Start!</button>
+                <button class="start-btn" onclick="startIdentifyGame()" aria-label="Start the game">Let's Start!</button>
             </div>
         </div>
 
-        <div class="feedback" id="feedback"></div>
+        <div class="feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true"></div>
 
         <!-- Streak Display -->
         <div class="streak-display" id="streakDisplay" style="display: none;">
@@ -2897,7 +2926,7 @@
                 <div class="streak-calendar" id="streakCalendar">
                     <!-- Calendar will be generated here -->
                 </div>
-                <button class="continue-btn" onclick="closeStreakModal()">Keep Going!</button>
+                <button class="continue-btn" onclick="closeStreakModal()" aria-label="Close streak milestone">Keep Going!</button>
             </div>
         </div>
 
@@ -2908,21 +2937,21 @@
                 
                 <div class="setting-group">
                     <label class="setting-label">⏱️ Timer Mode</label>
-                    <button class="toggle-btn" id="timerOff" onclick="setTimerMode('off')">Off</button>
-                    <button class="toggle-btn active" id="timerOn" onclick="setTimerMode('on')">10 Seconds</button>
+                    <button class="toggle-btn" id="timerOff" onclick="setTimerMode('off')" aria-pressed="false" aria-label="Turn timer off">Off</button>
+                    <button class="toggle-btn active" id="timerOn" onclick="setTimerMode('on')" aria-pressed="true" aria-label="Turn timer on">10 Seconds</button>
                 </div>
 
                 <div class="setting-group">
                     <label class="setting-label">🔤 Letter Case</label>
-                    <button class="toggle-btn" id="caseLower" onclick="setCaseMode('lower')">abc</button>
-                    <button class="toggle-btn" id="caseUpper" onclick="setCaseMode('upper')">ABC</button>
-                    <button class="toggle-btn active" id="caseMixed" onclick="setCaseMode('mixed')">Mixed</button>
+                    <button class="toggle-btn" id="caseLower" onclick="setCaseMode('lower')" aria-pressed="false" aria-label="Use lowercase letters">abc</button>
+                    <button class="toggle-btn" id="caseUpper" onclick="setCaseMode('upper')" aria-pressed="false" aria-label="Use uppercase letters">ABC</button>
+                    <button class="toggle-btn active" id="caseMixed" onclick="setCaseMode('mixed')" aria-pressed="true" aria-label="Use both cases">Mixed</button>
                 </div>
 
                 <div class="setting-group">
                     <label class="setting-label">🔊 Sound Effects</label>
-                    <button class="toggle-btn active" id="soundOn" onclick="setSoundMode('on')">On</button>
-                    <button class="toggle-btn" id="soundOff" onclick="setSoundMode('off')">Off</button>
+                    <button class="toggle-btn active" id="soundOn" onclick="setSoundMode('on')" aria-pressed="true" aria-label="Turn sound on">On</button>
+                    <button class="toggle-btn" id="soundOff" onclick="setSoundMode('off')" aria-pressed="false" aria-label="Turn sound off">Off</button>
                 </div>
 
                 <div class="setting-group">
@@ -2930,19 +2959,19 @@
                     <div class="focus-mode-toggle">
                         <div class="focus-option">
                             <span class="focus-option-label">Enable Focus Mode</span>
-                            <div class="focus-switch" id="focusModeSwitch" onclick="toggleFocusMode()">
+                            <div class="focus-switch" id="focusModeSwitch" onclick="toggleFocusMode()" role="switch" aria-checked="false" tabindex="0" aria-label="Enable focus mode">
                                 <div class="focus-switch-thumb"></div>
                             </div>
                         </div>
                         <div class="focus-option">
                             <span class="focus-option-label">High Contrast</span>
-                            <div class="focus-switch" id="highContrastSwitch" onclick="toggleHighContrast()">
+                            <div class="focus-switch" id="highContrastSwitch" onclick="toggleHighContrast()" role="switch" aria-checked="false" tabindex="0" aria-label="Enable high contrast">
                                 <div class="focus-switch-thumb"></div>
                             </div>
                         </div>
                         <div class="focus-option">
                             <span class="focus-option-label">Reduce Motion</span>
-                            <div class="focus-switch" id="reduceMotionSwitch" onclick="toggleReduceMotion()">
+                            <div class="focus-switch" id="reduceMotionSwitch" onclick="toggleReduceMotion()" role="switch" aria-checked="false" tabindex="0" aria-label="Reduce motion">
                                 <div class="focus-switch-thumb"></div>
                             </div>
                         </div>
@@ -3057,7 +3086,7 @@
                     <!-- Badges will be dynamically added here -->
                 </div>
                 
-                <button class="close-achievements" onclick="closeAchievements()">Continue Playing</button>
+                <button class="close-achievements" onclick="closeAchievements()" aria-label="Close achievements">Continue Playing</button>
             </div>
         </div>
 
@@ -3102,7 +3131,7 @@
             <div class="dashboard-header">
                 <div class="dashboard-title">📊 Parent Dashboard</div>
                 <div class="dashboard-subtitle">Track progress and get insights for all players</div>
-                <button class="dashboard-close" onclick="closeParentDashboard()">✕</button>
+                <button class="dashboard-close" onclick="closeParentDashboard()" aria-label="Close dashboard">✕</button>
             </div>
             
             <div class="dashboard-content">
@@ -3179,7 +3208,7 @@
                     <div class="problem-letters-title">Letters to practice:</div>
                     <div class="problem-letters-list" id="problemLettersList">None - Perfect! 🌟</div>
                 </div>
-                <button class="continue-btn" onclick="startNextRound()">Continue to Round <span id="nextRoundNum">2</span> →</button>
+                <button class="continue-btn" onclick="startNextRound()" aria-label="Continue to the next round">Continue to Round <span id="nextRoundNum">2</span> →</button>
             </div>
         </div>
     </div>
@@ -3892,8 +3921,12 @@
             
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
+                btn.setAttribute('aria-pressed', 'false');
             });
-            if (buttonEl) buttonEl.classList.add('active');
+            if (buttonEl) {
+                buttonEl.classList.add('active');
+                buttonEl.setAttribute('aria-pressed', 'true');
+            }
 
             clearAllTimers();
             cancelSpeech();
@@ -3938,12 +3971,12 @@
                 optionsHTML = options.map(letter => {
                     const isVowel = 'aeiouAEIOU'.includes(letter);
                     const highlightClass = isVowel ? 'vowel-highlight' : 'consonant-highlight';
-                    return `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')"><span class="${highlightClass}">${letter}</span></button>`;
+                    return `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')" aria-label="Choose letter ${letter}"><span class="${highlightClass}">${letter}</span></button>`;
                 }).join('');
             } else if (currentTheme === 'animals') {
                 // Show with associations
                 optionsHTML = options.map(letter => 
-                    `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')" style="position: relative;">
+                    `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')" style="position: relative;" aria-label="Choose letter ${letter}">
                         ${letter}
                         ${letter.toLowerCase() === currentLetter.toLowerCase() ? 
                             `<div class="letter-association">
@@ -3955,24 +3988,24 @@
             } else {
                 // Classic mode
                 optionsHTML = options.map(letter => 
-                    `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')">${letter}</button>`
+                    `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')" aria-label="Choose letter ${letter}">${letter}</button>`
                 ).join('');
             }
             
             gameArea.innerHTML = `
                 <div class="instruction">Tap the speaker, then find the letter!</div>
-                <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()">🔊</button>
+                <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">🔊</button>
                 <div class="options">${optionsHTML}</div>
                 <div class="voice-recorder">
-                    <button class="record-button" id="recordBtn" onclick="toggleRecording()">
+                    <button class="record-button" id="recordBtn" onclick="toggleRecording()" aria-label="Start recording">
                         <span id="recordIcon">🎤</span>
                     </button>
                     <div class="voice-controls">
-                        <button class="voice-btn" onclick="playLastRecording()" id="playBtn" disabled>
+                        <button class="voice-btn" onclick="playLastRecording()" id="playBtn" disabled aria-label="Play last recording">
                             <span>▶️</span>
                             <span>Play</span>
                         </button>
-                        <button class="voice-btn" onclick="compareWithCorrect()" id="compareBtn" disabled>
+                        <button class="voice-btn" onclick="compareWithCorrect()" id="compareBtn" disabled aria-label="Compare with correct pronunciation">
                             <span>🎙️</span>
                             <span>Compare</span>
                         </button>
@@ -4742,27 +4775,36 @@
             timerEnabled = mode === 'on';
             document.querySelectorAll('#timerOff, #timerOn').forEach(btn => {
                 btn.classList.remove('active');
+                btn.setAttribute('aria-pressed', 'false');
             });
-            document.getElementById('timer' + (mode === 'on' ? 'On' : 'Off')).classList.add('active');
+            const activeBtn = document.getElementById('timer' + (mode === 'on' ? 'On' : 'Off'));
+            activeBtn.classList.add('active');
+            activeBtn.setAttribute('aria-pressed', 'true');
         }
 
         function setCaseMode(mode) {
             currentCase = mode;
             document.querySelectorAll('#caseLower, #caseUpper, #caseMixed').forEach(btn => {
                 btn.classList.remove('active');
+                btn.setAttribute('aria-pressed', 'false');
             });
             
             const btnId = mode === 'lower' ? 'caseLower' : 
                          mode === 'upper' ? 'caseUpper' : 'caseMixed';
-            document.getElementById(btnId).classList.add('active');
+            const activeBtn = document.getElementById(btnId);
+            activeBtn.classList.add('active');
+            activeBtn.setAttribute('aria-pressed', 'true');
         }
 
         function setSoundMode(mode) {
             soundEnabled = mode === 'on';
             document.querySelectorAll('#soundOn, #soundOff').forEach(btn => {
                 btn.classList.remove('active');
+                btn.setAttribute('aria-pressed', 'false');
             });
-            document.getElementById('sound' + (mode === 'on' ? 'On' : 'Off')).classList.add('active');
+            const activeBtn = document.getElementById('sound' + (mode === 'on' ? 'On' : 'Off'));
+            activeBtn.classList.add('active');
+            activeBtn.setAttribute('aria-pressed', 'true');
         }
 
         // Visual Theme Functions
@@ -4832,6 +4874,7 @@
                     const recordBtn = document.getElementById('recordBtn');
                     recordBtn.classList.add('recording');
                     recordBtn.innerHTML = '<span id="recordIcon">🔴</span><div class="recording-indicator"></div>';
+                    recordBtn.setAttribute('aria-label', 'Stop recording');
                     
                     speakPhrase('Recording started. Say the letter!');
                 })
@@ -4849,6 +4892,7 @@
                 const recordBtn = document.getElementById('recordBtn');
                 recordBtn.classList.remove('recording');
                 recordBtn.innerHTML = '<span id="recordIcon">🎤</span>';
+                recordBtn.setAttribute('aria-label', 'Start recording');
                 
                 speakPhrase('Recording saved!');
             }
@@ -5618,15 +5662,21 @@
                     // Apply saved settings
                     if (focusModeEnabled) {
                         document.body.classList.add('focus-mode');
-                        document.getElementById('focusModeSwitch').classList.add('active');
+                        const el = document.getElementById('focusModeSwitch');
+                        el.classList.add('active');
+                        el.setAttribute('aria-checked', 'true');
                     }
                     if (highContrastEnabled) {
                         document.body.style.filter = 'contrast(1.5)';
-                        document.getElementById('highContrastSwitch').classList.add('active');
+                        const el = document.getElementById('highContrastSwitch');
+                        el.classList.add('active');
+                        el.setAttribute('aria-checked', 'true');
                     }
                     if (reduceMotionEnabled) {
                         document.body.style.setProperty('--animation-duration', '0.01s');
-                        document.getElementById('reduceMotionSwitch').classList.add('active');
+                        const el = document.getElementById('reduceMotionSwitch');
+                        el.classList.add('active');
+                        el.setAttribute('aria-checked', 'true');
                     }
                     
                     // Update UI
@@ -5664,6 +5714,7 @@
             if (focusModeEnabled) {
                 document.body.classList.add('focus-mode');
                 switchEl.classList.add('active');
+                switchEl.setAttribute('aria-checked', 'true');
                 // Store current timer state and disable timer in focus mode
                 previousTimerState = timerEnabled;
                 timerEnabled = false;
@@ -5674,6 +5725,7 @@
             } else {
                 document.body.classList.remove('focus-mode');
                 switchEl.classList.remove('active');
+                switchEl.setAttribute('aria-checked', 'false');
                 // Restore previous timer state instead of always enabling
                 timerEnabled = previousTimerState;
                 speakPhrase('Focus mode disabled.');
@@ -5689,9 +5741,11 @@
             if (highContrastEnabled) {
                 document.body.style.filter = 'contrast(1.5)';
                 switchEl.classList.add('active');
+                switchEl.setAttribute('aria-checked', 'true');
             } else {
                 document.body.style.filter = 'none';
                 switchEl.classList.remove('active');
+                switchEl.setAttribute('aria-checked', 'false');
             }
             
             saveGameData();
@@ -5709,11 +5763,13 @@
                 style.textContent = '* { animation-duration: 0.01s !important; transition-duration: 0.01s !important; }';
                 document.head.appendChild(style);
                 switchEl.classList.add('active');
+                switchEl.setAttribute('aria-checked', 'true');
             } else {
                 document.body.style.removeProperty('--animation-duration');
                 const style = document.getElementById('reduce-motion-style');
                 if (style) style.remove();
                 switchEl.classList.remove('active');
+                switchEl.setAttribute('aria-checked', 'false');
             }
             
             saveGameData();
@@ -5922,6 +5978,24 @@
                 closeSettings();
                 closeAchievements();
                 document.getElementById('roundModal').style.display = 'none';
+            }
+        });
+
+        // Keyboard access for focus switches
+        const focusSwitches = [
+            { id: 'focusModeSwitch', handler: toggleFocusMode },
+            { id: 'highContrastSwitch', handler: toggleHighContrast },
+            { id: 'reduceMotionSwitch', handler: toggleReduceMotion }
+        ];
+        focusSwitches.forEach(({ id, handler }) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handler();
+                    }
+                });
             }
         });
 
