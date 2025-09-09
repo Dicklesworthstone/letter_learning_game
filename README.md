@@ -1,494 +1,193 @@
-# 🌟 Learn Your Letters! 🌟
-### A Modern Educational Game with Professional Design and Advanced Learning Features
+# Learn Your Letters!
 
-Welcome to **Learn Your Letters!** - a sophisticated educational web application that helps children master the alphabet through interactive games, adaptive learning, and beautiful modern design. Created by Jeffrey Emanuel for his own children and made freely available to all families worldwide.
+An accessible, single‑file educational game that helps young children learn the alphabet through sound, visuals, and drawing. The entire app lives in one `index.html` and runs in any modern browser.
 
-## 🎮 What is This?
+This README reflects the current code precisely. If something is listed here, it exists in `index.html`; if it is not in the code, it is not claimed here.
 
-This is a premium single-page web application that teaches letter recognition through gamified learning with modern UI/UX design, comprehensive accessibility features, daily streak tracking, player profiles, and adaptive difficulty progression. Built with cutting-edge web technologies, it delivers a native app experience on any device - tablets, phones, computers, and classroom smart boards!
+## What It Is
+- Single‑file app: everything is implemented in `index.html`.
+- Two core modes: Find Letters (identify) and Tracing Practice (draw).
+- Child‑friendly UI, big touch targets, optional phonics flow, and gentle animations.
+- Data is stored locally in the browser via `localStorage` (no backend).
 
-### Core Philosophy
-The foundation of this project is **"Professional Learning Through Play"**. We believe educational tools should be as polished and engaging as commercial apps, with beautiful design, smooth animations, and thoughtful user experience that makes learning irresistible.
+## Major Features
 
-## 📊 Technical Architecture
+### Modes
+- Find Letters
+  - Presents 4 large letter tiles (same case as the target).
+  - Speaker button plays the target letter (via SpeechSynthesis API).
+  - Adaptive selection favors letters that need practice and avoids recent repeats.
+  - Optional phonics follow‑up (3‑second countdown, then letter sound and anchor word/emoji). Can be skipped.
+  - Scoring: base points plus a time bonus, with a per‑round cap. Wrong answers/timeouts deduct points.
+- Tracing Practice
+  - Responsive canvas sized to fit the screen (typically 260–560px square).
+  - Optional letter formation overlay (Show/Hide How to Write).
+  - Recognition: classical similarity (cloud matching + IoU checks) with optional deep similarity (MobileNet via TensorFlow.js if available).
+  - Letter‑specific helpers (dot detection for i/j, crossbar detection for t/f/E/F/H).
+  - Idle hint: after a short delay, a faint letter guide fades in (disabled as soon as the child starts tracing).
 
-### Application Structure
+### Adaptive Difficulty
+- Tracks per‑letter performance: correct, total attempts, response times, and a small spaced‑review state.
+- Builds an adaptive selection pool that up‑weights letters with low success rates and down‑weights recent letters.
+- Temporary “shape similarity” bias after an error (e.g., b/d/p/q) to reinforce tricky distinctions.
+- Difficulty indicator (1–5 bars) reflects overall performance; it is a visual indicator only (timing is not directly tied to the indicator).
 
-The application is built as a **single-file HTML application** containing:
-- One cohesive `index.html` for maximum portability
-- **Modern Design System** with CSS custom properties and professional styling
-- **Vanilla JavaScript** handling game logic, adaptive learning, and state management
-- **CDN Dependencies**: 
-  - TailwindCSS for utility-first styling
-  - GSAP 3.12.2 for professional animations
-  - Animate.css 4.1.1 for pre-built animation classes
-  - Inter font family for crisp, modern typography
-  - Optional TensorFlow.js + MobileNet embeddings for enhanced drawing similarity
-- **Local Storage**: Persistent progress, streaks, settings, and player profiles
+### Timing and Feedback
+- Timer On/Off (per setting). When on, a countdown bar and verbal countdown for the last 3 seconds.
+- Timeouts count as incorrect, with appropriate feedback and scoring.
+- Feedback banner for success/error, plus subtle wrong‑answer flash to keep kids oriented.
 
-### Design System
+### Celebrations
+- Default celebration uses themed emoji confetti and letter‑specific animations (e.g., rockets, balloons, etc.).
+- Celebration type is stored in save data; there is currently no UI for changing the celebration theme in Settings.
 
-```css
+### Visual Themes
+- Classic: clean letters.
+- Animals: shows letter associations (icon + word) near the correct option.
+- Colors: highlights vowels vs consonants.
+
+### Phonics Flow (optional)
+- After a correct answer, optionally enters phonics phase:
+  - 3‑second on‑screen countdown.
+  - Speaks the phonetic sound 3 times and optionally “as in <word>”.
+  - Shows an on‑screen emoji for some anchor words.
+  - Echo practice: if Voice Recording is enabled and permitted, listens briefly for the child’s voice; otherwise shows a repeat button.
+- The phonics phase can be skipped at any time.
+
+### Mini‑games (automatic short breaks)
+- Letter Rain: move the basket to catch the target letter; score feedback.
+- Memory Match: flip pairs of matching letters in a 4×4 grid with a timer.
+- Mini‑games are occasionally offered between questions in Find Letters mode.
+
+### Achievements
+Defined achievements (unlocked/persisted locally):
+- First Steps: first correct answer.
+- Streak 5, Streak 10: consecutive correct answers.
+- Speed Demon: 10 answers under 2 seconds (defined but not currently incremented in code).
+- Perfect Round: complete a round with no mistakes.
+- Letter Master: master all 26 letters.
+- Score milestones: 100, 500, 1000 points.
+- Play time: 10 minutes, 30 minutes total.
+- Rounds: complete 5 rounds.
+
+Badge counter appears on the trophy button and is visible once you earn at least one achievement.
+
+### Round System
+- 15 questions per round.
+- Round summary modal shows: average time, accuracy, points gained, and “problem letters” (letters with 2+ errors this round).
+
+### Streaks
+- Tracks daily play streaks (based on calendar days).
+- Milestone modal for common streak thresholds (3, 7, 14, 30, 50, 100) with a 4‑week calendar view.
+- Shows a compact streak banner (hidden until the streak is at least 2 days).
+
+### Multiplayer (Profiles)
+- Add players with an emoji avatar and a name.
+- Per‑player: scores, rounds, best streak, letter performance, achievements, mastered letters, and celebration type.
+- Player data is saved to `localStorage` and can be switched from the top player selector.
+
+### Parent/Teacher Dashboard
+- Open by long‑pressing (about 2s) or double‑clicking the gear button.
+- Sections:
+  - Player Progress cards (score, accuracy, letters mastered, best streak).
+  - Letter Performance Heatmap (A–Z color‑coded by success rate, with per‑cell tooltip).
+  - Insights (simple, rule‑based suggestions based on performance and timing).
+  - Recommendations (practical activity suggestions + time‑of‑day hints).
+- Dashboard and other overlays trap keyboard focus and prevent background scrolling while open.
+
+### Settings
+- Basic
+  - Timer: On/Off
+  - Letters: lowercase/uppercase/mixed
+  - Phonics: On/Off
+  - Sound: On/Off
+- Visual Theme: Classic / Animals / Colors
+- Advanced
+  - Voice Recording: On/Off (for phonics echo + practice tools)
+  - Focus Mode: simplifies the UI and disables the timer while active
+  - High Contrast: increases contrast
+  - Reduce Motion: minimizes animations
+  - Quick entry to Parent Dashboard
+
+## Scoring (as implemented)
+- Correct answer: `base + timeBonus`, then capped so total points gained in a round do not exceed 50.
+  - Base = `10 + (difficultyLevel * 5)`
+  - Time bonus decreases with response time, up to about +30 for very fast answers
+- Wrong answer: −10 points and resets correct streak; briefly highlights the correct tile.
+- Timeout: −10 points and counts as an incorrect attempt.
+
+## Persistence
+Saved in `localStorage`:
+- Overall game data: `letterLearningGameData` (score, rounds, achievements, per‑letter performance, streaks, settings, etc.).
+- Players list (for multiplayer): `letterLearningPlayers` (per‑player state; Sets are serialized as arrays).
+
+## Accessibility
+- Big touch targets and large typography.
+- Focus Mode that reduces UI complexity and disables timers.
+- High Contrast and Reduce Motion toggles.
+- ARIA attributes on interactive elements and focus traps for modals.
+
+## Technology
+- Single HTML file: `index.html` (HTML, CSS, and vanilla JS).
+- External libraries loaded via CDN:
+  - TailwindCSS (utilities)
+  - GSAP 3.12.x (animations; with requestAnimationFrame fallback)
+  - Animate.css 4.x (occasional effects)
+  - TensorFlow.js and MobileNet (optional; used only when available for deeper tracing similarity)
+- SpeechSynthesis API for voice prompts with an English‑voice priority list.
+- Optional Google Analytics tag is included in the HTML head (basic usage analytics).
+
+Note: Because libraries are loaded from CDNs, an internet connection is required on first load. Microphone features require HTTPS (or `localhost`).
+
+## Design Tokens (excerpt)
+Core CSS variables used in the app:
+
+```
 :root {
-    --primary: #5B3FD8;      // Rich purple
-    --secondary: #FF5E8A;    // Vibrant pink
-    --success: #10B981;      // Emerald green
-    --warning: #F59E0B;      // Warm amber
-    --error: #EF4444;        // Clear red
-    // Complete gray scale
-    // Shadow system (sm, md, lg, xl, 2xl)
-    // Border radius system (sm, md, lg, xl)
+  --primary: #6366F1;
+  --primary-dark: #4F46E5;
+  --secondary: #EC4899;
+  --secondary-dark: #DB2777;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
 }
 ```
 
-### Core Game Loop
+## Deployment
+- Static hosting: upload the single `index.html` to any static host (e.g., GitHub Pages, Cloudflare Pages, Netlify, S3/CloudFront).
+- Ensure the site is served over HTTPS to enable microphone features.
+
+## Device Support
+- Modern desktop and mobile browsers with ES6, Flexbox/Grid, and SpeechSynthesis support.
+- Touch input is fully supported; mouse and keyboard interactions also work.
+
+## Privacy
+- No backend or account system; all progress and settings stay in the browser (`localStorage`).
+- A Google Analytics tag is present for basic usage analytics. If you prefer not to use analytics, remove the GA `<script>` tag block at the top of `index.html` before deploying.
+
+## Known Notes
+- The “Speed Demon” achievement is defined but is not currently incremented by gameplay logic.
+- Celebration type is saved/restored, but there is no Settings UI to change it yet (default is fireworks).
+- Optional deep similarity for tracing (TensorFlow.js + MobileNet) is used only when those libraries are available.
+
+## Contributing
+Issues and pull requests are welcome. Useful areas include:
+- Hooking up the speed‑based achievement tracking.
+- Exposing celebration theme selection in Settings.
+- Additional mini‑games or letter formation guides.
+- Accessibility refinements and performance tuning.
+
+## Credits
+Created by Jeffrey Emanuel. Made freely available for families and classrooms.
 
-```
-Game Start → Mode Selection → Adaptive Challenge → User Input → 
-Real-time Validation → Performance Tracking → Score Update → 
-Achievement Check → Streak Update → Difficulty Adjustment → Next Challenge
-```
-
-## ✨ Key Features
-
-### 🎨 Modern Professional Design
-
-#### Glass Morphism UI
-- **Frosted Glass Effects**: Backdrop blur with subtle transparency
-- **Layered Backgrounds**: Multi-gradient overlays for depth
-- **Floating Bubbles**: Ambient animated elements
-- **Smooth Transitions**: GSAP-powered animations throughout
-- **Custom Shadow System**: 5-tier shadow hierarchy
-
-#### Professional Components
-- **Elevated Cards**: Clean white surfaces with subtle shadows
-- **Micro-interactions**: Hover states, active feedback, smooth transforms
-- **Consistent Spacing**: Design token-based layout system
-- **Typography Hierarchy**: Inter font with optimized weights
-- **No-Scroll Layout**: Fully contained interactions without vertical scrolling
-
-### 🔥 Daily Streak System
-
-#### Streak Tracking
-- **Visual Streak Counter**: Animated fire emoji with day count
-- **Milestone Celebrations**: Special rewards at key intervals
-- **Streak Calendar**: 4-week visual history display
-- **Smart Recovery**: Grace period for missed days
-- **Persistent Storage**: Cross-session streak maintenance
-
-#### Streak Milestones
-- 🔥 **3 Days**: "Great Start!" celebration
-- 🔥 **7 Days**: "Week Warrior" achievement  
-- 🔥 **14 Days**: "Two Week Champion" recognition
-- 🔥 **30 Days**: "Monthly Master" special effects
-- 🔥 **50 Days**: "Incredible Dedication" status
-- 🔥 **100 Days**: "Learning Legend" ultimate achievement
-
-### 🧠 Adaptive Learning System
-
-#### Performance Tracking
-```javascript
-letterPerformance = {
-    'a': { 
-        correct: 15, 
-        total: 18, 
-        avgTime: 2.3,
-        times: [2.1, 2.5, 2.3...]
-    }
-    // Tracked for all 26 letters
-}
-```
-
-#### Adaptive Difficulty Algorithm
-- **Weighted Letter Selection**: Focus on struggling letters
-- **Success Rate Analysis**: Real-time performance calculation
-- **Response Time Tracking**: Speed-based difficulty adjustment
-- **Mastery Detection**: 90%+ accuracy with 5+ attempts
-- **Recent Letter Avoidance**: Prevents repetition fatigue
-
-#### Difficulty Progression
-- **Level 1**: Beginner (10s timer, high tolerance)
-- **Level 2**: Learning (8s timer, focus mode)
-- **Level 3**: Practicing (6s timer, balanced)
-- **Level 4**: Advanced (5s timer, challenging)
-- **Level 5**: Mastery (4s timer, expert mode)
-
-### ♿ Comprehensive Accessibility
-
-#### Focus Mode Features
-- **Simplified Interface**: Reduced visual complexity
-- **High Contrast Option**: WCAG AAA compliant
-- **Reduce Motion**: Respects prefers-reduced-motion
-- **Extended Timers**: Additional response time
-- **Larger Touch Targets**: 44x44px minimum
-- **Full Keyboard Support**: Tab traps and ARIA labeling
-
-#### Accessibility Implementation
-```javascript
-AccessibilitySettings = {
-    focusMode: boolean,        // Streamlined UI
-    highContrast: boolean,     // Enhanced visibility
-    reduceMotion: boolean,     // Minimal animations
-    largerTargets: boolean,    // Bigger buttons
-    extendedTimers: boolean,   // More time
-    keyboardNav: boolean       // Full keyboard support
-}
-```
-
-### 🎆 Customizable Celebrations
-
-#### Celebration Themes
-1. **🎆 Fireworks**: Colorful particle explosions
-2. **🦁 Animals**: Safari parade animations
-3. **🚀 Vehicles**: Transportation celebration
-4. **⭐ Space**: Cosmic star shower
-5. **🦖 Dinosaurs**: Prehistoric party
-6. **💖 Hearts**: Love and encouragement
-
-Each celebration includes:
-- Custom particle systems
-- Themed emoji showers
-- Coordinated color schemes
-- Celebration-specific animations
-
-#### Letter-Specific Bursts
-- Tailored confetti, rings, and hero-letter bursts per letter
-- Theme-aware gradients and emoji tied to the displayed letter
-
-### 🌈 Visual Learning Themes
-
-#### Theme System
-1. **Classic Mode** 🔤
-   - Clean letter presentation
-   - Minimalist design focus
-   - Traditional learning approach
-
-2. **Animal Associations** 🐾
-   - Letter-animal pairings
-   - Visual memory anchors
-   - Mnemonic learning aids
-
-3. **Color Learning** 🎨
-   - Unique color per letter
-   - Synesthetic associations
-   - Enhanced memorization
-
-### 👥 Player Profiles (Multiplayer)
-- Create multiple players with fun emoji avatars
-- Switch between players during play
-- Per-player scores, streaks, achievements, and mastery
-- Persistent storage of profiles, progress, and preferences
-
-### 🎯 Game Modes
-
-#### 1. **Find Letters Mode** 🔍
-
-**Advanced Features:**
-- Speech synthesis introduction
-- 4-option adaptive selection
-- Performance-based difficulty
-- Phonetic reinforcement with anchor emojis
-- Visual feedback animations
-- Optional voice recording practice
-
-**Scoring System:**
-- Lightning (<2s): 50 points + streak bonus
-- Fast (<3s): 40 points
-- Normal (<5s): 30 points
-- Standard (5+s): 20 points
-- Incorrect: -15 points + error tracking
-- Timeout: -10 points + difficulty adjustment
-
-#### 2. **Draw Letters Mode** ✏️
-
-**Drawing Features:**
-- 350x350px HTML5 canvas
-- Touch and mouse support
-- Ghost letter overlay guide
-- On-device similarity: IoU-based shape comparison
-- Optional deep similarity: MobileNet embeddings via TensorFlow.js
-- Pressure sensitivity ready
-
-### 🏆 Achievement System
-
-#### Performance Achievements
-- ⚡ **Speed Demon**: 10 ultra-fast responses
-- 🎯 **Perfect Round**: 100% accuracy
-- ⭐ **Five Stars**: Maximum score reached
-- 🔥 **Hot Streak**: 20 consecutive correct
-
-#### Progress Achievements
-- 🎓 **Letter Master**: All 26 letters mastered
-- 🏁 **Round Champion**: 5 rounds completed
-- 💯 **Century Club**: 100 correct answers
-- 🚀 **Quick Learner**: Fast completion
-
-#### Special Achievements
-- 📅 **Consistency King**: Daily play streak
-- 🌟 **Perfectionist**: No errors in session
-- 🏆 **Ultimate Champion**: All achievements unlocked
-
-### 🔊 Professional Audio System
-
-#### Voice Configuration
-```javascript
-// Voice Priority System:
-1. US English (en-US) - Primary
-2. UK English (en-GB) - Secondary  
-3. Any English voice - Fallback
-4. System default - Final fallback
-```
-
-#### Optimized Pronunciations
-```javascript
-letterPronunciations = {
-    'a': 'ay', 'b': 'bee', 'c': 'see',
-    'd': 'dee', 'e': 'ee', 'f': 'eff',
-    // All 26 letters with clear pronunciation
-}
-```
-
-#### Phonetic Teaching
-```javascript
-phoneticSounds = {
-    'a': 'ah as in apple',
-    'b': 'buh as in ball',
-    'c': 'kuh as in cat',
-    // Complete phonetic guide
-}
-```
-
-#### Optional Voice Recording Practice
-- Child-friendly recorder to practice saying letters
-- Simple playback of the most recent recording
-- Stored in-memory during the session; optional persistence of setting
-- Requires user interaction and secure contexts for microphone access
-
-### 👨‍👩‍👧‍👦 Parent Dashboard
-
-#### Access Method
-- **Long Press**: Hold settings button for ~2 seconds
-- **Visual Hint**: "Hold for Parent Menu" appears during press
-- **Child-Safe**: Prevents accidental access
-
-#### Dashboard Features
-- **Learning Analytics**: Performance graphs and trends
-- **Letter Progress**: Individual letter mastery status
-- **Time Tracking**: Daily and weekly usage stats
-- **Difficulty Insights**: Current adaptive level
-- **Achievement Overview**: Unlocked badges display
-- **Recommendations**: Play tips and focus areas
-
-### ⚙️ Settings & Customization
-
-#### Game Settings
-- **Timer Mode**: Off/Standard/Extended
-- **Letter Case**: Lowercase/Uppercase/Mixed
-- **Sound Effects**: On/Off with volume control
-- **Voice Speed**: Adjustable speech rate
-- **Phonics**: Enable/disable phonics cues and anchor emojis
-- **Voice Recording**: Enable/disable the in-game recorder
-- **Celebration Style**: 6 unique themes
-- **Visual Theme**: 3 learning styles
-
-#### Accessibility Settings
-- **Focus Mode**: Simplified interface toggle
-- **High Contrast**: Enhanced visibility mode
-- **Reduce Motion**: Animation preferences
-- **Larger Targets**: Increased button sizes
-- **Extended Timers**: More response time
-- **Keyboard Navigation**: Full keyboard support
-
-## 🎨 Visual Design Details
-
-### Modern UI Components
-- **Glass Morphism**: 20px backdrop blur effects
-- **Gradient System**: Multi-stop linear gradients
-- **Animation Library**: 50+ custom animations
-- **Responsive Grid**: Flexbox and CSS Grid layouts
-- **Touch Optimized**: 44px minimum touch targets
-- **Dark Mode Ready**: CSS custom properties architecture
-
-### Performance Optimizations
-- **Single File**: No network requests after load
-- **Optimized Animations**: GPU-accelerated transforms
-- **Efficient Rendering**: RequestAnimationFrame usage
-- **Memory Management**: Proper cleanup and pooling
-- **Lazy Loading**: Progressive feature activation
-
-## 🚀 Deployment
-
-### GitHub Pages / Cloudflare Pages
-1. Single `index.html` file - no build required
-2. Deploy directly to GitHub Pages or Cloudflare Pages
-3. Custom domain ready (letter-learning-game.org)
-4. Automatic HTTPS enabled
-5. Global CDN distribution
-
-### Cloudflare Pages Setup
-```bash
-Build command: :
-Output directory: .
-Environment variables: None
-```
-
-## 📱 Device Compatibility
-
-### Fully Supported Devices
-- **Tablets** (Optimal): iPad, Android tablets, Surface
-- **Smartphones**: iPhone 12+, modern Android
-- **Desktop**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- **Smart Boards**: Touch-enabled classroom displays
-- **Accessibility**: Screen reader compatible (NVDA, JAWS, VoiceOver)
-
-### Browser Requirements
-- ES6+ JavaScript support
-- CSS Grid and Flexbox
-- Web Speech API (optional)
-- MediaDevices API for microphone (optional)
-- Local Storage API
-- Touch Events and Pointer Events API
-
-## 🛠️ Customization Guide
-
-### Adding New Celebrations
-```javascript
-const celebrationThemes = {
-    custom: {
-        particles: ['🎉', '🎊', '🎈'],
-        colors: ['#ff6b6b', '#4ecdc4'],
-        duration: 2000,
-        intensity: 'high'
-    }
-};
-```
-
-### Modifying Difficulty Curves
-```javascript
-const difficultySettings = {
-    level1: { timer: 10, errorTolerance: 5, adaptiveWeight: 1.0 },
-    level2: { timer: 8, errorTolerance: 4, adaptiveWeight: 1.5 },
-    level3: { timer: 6, errorTolerance: 3, adaptiveWeight: 2.0 },
-    level4: { timer: 5, errorTolerance: 2, adaptiveWeight: 2.5 },
-    level5: { timer: 4, errorTolerance: 1, adaptiveWeight: 3.0 }
-};
-```
-
-### Creating Visual Themes
-```javascript
-const visualThemes = {
-    custom: {
-        letterAssociations: {
-            'A': { icon: '🍎', word: 'Apple', color: '#ff6b6b' },
-            'B': { icon: '🐻', word: 'Bear', color: '#4ecdc4' }
-        },
-        background: 'linear-gradient(...)',
-        animations: 'bounce'
-    }
-};
-```
-
-## 📈 Educational Benefits
-
-### Learning Outcomes
-- **Letter Recognition**: Multi-sensory approach
-- **Phonemic Awareness**: Sound-letter connections
-- **Motor Skills**: Drawing mode practice
-- **Memory Formation**: Spaced repetition system
-- **Confidence Building**: Positive reinforcement
-- **Learning Habits**: Streak motivation system
-
-### Pedagogical Features
-- **Adaptive Learning**: Personalized difficulty
-- **Immediate Feedback**: Real-time validation
-- **Positive Reinforcement**: Celebration system
-- **Progress Tracking**: Visual achievement display
-- **Multi-Modal Learning**: Visual, auditory, kinesthetic
-- **Inclusive Design**: Accessibility-first approach
-
-## 🐛 Troubleshooting
-
-### Common Issues & Solutions
-
-**Streak Not Updating:**
-- Verify browser date/time settings
-- Check localStorage permissions
-- Complete at least one question daily
-- Clear cache and reload
-
-**Audio Not Working:**
-- Check device volume settings
-- iOS: Requires user interaction first
-- Enable speech synthesis in browser
-- Try different browser if persistent
-
-**Microphone Not Working:**
-- Ensure site is served over HTTPS (required by iOS/Safari)
-- Allow microphone permissions when prompted
-- Confirm device has a working microphone
-- Toggle the Voice Recording setting off/on
-
-**Performance Issues:**
-- Enable hardware acceleration
-- Close other browser tabs
-- Reduce animation settings
-- Use Focus Mode for older devices
-
-**Touch Not Responding:**
-- Calibrate touch screen
-- Clean screen surface
-- Check for screen protector issues
-- Restart browser/device
-
-## 💝 About This Project
-
-This game was created with love by **Jeffrey Emanuel** for his own children and is made freely available to all families. We believe every child deserves access to professional-quality educational tools.
-
-### Open Source Commitment
-- Completely free and open source
-- No ads, tracking, or data collection
-- Available on [GitHub](https://github.com/Dicklesworthstone/letter_learning_game)
-- Community contributions welcome
-- MIT License for maximum freedom
-
-## 🔮 Roadmap
-
-### Coming Soon
-- 🌍 Internationalization (10+ languages)
-- 📱 Progressive Web App with offline mode
-- 🎮 Additional mini-games and challenges
-- 📊 Advanced parent analytics dashboard
-- ☁️ Optional cloud sync across devices
-- 🏫 Classroom management for teachers
-- 🎨 Custom theme creator
-- 🔤 Cursive writing mode
-- 🎵 Background music options
-- 🏅 Printable achievement certificates
-
-## 📝 License
-
-MIT License - This educational tool is freely available for all families. Use, modify, and share to help children learn!
-
-## 🤝 Contributing
-
-We welcome contributions! Priority areas:
-- New celebration animations
-- Additional accessibility features
-- Language translations
-- Performance optimizations
-- Educational content additions
-- Bug fixes and improvements
-
-## 💖 Credits
-
-Created with ❤️ for children everywhere by Jeffrey Emanuel. Special thanks to all families using this tool to help their children learn.
-
----
-
-**Website**: [letter-learning-game.org](https://letter-learning-game.org)
-
-**GitHub**: [github.com/Dicklesworthstone/letter_learning_game](https://github.com/Dicklesworthstone/letter_learning_game)
-
-**Remember**: Every child learns at their own pace. This tool adapts to each learner's needs with professional design, adaptive difficulty, and comprehensive accessibility features. Learning should be beautiful, engaging, and accessible to all! 🌟
-
-*Made with ❤️ for children everywhere*

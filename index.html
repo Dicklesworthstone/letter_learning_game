@@ -5369,14 +5369,14 @@
             'p': 'puh, puh, puh, as in pig',
             'q': 'kwee, kwee, kwee, as in queen',
             'r': 'ruh, ruh, ruh, as in rabbit',
-            's': 'sss, sss, sss, as in snake',
+            's': 'sah, sah, sah, as in snake',
             't': 'tuh, tuh, tuh, as in turtle',
             'u': 'uhh, uhh, uhh, as in umbrella',
             'v': 'vuh, vuh, vuh, as in violin',
             'w': 'wuh, wuh, wuh, as in whale',
             'x': 'eks, eks, eks, as in fox',
-            'y': 'yuh, yuh, yuh, as in yellow',
-            'z': 'zuh, zuh, zuh, as in zebra'
+            'y': 'yeh, yeh, yeh, as in yellow',
+            'z': 'zeh, zeh, zeh, as in zebra'
         };
 
         // Emoji choices for phonics anchor words (only where a clear emoji exists)
@@ -7510,10 +7510,12 @@
                                     timerEl.textContent = '';
                                     // Say phonetics and association after countdown
                                     speakPhonetics(currentLetter, () => {
+                                        const proceed = () => startIdentifyGame();
                                         if (assoc) {
-                                            try { speakPhrase(`${currentLetter} is for ${assoc.word}.`); } catch (e) {}
+                                            try { speakPhrase(`${currentLetter} is for ${assoc.word}.`, proceed); } catch (e) { proceed(); }
+                                        } else {
+                                            proceed();
                                         }
-                                        setTimeout(() => startIdentifyGame(), 500);
                                     });
                                 }
                             };
@@ -8906,7 +8908,11 @@
 
         function updateBadgeCount() {
             const count = unlockedAchievements.size;
-            document.getElementById('badgeCount').textContent = count;
+            const el = document.getElementById('badgeCount');
+            if (!el) return;
+            el.textContent = count;
+            // Ensure the badge is only visible when there are achievements
+            el.style.display = count > 0 ? 'flex' : 'none';
         }
 
         function openAchievements() {
@@ -9773,18 +9779,18 @@
                     // Apply saved settings
                     if (focusModeEnabled) {
                         document.body.classList.add('focus-mode');
-                        const el = document.getElementById('focusModeSwitch');
-                        if (el) { el.classList.add('active'); el.setAttribute('aria-checked', 'true'); }
+                        const el = document.getElementById('focusModeCheck');
+                        if (el) { el.checked = true; }
                     }
                     if (highContrastEnabled) {
                         document.body.style.filter = 'contrast(1.5)';
-                        const el = document.getElementById('highContrastSwitch');
-                        if (el) { el.classList.add('active'); el.setAttribute('aria-checked', 'true'); }
+                        const el = document.getElementById('highContrastCheck');
+                        if (el) { el.checked = true; }
                     }
                     if (reduceMotionEnabled) {
                         document.body.style.setProperty('--animation-duration', '0.01s');
-                        const el = document.getElementById('reduceMotionSwitch');
-                        if (el) { el.classList.add('active'); el.setAttribute('aria-checked', 'true'); }
+                        const el = document.getElementById('reduceMotionCheck');
+                        if (el) { el.checked = true; }
                     }
 
                     // Update UI
@@ -9817,11 +9823,11 @@
         // Focus Mode Functions
         function toggleFocusMode() {
             focusModeEnabled = !focusModeEnabled;
-            const switchEl = document.getElementById('focusModeSwitch');
+            const switchEl = document.getElementById('focusModeCheck');
 
             if (focusModeEnabled) {
                 document.body.classList.add('focus-mode');
-                if (switchEl) { switchEl.classList.add('active'); switchEl.setAttribute('aria-checked', 'true'); }
+                if (switchEl) { switchEl.checked = true; }
                 // Store current timer state and disable timer in focus mode
                 previousTimerState = timerEnabled;
                 timerEnabled = false;
@@ -9831,7 +9837,7 @@
                 speakPhrase('Focus mode enabled. Simplified interface activated.');
             } else {
                 document.body.classList.remove('focus-mode');
-                if (switchEl) { switchEl.classList.remove('active'); switchEl.setAttribute('aria-checked', 'false'); }
+                if (switchEl) { switchEl.checked = false; }
                 // Restore previous timer state instead of always enabling
                 timerEnabled = previousTimerState;
                 speakPhrase('Focus mode disabled.');
@@ -9842,14 +9848,14 @@
 
         function toggleHighContrast() {
             highContrastEnabled = !highContrastEnabled;
-            const switchEl = document.getElementById('highContrastSwitch');
+            const switchEl = document.getElementById('highContrastCheck');
 
             if (highContrastEnabled) {
                 document.body.style.filter = 'contrast(1.5)';
-                if (switchEl) { switchEl.classList.add('active'); switchEl.setAttribute('aria-checked', 'true'); }
+                if (switchEl) { switchEl.checked = true; }
             } else {
                 document.body.style.filter = 'none';
-                if (switchEl) { switchEl.classList.remove('active'); switchEl.setAttribute('aria-checked', 'false'); }
+                if (switchEl) { switchEl.checked = false; }
             }
 
             saveGameData();
@@ -9857,7 +9863,7 @@
 
         function toggleReduceMotion() {
             reduceMotionEnabled = !reduceMotionEnabled;
-            const switchEl = document.getElementById('reduceMotionSwitch');
+            const switchEl = document.getElementById('reduceMotionCheck');
 
             if (reduceMotionEnabled) {
                 // Set all animation durations to nearly instant
@@ -9867,13 +9873,13 @@
                 style.textContent = '* { animation-duration: 0.01s !important; transition-duration: 0.01s !important; }';
                 document.head.appendChild(style);
                 document.body.classList.add('reduce-motion');
-                if (switchEl) { switchEl.classList.add('active'); switchEl.setAttribute('aria-checked', 'true'); }
+                if (switchEl) { switchEl.checked = true; }
             } else {
                 document.body.style.removeProperty('--animation-duration');
                 const style = document.getElementById('reduce-motion-style');
                 if (style) style.remove();
                 document.body.classList.remove('reduce-motion');
-                if (switchEl) { switchEl.classList.remove('active'); switchEl.setAttribute('aria-checked', 'false'); }
+                if (switchEl) { switchEl.checked = false; }
             }
 
             saveGameData();
@@ -10123,9 +10129,9 @@
 
         // Keyboard access for focus switches
         const focusSwitches = [
-            { id: 'focusModeSwitch', handler: toggleFocusMode },
-            { id: 'highContrastSwitch', handler: toggleHighContrast },
-            { id: 'reduceMotionSwitch', handler: toggleReduceMotion }
+            { id: 'focusModeCheck', handler: toggleFocusMode },
+            { id: 'highContrastCheck', handler: toggleHighContrast },
+            { id: 'reduceMotionCheck', handler: toggleReduceMotion }
         ];
         focusSwitches.forEach(({ id, handler }) => {
             const el = document.getElementById(id);
@@ -10316,6 +10322,14 @@
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
             let acceptThresh = BASE_ACCEPT + easing;
+            // Per-letter minimum acceptance floors and cloud gates (shape-first)
+            const letterFloors = new Map([
+                // Straight/diagonal-heavy letters should rely more on cloud shape
+                ['V', 0.44], ['v', 0.44], ['W', 0.44], ['w', 0.44], ['N', 0.44], ['n', 0.44], ['M', 0.44], ['m', 0.44], ['Z', 0.44], ['z', 0.44],
+                // Curvy letters get a slightly lower floor
+                ['S', 0.42], ['s', 0.42], ['G', 0.42], ['g', 0.42], ['Q', 0.42], ['q', 0.42]
+            ]);
+            const floor = letterFloors.get(currentLetter) || 0.40;
             let finalScore = classicalScore;
             if (deepOk) {
                 finalScore = 0.55 * classicalScore + 0.45 * deepScore;
@@ -10327,8 +10341,13 @@
             if (needCrossbar && !crossbarOK) acceptThresh += 0.01;
             acceptThresh = clamp(acceptThresh, 0.40, 0.58);
 
-            const bothBad = (classicalScore < 0.36) && (!deepOk || deepScore < 0.40);
-            const passed = (!bothBad) && (finalScore >= acceptThresh || (finalScore >= 0.44 && (classicalMargin >= 0.05 || deepMargin >= 0.05)));
+            // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
+            const cloudGate = cloudSim >= (floor - 0.05);
+            const bothBad = (classicalScore < (floor - 0.08)) && (!deepOk || deepScore < (floor - 0.10));
+            const passed = cloudGate && (!bothBad) && (
+                finalScore >= acceptThresh ||
+                (finalScore >= Math.max(0.42, floor) && (classicalMargin >= 0.05 || deepMargin >= 0.05))
+            );
 
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
             if (passed) {
