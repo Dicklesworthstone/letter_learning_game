@@ -21,6 +21,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 
+    <!-- Optional deep similarity support for tracing (gracefully falls back if blocked/offline) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.19.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -5051,7 +5055,6 @@
         let hintFadeOpacity = 0; // 0 → 0.12
         // Draw-mode advancement guards to avoid duplicate next prompts
         let drawAdvanceTimeout = null;
-        let drawAdvanceLocked = false;
         let drawHasAdvanced = false;
 
         function advanceToNextDrawLetterOnce() {
@@ -7930,9 +7933,8 @@
             scoreAtRoundStart = currentPlayer ? currentPlayer.score : score;
             clearAllTimers();
             cancelSpeech();
-            // Clear any pending auto-advance from prior round and unlock
+            // Clear any pending auto-advance from prior round
             if (drawAdvanceTimeout) { try { clearTimeout(drawAdvanceTimeout); } catch (e) {} drawAdvanceTimeout = null; }
-            drawAdvanceLocked = false;
             drawHasAdvanced = false;
             currentLetter = getRandomLetter();
             // reset hint state
@@ -7988,6 +7990,9 @@
             speakTracePrompt(currentLetter);
             // start idle hint timer after the initial prompt
             startIdleHintTimer();
+            // Start timing and warm up deep model (optional)
+            drawQuestionStartTime = Date.now();
+            try { if (typeof mobilenet !== 'undefined' && typeof tf !== 'undefined') { /* warm */ } } catch (e) {}
         }
 
         function resizeDrawLayout() {
@@ -10231,6 +10236,197 @@
                 e.preventDefault();
             }
         }, { passive: false });
+
+        // New tracing recognizer (hybrid classical + optional deep) — overrides old checkDrawing
+        function checkDrawingNew() {
+            const ALL_LETTERS = Object.keys(LETTER_CHECKPOINTS);
+
+            // Local helpers (scoped to avoid polluting global)
+            const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+            const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+            const lerp = (a, b, t) => a + (b - a) * t;
+            const bboxOfStrokes = (strokes) => {
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                for (const s of strokes) for (const p of s) { if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x; if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y; }
+                if (!isFinite(minX)) return { minX: 0, minY: 0, maxX: 1, maxY: 1, width: 1, height: 1 };
+                return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+            };
+            const joinStrokes = (strokes) => { const out = []; for (const s of strokes) for (const p of s) out.push(p); return out; };
+            const pathLength = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += dist(pts[i - 1], pts[i]); return d; };
+            const smoothStroke = (s) => { if (s.length < 3) return s.slice(); const out = [s[0]]; for (let i = 1; i < s.length - 1; i++) out.push({ x: (s[i - 1].x + s[i].x + s[i + 1].x) / 3, y: (s[i - 1].y + s[i].y + s[i + 1].y) / 3 }); out.push(s[s.length - 1]); return out; };
+            const normalizeStrokesToBox = (strokes) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = 100 / Math.max(w, h), ox = bb.minX, oy = bb.minY; return strokes.map(s => s.map(p => ({ x: (p.x - ox) * scale, y: (p.y - oy) * scale }))); };
+            const N_RESAMPLE = 96, ROT_MAX_DEG = 20, ROT_STEP_DEG = 4, CLOUD_NORM = 18;
+            const resampleStroke = (pts, n) => { if (pts.length === 0) return []; const I = pathLength(pts) / (n - 1); let D = 0, out = [{ ...pts[0] }]; for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], L = dist(a, b); if (!L) continue; while (D + L >= I) { const t = (I - D) / L; const q = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) }; out.push(q); pts.splice(i, 0, q); D = 0; break; } D += L; } if (out.length < n) out.push({ ...pts[pts.length - 1] }); return out.length === n ? out : (out.length > n ? out.slice(0, n) : out); };
+            const centroid = (pts) => { let cx = 0, cy = 0; for (const p of pts) { cx += p.x; cy += p.y; } return { x: cx / pts.length, y: cy / pts.length }; };
+            const rotatePoints = (pts, rad) => { const c = centroid(pts), cs = Math.cos(rad), sn = Math.sin(rad); return pts.map(p => ({ x: (p.x - c.x) * cs - (p.y - c.y) * sn + c.x, y: (p.x - c.x) * sn + (p.y - c.y) * cs + c.y })); };
+            const cloudDistance = (pts1, pts2) => { const n = pts1.length, matched = new Array(n).fill(false); let sum = 0; for (let i = 0; i < n; i++) { let md = Infinity, mi = -1; for (let j = 0; j < n; j++) { if (matched[j]) continue; const d = dist(pts1[i], pts2[j]); if (d < md) { md = d; mi = j; } } matched[mi] = true; sum += md; } return sum / n; };
+            const greedyCloudMatch = (userPts, tmplPts) => { let best = Infinity; for (let a = -ROT_MAX_DEG; a <= ROT_MAX_DEG; a += ROT_STEP_DEG) best = Math.min(best, cloudDistance(rotatePoints(userPts, a * Math.PI / 180), tmplPts)); return best; };
+            const rasterize = (strokes, size = 64, lw = 12) => { const c = document.createElement('canvas'); c.width = size; c.height = size; const g = c.getContext('2d'); g.clearRect(0, 0, size, size); g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#000'; g.lineWidth = lw; g.fillStyle = '#000'; const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = (size * 0.84) / Math.max(w, h), pad = size * 0.08; for (const s of strokes) { if (s.length < 2) { const p = s[0]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; g.beginPath(); g.arc(x, y, lw * 0.45, 0, Math.PI * 2); g.fill(); continue; } g.beginPath(); for (let i = 0; i < s.length; i++) { const p = s[i]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke(); } return g.getImageData(0, 0, size, size).data; };
+            const iou = (strokesA, strokesB, size = 64, lw = 12) => { const A = rasterize(strokesA, size, lw), B = rasterize(strokesB, size, lw); let inter = 0, uni = 0; for (let i = 3; i < A.length; i += 4) { const a = A[i] > 0, b = B[i] > 0; if (a && b) inter++; if (a || b) uni++; } return uni === 0 ? 0 : inter / uni; };
+            const analyzeStrokesRaw = (strokes) => { const bb = bboxOfStrokes(strokes); const area = bb.width * bb.height; let totalLen = 0; const boxes = []; for (const s of strokes) { if (s.length < 1) continue; totalLen += pathLength(s); const b = bboxOfStrokes([s]); b.area = b.width * b.height; boxes.push(b); } return { bb, area, totalLen, boxes }; };
+            const hasDotAboveMain = (strokesNorm) => { const { boxes } = analyzeStrokesRaw(strokesNorm); if (boxes.length < 2) return false; const main = boxes.reduce((a, b) => a.area > b.area ? a : b); const dots = boxes.filter(b => b.area < main.area * 0.12); const mainTop = main.minY + main.height * 0.2; return dots.some(d => d.maxY < mainTop); };
+            const hasMidCrossbar = (strokesNorm) => { const bb = bboxOfStrokes(strokesNorm); const y1 = bb.minY + bb.height * 0.35, y2 = bb.minY + bb.height * 0.65; let horiz = 0, total = 0; for (const s of strokesNorm) { for (let i = 1; i < s.length; i++) { total++; const a = s[i - 1], b = s[i]; const dy = Math.abs(b.y - a.y), dx = Math.abs(b.x - a.x); const ymid = (a.y + b.y) / 2; if (dx > dy * 2 && ymid >= y1 && ymid <= y2) horiz++; } } return horiz >= Math.max(2, Math.floor(total * 0.06)); };
+            const looksLikeScribble = (strokes, canvas) => { const { bb, totalLen } = analyzeStrokesRaw(strokes); const lenRatio = totalLen / (Math.max(1, Math.max(bb.width, bb.height))); const tiny = bb.width < canvas.width * 0.15 || bb.height < canvas.height * 0.15; return (!tiny && lenRatio > 16); };
+            const renderStrokesToCanvas = (strokes, size = 224, lw = 24) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = (size * 0.84) / Math.max(w, h), pad = size * 0.08; const c = document.createElement('canvas'); c.width = size; c.height = size; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, size, size); g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#000'; g.lineWidth = lw; g.fillStyle = '#000'; for (const s of strokes) { if (s.length < 2) { const p = s[0]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; g.beginPath(); g.arc(x, y, lw * 0.45, 0, Math.PI * 2); g.fill(); continue; } g.beginPath(); for (let i = 0; i < s.length; i++) { const p = s[i]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke(); } return c; };
+            const l2norm = (arr) => { let s = 0; for (let i = 0; i < arr.length; i++) s += arr[i] * arr[i]; s = Math.sqrt(s) || 1; for (let i = 0; i < arr.length; i++) arr[i] /= s; return arr; };
+            const cosine = (a, b) => { let s = 0, n = Math.min(a.length, b.length); for (let i = 0; i < n; i++) s += a[i] * b[i]; return s; };
+
+            // Build template cache once (normalized strokes + point-cloud)
+            const C = checkDrawingNew; // function object as cache container
+            if (!C.tmplCache) {
+                C.tmplCache = {};
+                for (const L of ALL_LETTERS) {
+                    const t = LETTER_CHECKPOINTS[L]; if (!t || !t.strokes) continue;
+                    const sm = t.strokes.map(s => smoothStroke(s));
+                    const norm = normalizeStrokesToBox(sm);
+                    const joined = joinStrokes(norm);
+                    const cloud = resampleStroke(joined, N_RESAMPLE);
+                    C.tmplCache[L] = { strokesNorm: norm, cloud, feedback: t.feedback || {} };
+                }
+            }
+
+            // Warm-up deep embeddings lazily
+            if (!C.deepInit && window.mobilenet && window.tf) {
+                C.deepInit = true;
+                C.deepEmb = new Map();
+                mobilenet.load({ version: 2, alpha: 0.5 }).then(model => {
+                    C.mbnet = model;
+                    const size = 224, lw = Math.round(size * 0.11);
+                    for (const L of ALL_LETTERS) {
+                        const s = C.tmplCache[L]?.strokesNorm; if (!s) continue;
+                        const c = renderStrokesToCanvas(s, size, lw);
+                        const vec = tf.tidy(() => { const e = model.infer(c, true); const flat = e.dataSync(); return Float32Array.from(flat); });
+                        C.deepEmb.set(L, l2norm(vec));
+                    }
+                }).catch(() => { /* fallback to classical only */ });
+            }
+
+            // Quick checks
+            const canvas = document.getElementById('drawCanvas');
+            if (!canvas) return;
+            if (drawingPoints.length < 12) {
+                showFeedback('Keep drawing! Try to complete the letter. ✏️', 'info');
+                speakPhrase('Add a little more to your drawing!');
+                return;
+            }
+
+            // Normalize user strokes to 100x100 box
+            const pointsToStrokes = (points) => { const strokes = []; let cur = []; for (const p of points) { if (p.newStroke && cur.length > 0) { strokes.push(cur); cur = []; } cur.push({ x: p.x, y: p.y }); } if (cur.length > 0) strokes.push(cur); return strokes; };
+            const raw = pointsToStrokes(drawingPoints).map(s => smoothStroke(s));
+            const bb = bboxOfStrokes(raw); const w = Math.max(1, bb.width), h = Math.max(1, bb.height);
+            const scale = 100 / Math.max(w, h);
+            const userNorm = raw.map(s => s.map(p => ({ x: (p.x - bb.minX) * scale, y: (p.y - bb.minY) * scale })));
+
+            if (bb.width < canvas.width * 0.18 || bb.height < canvas.height * 0.18) {
+                showFeedback('Try to make your letter bigger! 🎨', 'info');
+                speakPhrase('Try making your letter a little bigger.');
+                return;
+            }
+            if (looksLikeScribble(raw, canvas)) {
+                showFeedback('Hmm, that looks a bit scribbly. Try a smoother shape for the letter.', 'error');
+                speakPhrase('Try a smoother shape for the letter.');
+                return;
+            }
+
+            // Classical similarity (cloud + IoU)
+            const tmpl = C.tmplCache[currentLetter];
+            if (!tmpl) {
+                showFeedback("Great practice! Let's try another one. 👍", 'info');
+                speakPhrase('Good job practicing that letter!');
+                setTimeout(() => startDrawGame(), 2000);
+                return;
+            }
+            const userCloud = resampleStroke(joinStrokes(userNorm), N_RESAMPLE);
+            const meCloudD = greedyCloudMatch(userCloud, tmpl.cloud);
+            const cloudSim = 1 - clamp(meCloudD / CLOUD_NORM, 0, 1);
+            const visual = iou(userNorm, tmpl.strokesNorm, 64, 12);
+            const classicalScore = 0.6 * cloudSim + 0.4 * visual;
+
+            // Best-other classical margin
+            let bestOtherClassical = -1;
+            for (const L of ALL_LETTERS) {
+                if (L === currentLetter) continue;
+                const s = C.tmplCache[L]; if (!s) continue;
+                const d = greedyCloudMatch(userCloud, s.cloud);
+                const cs = 1 - clamp(d / CLOUD_NORM, 0, 1);
+                const vv = iou(userNorm, s.strokesNorm, 64, 12);
+                const comb = 0.6 * cs + 0.4 * vv;
+                if (comb > bestOtherClassical) bestOtherClassical = comb;
+            }
+            const classicalMargin = classicalScore - bestOtherClassical;
+
+            // Optional deep similarity (MobileNet embeddings)
+            let deepOk = false, deepScore = 0, deepMargin = 0;
+            if (C.mbnet && C.deepEmb && C.deepEmb.size) {
+                const size = 224, lw = Math.round(size * 0.11);
+                const cimg = renderStrokesToCanvas(userNorm, size, lw);
+                const vec = tf.tidy(() => { const e = C.mbnet.infer(cimg, true); const flat = e.dataSync(); return Float32Array.from(flat); });
+                const v = l2norm(vec);
+                let bestOther = -2; let targetCos = -1;
+                for (const [L, emb] of C.deepEmb.entries()) {
+                    const cs = cosine(v, emb);
+                    if (L === currentLetter) { targetCos = cs; }
+                    else if (cs > bestOther) bestOther = cs;
+                }
+                deepScore = (targetCos + 1) / 2; // normalize to [0,1]
+                deepMargin = targetCos - (bestOther === -2 ? -1 : bestOther);
+                deepOk = true;
+            }
+
+            // Letter-specific soft requirements
+            const needDot = (currentLetter === 'i' || currentLetter === 'j');
+            const needCrossbar = (currentLetter === 't' || currentLetter === 'f' || currentLetter === 'E' || currentLetter === 'F' || currentLetter === 'H');
+            const dotOK = hasDotAboveMain(userNorm);
+            const crossbarOK = hasMidCrossbar(userNorm);
+
+            // Blend decision
+            const BASE_ACCEPT = 0.50;
+            const LETTER_EASING = new Map([
+                ...['S','s','G','g','e','B','R','W','w','M','m','K','k'].map(L => [L, -0.03]),
+                ...['l','I','t','T','v','V'].map(L => [L, +0.03])
+            ]);
+            let easing = LETTER_EASING.get(currentLetter) || 0;
+            let acceptThresh = BASE_ACCEPT + easing;
+            let finalScore = classicalScore;
+            if (deepOk) {
+                finalScore = 0.58 * classicalScore + 0.42 * deepScore;
+                if (deepMargin >= 0.10) acceptThresh -= 0.03;
+                if (deepScore >= 0.82) acceptThresh = Math.min(acceptThresh, 0.50);
+            }
+            if (classicalMargin >= 0.10) acceptThresh -= 0.02;
+            if (needDot && !dotOK) acceptThresh += 0.03;
+            if (needCrossbar && !crossbarOK) acceptThresh += 0.02;
+            acceptThresh = clamp(acceptThresh, 0.44, 0.60);
+
+            const bothBad = (classicalScore < 0.45) && (!deepOk || deepScore < 0.50);
+            const passed = (!bothBad) && (finalScore >= acceptThresh || (finalScore >= 0.46 && (classicalMargin >= 0.06 || deepMargin >= 0.06)));
+
+            const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
+            if (passed) {
+                const base = 10 + (difficultyLevel * 5);
+                const bonus = Math.max(0, 30 - responseTime * 3);
+                const hintPenalty = hintWasShown ? 10 : 0;
+                let points = Math.max(0, Math.floor(base + bonus) - hintPenalty);
+                const gainedThisRound = Math.max(0, (currentPlayer ? currentPlayer.score : score) - scoreAtRoundStart);
+                if (gainedThisRound + points > 50) points = Math.max(0, 50 - gainedThisRound);
+                score += points; roundCorrect++; correctAnswers++; totalQuestions++; updateScoreDisplay();
+                updateLetterPerformance(currentLetter, true, responseTime, points);
+                showFeedback(`That's a great "${currentLetter}"! +${points} ✨`, 'success');
+                cancelSpeech(); speakPhrase(`Great ${currentLetter}!`, () => { advanceToNextDrawLetterOnce(); });
+                const container = document.querySelector('.canvas-container');
+                if (container) { container.style.boxShadow = '0 10px 30px rgba(74, 222, 128, 0.5)'; container.style.transform = 'scale(1.03)'; setTimeout(() => { container.style.boxShadow = ''; container.style.transform = ''; }, 1000); }
+                drawAdvanceTimeout = setTimeout(() => { advanceToNextDrawLetterOnce(); }, 2200);
+            } else {
+                const msg = (finalScore >= (acceptThresh - 0.06)) ? (tmpl.feedback.incomplete || 'So close! A little more will do it.') : (tmpl.feedback.wrong || "Let's try again with this letter shape.");
+                showFeedback(msg, 'error'); speakPhrase(msg);
+                const container = document.querySelector('.canvas-container');
+                if (container) { container.classList.add('animate__animated', 'animate__shakeX'); setTimeout(() => container.classList.remove('animate__animated', 'animate__shakeX'), 800); }
+                setTimeout(() => clearCanvas(), 2000);
+            }
+        }
+
+        // Override: ensure the new recognizer is used
+        function checkDrawing() { return checkDrawingNew(); }
     </script>
 </body>
 
