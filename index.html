@@ -5262,7 +5262,7 @@
             'j': 'juh, juh, juh, as in jump',
             'k': 'kuh, kuh, kuh, as in kite',
             'l': 'luh, luh, luh, as in lion',
-            'm': 'mmm, mmm, mmm, as in moon',
+            'm': 'ehm, ehm, ehm, as in moon',
             'n': 'nuh, nuh, nuh, as in nose',
             'o': 'ah, ah, ah, as in octopus',
             'p': 'puh, puh, puh, as in pig',
@@ -5273,7 +5273,7 @@
             'u': 'uhh, uhh, uhh, as in umbrella',
             'v': 'vuh, vuh, vuh, as in violin',
             'w': 'wuh, wuh, wuh, as in whale',
-            'x': 'ex, ex, ex, as in fox',
+            'x': 'eks, eks, eks, as in fox',
             'y': 'yuh, yuh, yuh, as in yellow',
             'z': 'zuh, zuh, zuh, as in zebra'
         };
@@ -10137,7 +10137,7 @@
             // Blend decision
             const BASE_ACCEPT = 0.46;
             const LETTER_EASING = new Map([
-                ...['S','s','G','g','Z','z','V','v','e','B','R','W','w','M','m','K','k'].map(L => [L, -0.06]),
+                ...['S','s','G','g','Z','z','V','v','N','n','e','B','R','W','w','M','m','K','k'].map(L => [L, -0.06]),
                 ...['l','I','t','T'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
