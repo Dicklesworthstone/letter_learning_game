@@ -4238,6 +4238,15 @@
 
         /* Desktop layout improvements: only on wide pointer/hover devices (keeps iPhone/mobile unchanged) */
         @media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+            /* Center and normalize background to avoid right-side banding */
+            body {
+                background-position: center center;
+                background-size: 100% 100%;
+                background-attachment: fixed;
+            }
+
+            /* Center children horizontally */
+            .container { align-items: center; }
             /* Constrain primary sections and center for symmetry */
             .header,
             .player-selector,
@@ -4269,7 +4278,7 @@
 
             /* Larger, cleaner tiles on desktop while keeping 2x2 grid */
             .options {
-                max-width: 540px;
+                max-width: 560px;
                 gap: 20px;
                 padding-top: clamp(48px, 8vmin, 80px);
             }
@@ -4296,6 +4305,14 @@
             .controls {
                 max-width: 420px;
                 gap: 16px;
+            }
+
+            /* Ensure absolute player selector centers horizontally on desktop */
+            .player-selector {
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+                width: min(980px, 92vw);
             }
         }
     </style>
@@ -6925,10 +6942,23 @@
                     });
                 }
 
-                speakPhrase('Excellent! That\'s correct!');
+                let showedExamples = false; // declared early so TTS callback can reference it
+                speakPhrase('Excellent! That\'s correct!', () => {
+                    const baseDelay = phonicsEnabled ? 1500 : 1200;
+                    const extraDelay = (!phonicsEnabled && showedExamples) ? 300 : 0;
+                    if (phonicsEnabled) {
+                        if (phonicsPhaseTimeout) { clearTimeout(phonicsPhaseTimeout); phonicsPhaseTimeout = null; }
+                        phonicsPhaseTimeout = setTimeout(() => { isProcessing = false; startPhonicsPhase(); }, baseDelay + extraDelay);
+                    } else {
+                        setTimeout(() => { isProcessing = false; startIdentifyGame(); }, baseDelay + extraDelay);
+                        // Re-enable buttons only if not transitioning into phonics
+                        setTimeout(() => {
+                            document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
+                        }, 1500);
+                    }
+                });
 
                 // Occasionally show brief word examples once the child is doing well
-                let showedExamples = false;
                 if (roundCorrect > 10 && Math.random() < 0.3) {
                     const key = currentLetter.toLowerCase();
                     const examples = letterWords[key];
@@ -6936,23 +6966,6 @@
                         showedExamples = true;
                         showWordExamples(currentLetter, examples);
                     }
-                }
-
-                // Start phonics phase (track timeout so it can be cancelled)
-                const baseDelay = phonicsEnabled ? 1500 : 1200;
-                const extraDelay = (!phonicsEnabled && showedExamples) ? 300 : 0; // keep overlay quick and non-blocking
-                if (phonicsEnabled) {
-                    if (phonicsPhaseTimeout) { clearTimeout(phonicsPhaseTimeout); phonicsPhaseTimeout = null; }
-                    phonicsPhaseTimeout = setTimeout(() => { isProcessing = false; startPhonicsPhase(); }, baseDelay + extraDelay);
-                } else {
-                    setTimeout(() => { isProcessing = false; startIdentifyGame(); }, baseDelay + extraDelay);
-                }
-
-                // Re-enable buttons only if not transitioning into phonics
-                if (!phonicsEnabled) {
-                    setTimeout(() => {
-                        document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
-                    }, 1500);
                 }
 
             } else {
@@ -7945,6 +7958,37 @@
                 return out;
             };
             const prepareStrokes = (strokes, maxPts) => strokes.map(s => downsampleStroke(s, maxPts));
+            const densifyStroke = (stroke, targetPts) => {
+                if (!stroke || stroke.length < 2) return stroke;
+                // Compute cumulative lengths along the polyline
+                const segLens = [];
+                let total = 0;
+                for (let i = 0; i < stroke.length - 1; i++) {
+                    const dx = stroke[i + 1].x - stroke[i].x;
+                    const dy = stroke[i + 1].y - stroke[i].y;
+                    const len = Math.hypot(dx, dy);
+                    segLens.push(len);
+                    total += len;
+                }
+                if (total === 0) return stroke;
+                const out = [];
+                let segIndex = 0;
+                let segStartDist = 0;
+                for (let i = 0; i < targetPts; i++) {
+                    const t = i / (targetPts - 1);
+                    const dist = t * total;
+                    while (segIndex < segLens.length - 1 && segStartDist + segLens[segIndex] < dist) {
+                        segStartDist += segLens[segIndex];
+                        segIndex++;
+                    }
+                    const segLen = segLens[segIndex] || 1e-6;
+                    const localT = Math.max(0, Math.min(1, (dist - segStartDist) / segLen));
+                    const p0 = stroke[segIndex];
+                    const p1 = stroke[segIndex + 1] || p0;
+                    out.push({ x: p0.x + (p1.x - p0.x) * localT, y: p0.y + (p1.y - p0.y) * localT });
+                }
+                return out;
+            };
             const hausdorff = (a, b) => {
                 const d = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
                 const oneSided = (P, Q) => {
@@ -7958,10 +8002,20 @@
                 };
                 return Math.max(oneSided(a, b), oneSided(b, a));
             };
+            const oneSidedHd = (a, b) => {
+                const d = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
+                let worst = 0;
+                for (const p of a) {
+                    let best = Infinity;
+                    for (const q of b) { const dist = d(p, q); if (dist < best) best = dist; }
+                    if (best > worst) worst = best;
+                }
+                return worst;
+            };
             const distTol = Math.max(10, Math.min(22, Math.round(effectiveTolerance * 0.4)));
 
-            // Template prep (downsample for speed)
-            const templateStrokes = letterData.strokes.map(s => downsampleStroke(s, 48));
+            // Template prep: densify polylines for stable Hausdorff, then (light) downsample
+            const templateStrokes = letterData.strokes.map(s => downsampleStroke(densifyStroke(s, 64), 64));
 
             // Build variants: base, rotate-to-horizontal, rotate-to-vertical
             const pca = computePCAAngle(flattenPoints(normalizedUserStrokes));
@@ -8012,8 +8066,13 @@
                     let bestIdx = -1;
                     for (let i = 0; i < availVar.length; i++) {
                         const userDs = downsampleStroke(availVar[i], 64);
-                        const d = hausdorff(userDs, reqDs);
-                        if (d <= distTol) { bestIdx = i; break; }
+                        const dSym = hausdorff(userDs, reqDs);
+                        if (dSym <= distTol) { bestIdx = i; break; }
+                        // For letters like 'K', allow extra user stroke content using directed Hausdorff (template→user)
+                        if (currentLetter === 'K' || currentLetter === 'k') {
+                            const dDir = oneSidedHd(reqDs, userDs);
+                            if (dDir <= distTol) { bestIdx = i; break; }
+                        }
                     }
                     if (bestIdx !== -1) {
                         matchedCount++;
