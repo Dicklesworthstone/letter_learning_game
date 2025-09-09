@@ -608,6 +608,11 @@
             font-family: -apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         }
 
+        /* When no timer text is present, collapse the area entirely (fixes blank gap on iPhone) */
+        .timer-display:empty {
+            display: none;
+        }
+
         .timer-display.warning {
             animation: pulse-red 0.5s infinite;
             color: #dc2626;
@@ -1106,7 +1111,9 @@
             left: 50%;
             transform: translate(-50%, -50%);
             font-size: 220px;
-            color: rgba(102, 126, 234, 0.08);
+            color: #667eea;
+            opacity: 0; /* hidden by default; will fade in as hint */
+            transition: opacity 0.6s linear;
             pointer-events: none;
             font-family: 'Georgia', serif;
             font-weight: bold;
@@ -4830,6 +4837,12 @@
         let previouslyFocusedElement = null; // for modal focus management
         const QUESTIONS_PER_ROUND = 15; // shorter, kid-friendly rounds
         let phonicsPhaseTimeout = null; // track phonics phase start timeout
+        // Idle hint state for tracing
+        let idleHintTimeout = null;
+        let idleHintInterval = null;
+        let hintFadeOpacity = 0; // 0 → 0.12
+        let hintWasShown = false; // used to reduce score when hint helped
+        let hasStartedTrace = false; // first stroke gate to cancel hint
 
         // Adaptive Difficulty State
         let letterPerformance = {};
@@ -5419,6 +5432,10 @@
             if (dashboardTimer) {
                 clearTimeout(dashboardTimer);
                 dashboardTimer = null;
+            }
+            // Also clear any idle hint timers used by tracing mode
+            if (typeof clearIdleHintTimers === 'function') {
+                try { clearIdleHintTimers(); } catch (e) { }
             }
         }
 
@@ -6256,6 +6273,10 @@
             clearAllTimers();
             cancelSpeech();
             currentLetter = getRandomLetter();
+            // reset hint state
+            hintWasShown = false;
+            hasStartedTrace = false;
+            clearIdleHintTimers();
 
             const gameArea = document.getElementById('gameArea');
             // Compute space: keep everything fully in view without scrolling
@@ -6263,7 +6284,8 @@
             const reservedTop = Math.max(72, Math.min(window.innerHeight * 0.14, 120));
             const verticalGutters = reservedTop + 12 /*bottom padding*/ + 140 /*controls+labels*/;
             const maxSquare = Math.min(window.innerWidth - 36, window.innerHeight - verticalGutters);
-            const canvasSize = Math.max(180, Math.min(320, maxSquare));
+            // make the draw area much larger for kids; allow up to available square
+            const canvasSize = Math.max(260, Math.min(560, maxSquare));
             gameArea.innerHTML = `
                 <div class="instruction">Trace the letter: <span class="letter-display">${currentLetter}</span></div>
                 <div class="canvas-container">
@@ -6301,6 +6323,8 @@
             updateScoreDisplay();
 
             speakPhrase(`Trace the letter ${currentLetter}`);
+            // start idle hint timer after the initial prompt
+            startIdleHintTimer();
         }
 
         function resizeDrawLayout() {
@@ -6335,7 +6359,8 @@
             );
 
             const availableWidth = Math.max(160, gameArea.clientWidth - 32);
-            const size = Math.floor(Math.max(160, Math.min(availableWidth, availableHeight)));
+            // Prefer large square while keeping controls visible; minimum significantly larger than before
+            const size = Math.floor(Math.max(260, Math.min(availableWidth, availableHeight)));
 
             // Apply size to canvas, guide and container
             canvas.width = size;
@@ -6348,7 +6373,7 @@
             container.style.height = size + 'px';
 
             if (letterGuide) {
-                letterGuide.style.fontSize = Math.round(size * 0.68) + 'px';
+                letterGuide.style.fontSize = Math.round(size * 0.72) + 'px';
             }
         }
 
@@ -6425,6 +6450,8 @@
         function startDrawing(e) {
             e.preventDefault();
             isDrawing = true;
+            hasStartedTrace = true; // stop any idle hint
+            clearIdleHintTimers();
             const rect = e.target.getBoundingClientRect();
             const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
             const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
@@ -6465,6 +6492,9 @@
             const canvas = document.getElementById('drawCanvas');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawingPoints = [];
+            hasStartedTrace = false;
+            // restart idle hint if user clears without drawing immediately
+            startIdleHintTimer();
 
             // Add clear animation
             const container = document.querySelector('.canvas-container');
@@ -6539,13 +6569,17 @@
 
             // Phase 4: feedback and progression
             if (matched === letterData.strokes.length) {
-                score += 25;
+                // Apply base points, with a small penalty if a hint was shown
+                const base = 25;
+                const penalty = hintWasShown ? 10 : 0; // fewer points if hint displayed
+                score += Math.max(0, base - penalty);
                 roundCorrect++;
                 correctAnswers++;
                 totalQuestions++;
                 updateScoreDisplay();
 
-                showFeedback(`That's a perfect "${currentLetter}"! +25 ✨`, 'success');
+                const pointsGained = Math.max(0, base - penalty);
+                showFeedback(`That's a perfect "${currentLetter}"! +${pointsGained} ✨`, 'success');
                 speakPhrase(`Wow! That's a great ${currentLetter}!`);
                 const container = document.querySelector('.canvas-container');
                 if (container) {
@@ -6639,6 +6673,37 @@
             setTimeout(() => {
                 feedback.style.display = 'none';
             }, 2000);
+        }
+
+        // Idle hint logic for tracing mode
+        function startIdleHintTimer() {
+            clearIdleHintTimers();
+            const container = document.querySelector('.canvas-container');
+            const guideEl = container ? container.querySelector('.letter-guide') : null;
+            if (!guideEl) return;
+            hintFadeOpacity = 0;
+            // Wait a few seconds before gradually revealing the hint
+            idleHintTimeout = setTimeout(() => {
+                hintWasShown = true;
+                // fade from 0 → 0.12 over several seconds in tiny steps
+                idleHintInterval = setInterval(() => {
+                    // If the child started drawing, stop immediately
+                    if (hasStartedTrace) { clearIdleHintTimers(); return; }
+                    hintFadeOpacity = Math.min(0.12, hintFadeOpacity + 0.01);
+                    guideEl.style.opacity = String(hintFadeOpacity);
+                    if (hintFadeOpacity >= 0.12) {
+                        clearInterval(idleHintInterval);
+                        idleHintInterval = null;
+                    }
+                }, 200);
+            }, 2500);
+        }
+
+        function clearIdleHintTimers() {
+            if (idleHintTimeout) { clearTimeout(idleHintTimeout); idleHintTimeout = null; }
+            if (idleHintInterval) { clearInterval(idleHintInterval); idleHintInterval = null; }
+            const guideEl = document.querySelector('.canvas-container .letter-guide');
+            if (guideEl) guideEl.style.opacity = '0';
         }
 
         function openSettings() {
