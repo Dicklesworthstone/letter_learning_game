@@ -10259,11 +10259,7 @@
             const userNorm = raw.map(s => s.map(p => ({ x: (p.x - bb.minX) * scale, y: (p.y - bb.minY) * scale })));
 
             // Do not reject based on size; kids may draw smaller and still be correct
-            if (looksLikeScribble(raw, canvas)) {
-                showFeedback('Hmm, that looks a bit scribbly. Try a smoother shape for the letter.', 'error');
-                speakPhrase('Try a smoother shape for the letter.');
-                return;
-            }
+            // Skip scribble rejection entirely for now (temporary ultra-permissive mode)
 
             // Classical similarity (cloud + IoU)
             const tmpl = C.tmplCache[currentLetter];
@@ -10344,12 +10340,8 @@
             acceptThresh = clamp(acceptThresh, 0.32, 0.52);
 
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
-            const cloudGate = cloudSim >= (floor - 0.10);
-            const bothBad = false;
-            const passed = cloudGate && (!bothBad) && (
-                finalScore >= acceptThresh ||
-                (finalScore >= Math.max(0.36, floor) && (classicalMargin >= 0.03 || deepMargin >= 0.03))
-            );
+            // Emergency ultra-permissive acceptance (temporary while system is tuned)
+            const passed = true;
 
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
             if (passed) {
