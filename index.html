@@ -5910,6 +5910,49 @@
             requestAnimationFrame(step);
         }
 
+        // Helper: brief screen shake for impactful moments
+        function screenShake(intensity = 6, duration = 300) {
+            try {
+                const target = document.body;
+                if (typeof gsap !== 'undefined') {
+                    const repeats = Math.max(1, Math.floor(duration / 50));
+                    gsap.fromTo(target, { x: 0, y: 0 }, { x: intensity, y: -intensity, duration: 0.05, yoyo: true, repeat: repeats, clearProps: 'x,y' });
+                } else {
+                    const start = performance.now();
+                    const step = (t) => {
+                        const elapsed = t - start;
+                        if (elapsed >= duration) {
+                            target.style.transform = '';
+                            return;
+                        }
+                        const pct = 1 - Math.min(1, elapsed / duration);
+                        const dx = (Math.random() * 2 - 1) * intensity * pct;
+                        const dy = (Math.random() * 2 - 1) * intensity * pct;
+                        target.style.transform = `translate(${dx}px, ${dy}px)`;
+                        requestAnimationFrame(step);
+                    };
+                    requestAnimationFrame(step);
+                }
+            } catch (_) { }
+        }
+
+        // Helper: expanding ring shockwave at a position
+        function createShockwaveAt(x, y, color = 'rgba(255,255,255,0.8)', maxScale = 1.8, duration = 800) {
+            const layer = createCelebrationLayer();
+            const ring = document.createElement('div');
+            const size = 120;
+            ring.style.cssText = `position:absolute; left:${x - size/2}px; top:${y - size/2}px; width:${size}px; height:${size}px; border-radius:50%; border: 4px solid ${color}; opacity: 0.9;`;
+            layer.appendChild(ring);
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(ring, { scale: 0.2, opacity: 0.9 }, { scale: maxScale, opacity: 0, duration: duration / 1000, ease: 'sine.out', onComplete: () => layer.remove() });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    ring.style.transform = `scale(${0.2 + (maxScale - 0.2) * e})`;
+                    ring.style.opacity = String(0.9 * (1 - e));
+                }, () => { try { layer.remove(); } catch (_) {} });
+            }
+        }
+
         // Letter-specific visual theme configuration
         function getLetterTheme(letter) {
             const themes = {
@@ -6029,7 +6072,7 @@
         function createBalloonFloat(element) {
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
-            const count = 8;
+            const count = 10;
             for (let i = 0; i < count; i++) {
                 const el = document.createElement('span');
                 el.textContent = '🎈';
@@ -6049,6 +6092,29 @@
                     });
                 }
             }
+            // sparkle ring near the top for extra delight
+            setTimeout(() => {
+                for (let i = 0; i < 8; i++) {
+                    const star = document.createElement('span');
+                    star.textContent = '✨';
+                    star.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y - 160}px; font-size:${14 + Math.random() * 8}px;`;
+                    layer.appendChild(star);
+                    const angle = (Math.PI * 2) * (i / 8);
+                    const dist = 80 + Math.random() * 40;
+                    const dx = Math.cos(angle) * dist;
+                    const dy = Math.sin(angle) * dist;
+                    const dur = 700 + Math.random() * 300;
+                    if (typeof gsap !== 'undefined') {
+                        gsap.fromTo(star, { x: 0, y: 0, opacity: 0 }, { x: dx, y: dy, opacity: 1, duration: dur / 1000, ease: 'sine.out' });
+                        gsap.to(star, { opacity: 0, duration: 0.2, delay: dur / 1000 });
+                    } else {
+                        animateWithRAF(dur, (e) => {
+                            star.style.transform = `translate(${dx * e}px, ${dy * e}px)`;
+                            star.style.opacity = String(e < 0.8 ? e : 1 - (e - 0.8) * 5);
+                        });
+                    }
+                }
+            }, 400);
             setTimeout(() => layer.remove(), 2000);
         }
 
@@ -6072,8 +6138,8 @@
                     rainbow.style.opacity = String(e);
                 });
             }
-            // add some twinkles
-            for (let i = 0; i < 6; i++) {
+            // add some twinkles (more for extra sparkle)
+            for (let i = 0; i < 10; i++) {
                 const star = document.createElement('span');
                 star.textContent = '✨';
                 star.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${18 + Math.random() * 12}px;`;
@@ -6169,6 +6235,23 @@
                     });
                 }
             }
+            // add a few leaves for jungle vibes
+            for (let i = 0; i < 4; i++) {
+                const leaf = document.createElement('span');
+                leaf.textContent = '🍃';
+                leaf.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${16 + Math.random() * 6}px;`;
+                layer.appendChild(leaf);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 70 + Math.random() * 60;
+                const dx3 = Math.cos(angle) * dist;
+                const dy3 = Math.sin(angle) * dist - 20;
+                const dur3 = 900 + Math.random() * 300;
+                animateWithRAF(dur3, (e) => {
+                    const sway = Math.sin(e * Math.PI * 2) * 6;
+                    leaf.style.transform = `translate(${dx3 * e + sway}px, ${dy3 * e}px)`;
+                    leaf.style.opacity = String(1 - e);
+                });
+            }
             setTimeout(() => layer.remove(), 1800);
         }
 
@@ -6197,6 +6280,24 @@
                         el.style.opacity = String(1 - e);
                     });
                 }
+            }
+            // swirling sparkles for added motion variety
+            const swirls = 8;
+            for (let i = 0; i < swirls; i++) {
+                const star = document.createElement('span');
+                star.textContent = '✨';
+                star.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${14 + Math.random() * 8}px;`;
+                layer.appendChild(star);
+                const dir = Math.random() < 0.5 ? -1 : 1;
+                const dur = 1000 + Math.random() * 400;
+                animateWithRAF(dur, (e) => {
+                    const theta = dir * e * Math.PI * 2;
+                    const radius = 20 + 100 * e;
+                    const x = Math.cos(theta) * radius;
+                    const y = Math.sin(theta) * radius - 30 * e;
+                    star.style.transform = `translate(${x}px, ${y}px)`;
+                    star.style.opacity = String(1 - e);
+                });
             }
             setTimeout(() => layer.remove(), 1600);
         }
@@ -6248,13 +6349,28 @@
                     setTimeout(() => { bolt.style.opacity = '0'; }, duration);
                 }
             }
+            // thunderclouds and shockwave for impact
+            for (let i = 0; i < 4; i++) {
+                const cloud = document.createElement('span');
+                cloud.textContent = '☁️';
+                cloud.style.cssText = `position:absolute; left:${origin.x - 60 + i * 30}px; top:${origin.y - 140}px; font-size:${24 + Math.random() * 8}px; opacity:0.8;`;
+                layer.appendChild(cloud);
+                const dur = 800 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(cloud, { opacity: 0.8 }, { opacity: 0, y: -20, duration: dur / 1000, ease: 'sine.out' });
+                } else {
+                    animateWithRAF(dur, (e) => { cloud.style.transform = `translate(0px, ${-20 * e}px)`; cloud.style.opacity = String(0.8 - 0.8 * e); });
+                }
+            }
+            createShockwaveAt(origin.x, origin.y, 'rgba(255,255,255,0.6)', 1.6, 700);
+            screenShake(8, 300);
             setTimeout(() => layer.remove(), 1200);
         }
 
         function createBubbleRise(element) {
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
-            const count = 10;
+            const count = 12;
             for (let i = 0; i < count; i++) {
                 const el = document.createElement('span');
                 el.textContent = '🫧';
@@ -6273,13 +6389,31 @@
                     });
                 }
             }
+            // pop sparkle at crest
+            setTimeout(() => {
+                for (let i = 0; i < 8; i++) {
+                    const star = document.createElement('span');
+                    star.textContent = '✨';
+                    star.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y - 160}px; font-size:${12 + Math.random() * 8}px;`;
+                    layer.appendChild(star);
+                    const angle = (Math.PI * 2) * (i / 8);
+                    const dist = 60 + Math.random() * 30;
+                    const dx = Math.cos(angle) * dist;
+                    const dy = Math.sin(angle) * dist;
+                    const dur = 600 + Math.random() * 300;
+                    animateWithRAF(dur, (e) => {
+                        star.style.transform = `translate(${dx * e}px, ${dy * e}px)`;
+                        star.style.opacity = String(1 - e);
+                    });
+                }
+            }, 500);
             setTimeout(() => layer.remove(), 2000);
         }
 
         function createPopcornPop(element) {
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
-            const count = 8;
+            const count = 10;
             for (let i = 0; i < count; i++) {
                 const el = document.createElement('span');
                 el.textContent = '🍿';
@@ -6296,6 +6430,18 @@
                         el.style.opacity = String(1 - e);
                     });
                 }
+                // salty sparkles
+                const sparkle = document.createElement('span');
+                sparkle.textContent = '✨';
+                sparkle.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${12 + Math.random() * 8}px;`;
+                layer.appendChild(sparkle);
+                const sdx = (Math.random() * 180 - 90);
+                const sdy = - (60 + Math.random() * 80);
+                const sdur = 800 + Math.random() * 300;
+                animateWithRAF(sdur, (e) => {
+                    sparkle.style.transform = `translate(${sdx * e}px, ${sdy * e}px)`;
+                    sparkle.style.opacity = String(1 - e);
+                });
             }
             setTimeout(() => layer.remove(), 1600);
         }
@@ -6333,6 +6479,20 @@
                         cloud.style.opacity = String(0.8 - 0.8 * e);
                     });
                 }
+            }
+            // contrail puffs
+            for (let i = 0; i < 4; i++) {
+                const puff = document.createElement('span');
+                puff.textContent = '💨';
+                puff.style.cssText = `position:absolute; left:${origin.x - 10}px; top:${origin.y + 6}px; font-size:${18 + Math.random() * 6}px;`;
+                layer.appendChild(puff);
+                const pdx = - (40 + Math.random() * 30);
+                const pdy = - (10 + Math.random() * 20);
+                const pdur = 900 + Math.random() * 300;
+                animateWithRAF(pdur, (e) => {
+                    puff.style.transform = `translate(${pdx * e}px, ${pdy * e}px)`;
+                    puff.style.opacity = String(1 - e);
+                });
             }
             setTimeout(() => layer.remove(), 1800);
         }
@@ -6418,7 +6578,29 @@
                         fw.style.opacity = String(0.8 - 0.8 * e);
                     });
                 }
+                // explosion shockwave and star ring at apex
+                setTimeout(() => {
+                    const ex = origin.x + dx;
+                    const ey = origin.y + dy;
+                    createShockwaveAt(ex, ey, 'rgba(255,255,255,0.65)', 1.8, 700);
+                    for (let k = 0; k < 10; k++) {
+                        const star = document.createElement('span');
+                        star.textContent = '✨';
+                        star.style.cssText = `position:absolute; left:${ex}px; top:${ey}px; font-size:${14 + Math.random() * 10}px;`;
+                        layer.appendChild(star);
+                        const ang = (Math.PI * 2) * (k / 10) + Math.random() * 0.3;
+                        const dist2 = 80 + Math.random() * 60;
+                        const dx2 = Math.cos(ang) * dist2;
+                        const dy2 = Math.sin(ang) * dist2;
+                        const dur2 = 800 + Math.random() * 300;
+                        animateWithRAF(dur2, (e2) => {
+                            star.style.transform = `translate(${dx2 * e2}px, ${dy2 * e2}px)`;
+                            star.style.opacity = String(1 - e2);
+                        });
+                    }
+                }, Math.max(300, duration - 700));
             }
+            screenShake(6, 250);
             setTimeout(() => layer.remove(), 1700);
         }
 
@@ -6825,6 +7007,21 @@
                     });
                 }
             }
+            // smoke trail and minor screen shake
+            for (let i = 0; i < 5; i++) {
+                const smoke = document.createElement('span');
+                smoke.textContent = '💨';
+                smoke.style.cssText = `position:absolute; left:${origin.x - 10}px; top:${origin.y + 16}px; font-size:${14 + Math.random() * 6}px;`;
+                layer.appendChild(smoke);
+                const sdx = - (30 + Math.random() * 30);
+                const sdy = (10 + Math.random() * 20);
+                const sdur = 900 + Math.random() * 300;
+                animateWithRAF(sdur, (e) => {
+                    smoke.style.transform = `translate(${sdx * e}px, ${sdy * e}px)`;
+                    smoke.style.opacity = String(1 - e);
+                });
+            }
+            screenShake(6, 220);
             setTimeout(() => layer.remove(), 1700);
         }
 
@@ -7071,8 +7268,11 @@
                     });
                 }
 
+                let advanceFallback = null;
                 let showedExamples = false; // declared early so TTS callback can reference it
-                speakPhrase('Excellent! That\'s correct!', () => {
+                const scheduleAdvance = () => {
+                    // Clear fallback if it was set (e.g., in case TTS onend fires)
+                    if (advanceFallback) { try { clearTimeout(advanceFallback); } catch (e) {} advanceFallback = null; }
                     const baseDelay = phonicsEnabled ? 1500 : 1200;
                     const extraDelay = (!phonicsEnabled && showedExamples) ? 300 : 0;
                     if (phonicsEnabled) {
@@ -7085,7 +7285,20 @@
                             document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
                         }, 1500);
                     }
-                });
+                };
+                speakPhrase('Excellent! That\'s correct!', scheduleAdvance);
+                // Fallback in case speech is cancelled or onend never fires
+                advanceFallback = setTimeout(() => {
+                    isProcessing = false;
+                    if (phonicsEnabled) {
+                        startPhonicsPhase();
+                    } else {
+                        startIdentifyGame();
+                        setTimeout(() => {
+                            document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
+                        }, 1500);
+                    }
+                }, 2500);
 
                 // Occasionally show brief word examples once the child is doing well
                 if (roundCorrect > 10 && Math.random() < 0.3) {
