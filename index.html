@@ -2895,6 +2895,7 @@
             stroke-linecap: round;
             stroke-linejoin: round;
             opacity: 0.3;
+            vector-effect: non-scaling-stroke;
         }
 
         .stroke-animated {
@@ -5205,6 +5206,18 @@
             'a': [
                 { path: 'M 20 40 Q 20 20, 40 20 Q 60 20, 60 40 L 60 60', strokes: 1 },
                 { path: 'M 60 40 L 60 20', strokes: 2 }
+            ],
+            'j': [
+                { path: 'M 60 25 L 60 65 Q 60 80, 45 80 Q 35 80, 30 75', strokes: 1 },
+                { path: 'M 60 15 L 60 15', strokes: 2 }
+            ],
+            'A': [
+                { path: 'M 20 80 L 50 20', strokes: 1 },
+                { path: 'M 80 80 L 50 20', strokes: 2 },
+                { path: 'M 35 60 L 65 60', strokes: 3 }
+            ],
+            'J': [
+                { path: 'M 70 20 L 70 60 Q 70 80, 50 85 Q 35 80, 25 70', strokes: 1 }
             ],
             'b': [
                 { path: 'M 20 10 L 20 60', strokes: 1 },
@@ -8169,7 +8182,7 @@
                 <div class="instruction">Trace the letter: <span class="letter-display">${currentLetter}</span></div>
                 <div class="canvas-container">
                     <div class="letter-guide">${currentLetter}</div>
-                    <svg class="formation-guide" width="${canvasSize}" height="${canvasSize}" id="formationGuide">
+                    <svg class="formation-guide" width="${canvasSize}" height="${canvasSize}" id="formationGuide" preserveAspectRatio="xMidYMid meet">
                         <!-- Letter formation guide will be added here -->
                     </svg>
                     <canvas id="drawCanvas" width="${canvasSize}" height="${canvasSize}"></canvas>
@@ -8256,19 +8269,28 @@
             container.style.height = size + 'px';
 
             if (letterGuide) {
-                letterGuide.style.fontSize = Math.round(size * 0.72) + 'px';
+                // Fit letter to inner padding so it won't clip rounded corners
+                const padding = 0.12; // 12% breathing room
+                const fitted = Math.round(size * (1 - padding * 2));
+                letterGuide.style.fontSize = fitted + 'px';
+                letterGuide.style.maxWidth = fitted + 'px';
+                letterGuide.style.maxHeight = fitted + 'px';
+                letterGuide.style.lineHeight = fitted + 'px';
+                letterGuide.style.whiteSpace = 'nowrap';
             }
         }
 
         function showFormationGuide() {
             const guide = document.getElementById('formationGuide');
-            const letterData = letterFormations[currentLetter.toLowerCase()];
+            // Prefer exact-case data; fall back to lower-case, then upper-case
+            const letterData = letterFormations[currentLetter] || letterFormations[currentLetter.toLowerCase()] || letterFormations[currentLetter.toUpperCase()];
 
             if (!letterData) {
                 // Fallback for letters without formation data
                 const size = Math.min(guide.clientWidth || 300, guide.clientHeight || 300);
+                guide.setAttribute('viewBox', '0 0 100 100');
                 guide.innerHTML = `
-                    <text x="50%" y="50%" font-size="${Math.floor(size * 0.7)}" fill="#667eea" opacity="0.25" text-anchor="middle" dominant-baseline="middle">
+                    <text x="50" y="50" font-size="70" fill="#667eea" opacity="0.25" text-anchor="middle" dominant-baseline="middle">
                         ${currentLetter}
                     </text>
                 `;
