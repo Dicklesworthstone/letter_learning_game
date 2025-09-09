@@ -5795,12 +5795,12 @@
             // Minimal gentle fade if motion is reduced
             if (minimal || typeof el.animate !== 'function') {
                 try {
-                    el.style.transition = 'opacity 200ms ease-out';
+                    el.style.transition = 'opacity 300ms ease-out';
                     el.style.opacity = '1';
-                    setTimeout(() => { el.style.opacity = '0'; }, 700);
-                    setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 950);
+                    setTimeout(() => { el.style.opacity = '0'; }, 1700);
+                    setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 2100);
                 } catch (e) {
-                    setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 800);
+                    setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 2100);
                 }
                 return;
             }
@@ -5810,16 +5810,16 @@
                 const anim = el.animate([
                     { transform: 'translate(-50%, -50%) scale(0.7)', opacity: 0 },
                     { transform: 'translate(-50%, -50%) scale(1.15)', opacity: 1, offset: 0.22 },
-                    { transform: 'translate(-50%, -62%) scale(1.0)', opacity: 1, offset: 0.7 },
+                    { transform: 'translate(-50%, -62%) scale(1.0)', opacity: 1, offset: 0.85 },
                     { transform: 'translate(-50%, -74%) scale(1.0)', opacity: 0 }
                 ], {
-                    duration: 1100,
+                    duration: 2000,
                     easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
                     fill: 'forwards'
                 });
                 anim.onfinish = () => { if (el && el.parentNode) el.parentNode.removeChild(el); };
             } catch (e) {
-                setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 1200);
+                setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 2200);
             }
         }
 
