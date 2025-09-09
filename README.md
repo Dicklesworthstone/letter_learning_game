@@ -1,11 +1,11 @@
 # 🌟 Learn Your Letters! 🌟
 ### A Modern Educational Game with Professional Design and Advanced Learning Features
 
-Welcome to **Learn Your Letters!** - a sophisticated educational web application that helps children master the alphabet through interactive games, adaptive learning, and beautiful modern design. Created with love by Jeffrey Emanuel for his own children and made freely available to all families worldwide.
+Welcome to **Learn Your Letters!** - a sophisticated educational web application that helps children master the alphabet through interactive games, adaptive learning, and beautiful modern design. Created by Jeffrey Emanuel for his own children and made freely available to all families worldwide.
 
 ## 🎮 What is This?
 
-This is a premium single-page web application that teaches letter recognition through gamified learning with modern UI/UX design, comprehensive accessibility features, daily streak tracking, and adaptive difficulty progression. Built with cutting-edge web technologies, it delivers a native app experience on any device - tablets, phones, computers, and classroom smart boards!
+This is a premium single-page web application that teaches letter recognition through gamified learning with modern UI/UX design, comprehensive accessibility features, daily streak tracking, player profiles, and adaptive difficulty progression. Built with cutting-edge web technologies, it delivers a native app experience on any device - tablets, phones, computers, and classroom smart boards!
 
 ### Core Philosophy
 The foundation of this project is **"Professional Learning Through Play"**. We believe educational tools should be as polished and engaging as commercial apps, with beautiful design, smooth animations, and thoughtful user experience that makes learning irresistible.
@@ -15,7 +15,7 @@ The foundation of this project is **"Professional Learning Through Play"**. We b
 ### Application Structure
 
 The application is built as a **single-file HTML application** containing:
-- **6,194 lines of code** in one file for maximum portability
+- One cohesive `index.html` for maximum portability
 - **Modern Design System** with CSS custom properties and professional styling
 - **Vanilla JavaScript** handling game logic, adaptive learning, and state management
 - **CDN Dependencies**: 
@@ -23,7 +23,8 @@ The application is built as a **single-file HTML application** containing:
   - GSAP 3.12.2 for professional animations
   - Animate.css 4.1.1 for pre-built animation classes
   - Inter font family for crisp, modern typography
-- **Local Storage**: Persistent progress, streaks, and settings
+  - Optional TensorFlow.js + MobileNet embeddings for enhanced drawing similarity
+- **Local Storage**: Persistent progress, streaks, settings, and player profiles
 
 ### Design System
 
@@ -64,6 +65,7 @@ Achievement Check → Streak Update → Difficulty Adjustment → Next Challenge
 - **Micro-interactions**: Hover states, active feedback, smooth transforms
 - **Consistent Spacing**: Design token-based layout system
 - **Typography Hierarchy**: Inter font with optimized weights
+- **No-Scroll Layout**: Fully contained interactions without vertical scrolling
 
 ### 🔥 Daily Streak System
 
@@ -119,6 +121,7 @@ letterPerformance = {
 - **Reduce Motion**: Respects prefers-reduced-motion
 - **Extended Timers**: Additional response time
 - **Larger Touch Targets**: 44x44px minimum
+- **Full Keyboard Support**: Tab traps and ARIA labeling
 
 #### Accessibility Implementation
 ```javascript
@@ -148,6 +151,10 @@ Each celebration includes:
 - Coordinated color schemes
 - Celebration-specific animations
 
+#### Letter-Specific Bursts
+- Tailored confetti, rings, and hero-letter bursts per letter
+- Theme-aware gradients and emoji tied to the displayed letter
+
 ### 🌈 Visual Learning Themes
 
 #### Theme System
@@ -166,6 +173,12 @@ Each celebration includes:
    - Synesthetic associations
    - Enhanced memorization
 
+### 👥 Player Profiles (Multiplayer)
+- Create multiple players with fun emoji avatars
+- Switch between players during play
+- Per-player scores, streaks, achievements, and mastery
+- Persistent storage of profiles, progress, and preferences
+
 ### 🎯 Game Modes
 
 #### 1. **Find Letters Mode** 🔍
@@ -174,8 +187,9 @@ Each celebration includes:
 - Speech synthesis introduction
 - 4-option adaptive selection
 - Performance-based difficulty
-- Phonetic reinforcement
+- Phonetic reinforcement with anchor emojis
 - Visual feedback animations
+- Optional voice recording practice
 
 **Scoring System:**
 - Lightning (<2s): 50 points + streak bonus
@@ -191,7 +205,8 @@ Each celebration includes:
 - 350x350px HTML5 canvas
 - Touch and mouse support
 - Ghost letter overlay guide
-- Stroke validation (future)
+- On-device similarity: IoU-based shape comparison
+- Optional deep similarity: MobileNet embeddings via TensorFlow.js
 - Pressure sensitivity ready
 
 ### 🏆 Achievement System
@@ -243,11 +258,17 @@ phoneticSounds = {
 }
 ```
 
+#### Optional Voice Recording Practice
+- Child-friendly recorder to practice saying letters
+- Simple playback of the most recent recording
+- Stored in-memory during the session; optional persistence of setting
+- Requires user interaction and secure contexts for microphone access
+
 ### 👨‍👩‍👧‍👦 Parent Dashboard
 
 #### Access Method
-- **Long Press**: Hold settings button for 2 seconds
-- **Visual Hint**: "Hold for Parent Menu" after 800ms
+- **Long Press**: Hold settings button for ~2 seconds
+- **Visual Hint**: "Hold for Parent Menu" appears during press
 - **Child-Safe**: Prevents accidental access
 
 #### Dashboard Features
@@ -256,7 +277,7 @@ phoneticSounds = {
 - **Time Tracking**: Daily and weekly usage stats
 - **Difficulty Insights**: Current adaptive level
 - **Achievement Overview**: Unlocked badges display
-- **Recommendations**: AI-powered learning suggestions
+- **Recommendations**: Play tips and focus areas
 
 ### ⚙️ Settings & Customization
 
@@ -265,6 +286,8 @@ phoneticSounds = {
 - **Letter Case**: Lowercase/Uppercase/Mixed
 - **Sound Effects**: On/Off with volume control
 - **Voice Speed**: Adjustable speech rate
+- **Phonics**: Enable/disable phonics cues and anchor emojis
+- **Voice Recording**: Enable/disable the in-game recorder
 - **Celebration Style**: 6 unique themes
 - **Visual Theme**: 3 learning styles
 
@@ -322,8 +345,9 @@ Environment variables: None
 - ES6+ JavaScript support
 - CSS Grid and Flexbox
 - Web Speech API (optional)
+- MediaDevices API for microphone (optional)
 - Local Storage API
-- Touch Events API
+- Touch Events and Pointer Events API
 
 ## 🛠️ Customization Guide
 
@@ -397,6 +421,12 @@ const visualThemes = {
 - iOS: Requires user interaction first
 - Enable speech synthesis in browser
 - Try different browser if persistent
+
+**Microphone Not Working:**
+- Ensure site is served over HTTPS (required by iOS/Safari)
+- Allow microphone permissions when prompted
+- Confirm device has a working microphone
+- Toggle the Voice Recording setting off/on
 
 **Performance Issues:**
 - Enable hardware acceleration
