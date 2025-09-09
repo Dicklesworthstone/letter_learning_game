@@ -4935,6 +4935,18 @@
         // Draw-mode advancement guards to avoid duplicate next prompts
         let drawAdvanceTimeout = null;
         let drawAdvanceLocked = false;
+        let drawHasAdvanced = false;
+
+        function advanceToNextDrawLetterOnce() {
+            if (drawHasAdvanced) return;
+            drawHasAdvanced = true;
+            if (drawAdvanceTimeout) { try { clearTimeout(drawAdvanceTimeout); } catch (e) {} drawAdvanceTimeout = null; }
+            const modal = document.getElementById('roundModal');
+            const isModalVisible = modal ? window.getComputedStyle(modal).display !== 'none' : false;
+            if (!isModalVisible) {
+                startDrawGame();
+            }
+        }
         let hintWasShown = false; // used to reduce score when hint helped
         let hasStartedTrace = false; // first stroke gate to cancel hint
 
@@ -5069,24 +5081,24 @@
 
         // Phonetic sounds spelled out for primitive TTS systems (natural pacing + anchor word)
         const phoneticSounds = {
-            'a': 'aah, aah, aah, as in apple',
+            'a': 'ah, ah, ah, as in apple',
             'b': 'buh, buh, buh, as in ball',
             'c': 'cah, cah, cah, as in cat',
-            'd': 'dah, dah, dah, as in dog',
+            'd': 'duh, duh, duh, as in dog',
             'e': 'eh, eh, eh, as in egg',
-            'f': 'fih, fih, fih, as in fish',
-            'g': 'goh, goh, goh, as in goat',
-            'h': 'hah, hah, hah, as in hat',
+            'f': 'fuh, fuh, fuh, as in fish',
+            'g': 'guh, guh, guh, as in goat',
+            'h': 'huh, huh, huh, as in hat',
             'i': 'ih, ih, ih, as in igloo',
             'j': 'juh, juh, juh, as in jump',
-            'k': 'kye, kye, kye, as in kite',
-            'l': 'lah, lah, lah, as in lion',
+            'k': 'kuh, kuh, kuh, as in kite',
+            'l': 'luh, luh, luh, as in lion',
             'm': 'mmm, mmm, mmm, as in moon',
             'n': 'nuh, nuh, nuh, as in nose',
-            'o': 'aw, aw, aw, as in octopus',
-            'p': 'pih, pih, pih, as in pig',
-            'q': 'kwuh, kwuh, kwuh, as in queen',
-            'r': 'rah, rah, rah, as in rabbit',
+            'o': 'ah, ah, ah, as in octopus',
+            'p': 'puh, puh, puh, as in pig',
+            'q': 'kwee, kwee, kwee, as in queen',
+            'r': 'ruh, ruh, ruh, as in rabbit',
             's': 'sss, sss, sss, as in snake',
             't': 'tuh, tuh, tuh, as in turtle',
             'u': 'uh, uh, uh, as in umbrella',
@@ -5365,6 +5377,24 @@
             speechSynthesis.speak(utterance);
         }
 
+        function speakTracePrompt(letter) {
+            if (!speechSupported || !soundEnabled) return;
+            // Speak as two utterances to avoid stutter/duplication on some TTS engines
+            cancelSpeech();
+            const selectedVoice = getBestVoice();
+
+            const lead = new SpeechSynthesisUtterance('Trace the letter.');
+            lead.rate = 0.95;
+            lead.pitch = 1.05;
+            lead.volume = 1;
+            if (selectedVoice) lead.voice = selectedVoice;
+            lead.onend = () => {
+                // brief pause between sentences for clarity
+                setTimeout(() => speakLetter(letter), 120);
+            };
+            speechSynthesis.speak(lead);
+        }
+
         function speakPhonetics(letter, callback) {
             if (!soundEnabled) { if (callback) callback(); return; }
             const lower = letter.toLowerCase();
@@ -5620,6 +5650,425 @@
             createConfetti(element);
         }
 
+        // Letter-specific celebrations
+        function createLetterCelebration(letter, element) {
+            try {
+                if (focusModeEnabled || reduceMotionEnabled) {
+                    showFeedback('Great job! ✓', 'success');
+                    return;
+                }
+
+                const now = Date.now();
+                if (now - lastCelebrationTime < 500) return;
+                lastCelebrationTime = now;
+
+                const upper = (letter || '').toString().toUpperCase();
+
+                const celebrations = {
+                    'A': () => createAirplaneTakeoff(element),
+                    'B': () => createBalloonFloat(element),
+                    'C': () => createConfettiBurst(element),
+                    'E': () => createStarExplosion(element),
+                    'L': () => createLightningStrike(element),
+                    'O': () => createBubbleRise(element),
+                    'P': () => createPopcornPop(element),
+                    'R': () => createRainbowArc(element),
+                    'S': () => createSnakeWiggle(element),
+                    'T': () => createTrophyShine(element),
+                    'X': () => createXMarksTheSpot(element)
+                };
+
+                const specific = celebrations[upper];
+                if (specific && Math.random() < 0.5) {
+                    specific();
+                } else {
+                    createConfetti(element);
+                }
+            } catch (e) {
+                // Fallback if anything goes wrong
+                try { createConfetti(element); } catch (_) {}
+            }
+        }
+
+        // Helpers
+        function getOriginFromElement(element) {
+            const rect = element ? element.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
+            return {
+                x: rect.left + (rect.width || 0) / 2,
+                y: rect.top + (rect.height || 0) / 2
+            };
+        }
+
+        function createCelebrationLayer() {
+            const layer = document.createElement('div');
+            layer.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:visible;';
+            document.body.appendChild(layer);
+            return layer;
+        }
+
+        function animateWithRAF(durationMs, onUpdate, onComplete) {
+            const start = performance.now();
+            function step(t) {
+                const p = Math.min(1, (t - start) / durationMs);
+                // easeOutCubic
+                const e = 1 - Math.pow(1 - p, 3);
+                onUpdate(e);
+                if (p < 1) requestAnimationFrame(step); else if (onComplete) onComplete();
+            }
+            requestAnimationFrame(step);
+        }
+
+        // Individual animations
+        function createBalloonFloat(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const count = 8;
+            for (let i = 0; i < count; i++) {
+                const el = document.createElement('span');
+                el.textContent = '🎈';
+                el.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${28 + Math.random() * 14}px;`;
+                layer.appendChild(el);
+                const dx = (Math.random() * 120 - 60);
+                const dy = - (220 + Math.random() * 180);
+                const rot = (Math.random() * 30 - 15);
+                const duration = 1200 + Math.random() * 600;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(el, { x: 0, y: 0, rotation: 0, opacity: 1 }, { x: dx, y: dy, rotation: rot, opacity: 0.2, duration: duration / 1000, ease: 'sine.out' });
+                } else {
+                    animateWithRAF(duration, (e) => {
+                        const sway = Math.sin(e * Math.PI * 2) * 12;
+                        el.style.transform = `translate(${dx * e + sway}px, ${dy * e}px) rotate(${rot * e}deg)`;
+                        el.style.opacity = String(1 - e * 0.8);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 2000);
+        }
+
+        function createRainbowArc(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const rainbow = document.createElement('span');
+            rainbow.textContent = '🌈';
+            rainbow.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:80px; transform-origin:center;`;
+            layer.appendChild(rainbow);
+            const dx = 260, dy = -120;
+            const duration = 1200;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(rainbow, { x: 0, y: 0, scale: 0.4, rotation: -20, opacity: 0 }, { x: dx, y: dy, scale: 1, rotation: 0, opacity: 1, duration: duration / 1000, ease: 'power2.out' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    const angle = -Math.PI / 3 + e * (Math.PI / 3);
+                    const x = dx * e;
+                    const y = dy * e - Math.sin(e * Math.PI) * 30;
+                    rainbow.style.transform = `translate(${x}px, ${y}px) rotate(${angle * (180 / Math.PI)}deg) scale(${0.4 + 0.6 * e})`;
+                    rainbow.style.opacity = String(e);
+                });
+            }
+            // add some twinkles
+            for (let i = 0; i < 6; i++) {
+                const star = document.createElement('span');
+                star.textContent = '✨';
+                star.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${18 + Math.random() * 12}px;`;
+                layer.appendChild(star);
+                const sdx = (Math.random() * 220 - 110);
+                const sdy = - (60 + Math.random() * 120);
+                const dur = 900 + Math.random() * 400;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(star, { x: 0, y: 0, opacity: 0 }, { x: sdx, y: sdy, opacity: 1, duration: dur / 1000, ease: 'sine.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        star.style.transform = `translate(${sdx * e}px, ${sdy * e}px)`;
+                        star.style.opacity = String(e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 2000);
+        }
+
+        function createXMarksTheSpot(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const x = document.createElement('span');
+            x.textContent = '❌';
+            x.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:72px; transform-origin:center;`;
+            layer.appendChild(x);
+            const duration = 700;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(x, { scale: 0, rotation: -180, opacity: 0 }, { scale: 1.2, rotation: 0, opacity: 1, duration: duration / 1000, ease: 'back.out(1.7)' });
+                gsap.to(x, { scale: 1, duration: 0.2, delay: duration / 1000 });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    x.style.transform = `translate(-36px, -36px) rotate(${(-180 + 180 * e)}deg) scale(${e * 1.2})`;
+                    x.style.opacity = String(e);
+                });
+            }
+            for (let i = 0; i < 6; i++) {
+                const burst = document.createElement('span');
+                burst.textContent = '💥';
+                burst.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${22 + Math.random() * 10}px;`;
+                layer.appendChild(burst);
+                const angle = (Math.PI * 2) * (i / 6) + Math.random() * 0.4;
+                const dist = 120 + Math.random() * 40;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist;
+                const dur = 800 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(burst, { x: 0, y: 0, scale: 0.6, opacity: 1 }, { x: dx, y: dy, scale: 1.1, opacity: 0, duration: dur / 1000, ease: 'power2.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        burst.style.transform = `translate(${dx * e}px, ${dy * e}px) scale(${0.6 + 0.5 * e})`;
+                        burst.style.opacity = String(1 - e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1600);
+        }
+
+        function createSnakeWiggle(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const snake = document.createElement('span');
+            snake.textContent = '🐍';
+            snake.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:64px;`;
+            layer.appendChild(snake);
+            const dx = 300, dy = -40;
+            const duration = 1400;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(snake, { x: 0, y: 0, rotation: -5 }, { x: dx, y: dy, rotation: 5, duration: duration / 1000, ease: 'sine.inOut', yoyo: true, repeat: 1 });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    const wave = Math.sin(e * Math.PI * 4) * 20;
+                    snake.style.transform = `translate(${dx * e}px, ${dy * e + wave}px) rotate(${wave * 0.3}deg)`;
+                });
+            }
+            // green confetti scales for added flair
+            for (let i = 0; i < 6; i++) {
+                const dot = document.createElement('span');
+                dot.textContent = '🟢';
+                dot.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${16 + Math.random() * 8}px;`;
+                layer.appendChild(dot);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 80 + Math.random() * 80;
+                const dx2 = Math.cos(angle) * dist;
+                const dy2 = Math.sin(angle) * dist - 40;
+                const dur = 900 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(dot, { x: 0, y: 0, opacity: 1 }, { x: dx2, y: dy2, opacity: 0, duration: dur / 1000, ease: 'power1.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        dot.style.transform = `translate(${dx2 * e}px, ${dy2 * e}px)`;
+                        dot.style.opacity = String(1 - e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1800);
+        }
+
+        function createConfettiBurst(element) {
+            // A more focused, celebratory burst using party emojis
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const particles = ['🎉', '🎊', '✨'];
+            const count = 12;
+            for (let i = 0; i < count; i++) {
+                const el = document.createElement('span');
+                el.textContent = particles[Math.floor(Math.random() * particles.length)];
+                el.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${22 + Math.random() * 10}px;`;
+                layer.appendChild(el);
+                const angle = (Math.PI * 2) * (i / count) + (Math.random() * 0.4 - 0.2);
+                const dist = 140 + Math.random() * 80;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist - 40;
+                const rot = (Math.random() * 360 - 180);
+                const duration = 1000 + Math.random() * 400;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(el, { x: 0, y: 0, rotation: 0, opacity: 1 }, { x: dx, y: dy, rotation: rot, opacity: 0, duration: duration / 1000, ease: 'power2.out' });
+                } else {
+                    animateWithRAF(duration, (e) => {
+                        el.style.transform = `translate(${dx * e}px, ${dy * e}px) rotate(${rot * e}deg)`;
+                        el.style.opacity = String(1 - e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1600);
+        }
+
+        function createStarExplosion(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const stars = ['⭐', '🌟'];
+            const count = 10;
+            for (let i = 0; i < count; i++) {
+                const el = document.createElement('span');
+                el.textContent = stars[Math.floor(Math.random() * stars.length)];
+                el.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${24 + Math.random() * 12}px;`;
+                layer.appendChild(el);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 150 + Math.random() * 80;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist - 30;
+                const duration = 1100 + Math.random() * 400;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(el, { x: 0, y: 0, scale: 0.4, opacity: 1 }, { x: dx, y: dy, scale: 1.2, opacity: 0, duration: duration / 1000, ease: 'power2.out' });
+                } else {
+                    animateWithRAF(duration, (e) => {
+                        el.style.transform = `translate(${dx * e}px, ${dy * e}px) scale(${0.4 + 0.8 * e})`;
+                        el.style.opacity = String(1 - e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1700);
+        }
+
+        function createLightningStrike(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            for (let i = 0; i < 3; i++) {
+                const bolt = document.createElement('span');
+                bolt.textContent = '⚡';
+                bolt.style.cssText = `position:absolute; left:${origin.x - 32 + i * 16}px; top:${origin.y - 100}px; font-size:64px;`;
+                layer.appendChild(bolt);
+                const duration = 500 + i * 80;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(bolt, { y: -140, opacity: 0 }, { y: 0, opacity: 1, duration: duration / 1000, ease: 'power2.out' });
+                    gsap.to(bolt, { opacity: 0, duration: 0.25, delay: duration / 1000 });
+                } else {
+                    animateWithRAF(duration, (e) => {
+                        bolt.style.transform = `translate(0px, ${(-140 + 140 * e)}px)`;
+                        bolt.style.opacity = String(Math.min(1, e * 2));
+                    });
+                    setTimeout(() => { bolt.style.opacity = '0'; }, duration);
+                }
+            }
+            setTimeout(() => layer.remove(), 1200);
+        }
+
+        function createBubbleRise(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const count = 10;
+            for (let i = 0; i < count; i++) {
+                const el = document.createElement('span');
+                el.textContent = '🫧';
+                el.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${16 + Math.random() * 14}px;`;
+                layer.appendChild(el);
+                const dx = (Math.random() * 140 - 70);
+                const dy = - (160 + Math.random() * 180);
+                const duration = 1400 + Math.random() * 500;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(el, { x: 0, y: 0, opacity: 0.9 }, { x: dx, y: dy, opacity: 0, duration: duration / 1000, ease: 'sine.out' });
+                } else {
+                    animateWithRAF(duration, (e) => {
+                        const sway = Math.sin(e * Math.PI * 2) * 10;
+                        el.style.transform = `translate(${dx * e + sway}px, ${dy * e}px)`;
+                        el.style.opacity = String(0.9 - 0.9 * e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 2000);
+        }
+
+        function createPopcornPop(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const count = 8;
+            for (let i = 0; i < count; i++) {
+                const el = document.createElement('span');
+                el.textContent = '🍿';
+                el.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${20 + Math.random() * 10}px;`;
+                layer.appendChild(el);
+                const dx = (Math.random() * 200 - 100);
+                const dy = - (120 + Math.random() * 120);
+                const duration = 900 + Math.random() * 400;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(el, { x: 0, y: 0, scale: 0.8, opacity: 1 }, { x: dx, y: dy, scale: 1.1, opacity: 0, duration: duration / 1000, ease: 'back.out(1.4)' });
+                } else {
+                    animateWithRAF(duration, (e) => {
+                        el.style.transform = `translate(${dx * e}px, ${dy * e}px) scale(${0.8 + 0.3 * e})`;
+                        el.style.opacity = String(1 - e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1600);
+        }
+
+        function createAirplaneTakeoff(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const plane = document.createElement('span');
+            plane.textContent = '✈️';
+            plane.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:56px;`;
+            layer.appendChild(plane);
+            const dx = 320, dy = -180;
+            const duration = 1200;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(plane, { x: 0, y: 0, rotation: -10, opacity: 1 }, { x: dx, y: dy, rotation: -10, opacity: 0.8, duration: duration / 1000, ease: 'power2.out' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    plane.style.transform = `translate(${dx * e}px, ${dy * e}px) rotate(-10deg)`;
+                    plane.style.opacity = String(0.5 + 0.5 * e);
+                });
+            }
+            for (let i = 0; i < 5; i++) {
+                const cloud = document.createElement('span');
+                cloud.textContent = '☁️';
+                cloud.style.cssText = `position:absolute; left:${origin.x - 20}px; top:${origin.y + 10}px; font-size:${26 + Math.random() * 10}px;`;
+                layer.appendChild(cloud);
+                const cdx = - (30 + Math.random() * 40);
+                const cdy = - (20 + Math.random() * 30);
+                const dur = 1200 + Math.random() * 500;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(cloud, { x: 0, y: 0, opacity: 0.8 }, { x: cdx, y: cdy, opacity: 0, duration: dur / 1000, ease: 'sine.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        cloud.style.transform = `translate(${cdx * e}px, ${cdy * e}px)`;
+                        cloud.style.opacity = String(0.8 - 0.8 * e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1800);
+        }
+
+        function createTrophyShine(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const trophy = document.createElement('span');
+            trophy.textContent = '🏆';
+            trophy.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:72px;`;
+            layer.appendChild(trophy);
+            const duration = 900;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(trophy, { scale: 0, opacity: 0 }, { scale: 1.1, opacity: 1, duration: duration / 1000, ease: 'back.out(1.8)' });
+                gsap.to(trophy, { scale: 1, duration: 0.2, delay: duration / 1000 });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    trophy.style.transform = `translate(-36px, -36px) scale(${e * 1.1})`;
+                    trophy.style.opacity = String(e);
+                });
+            }
+            for (let i = 0; i < 6; i++) {
+                const sparkle = document.createElement('span');
+                sparkle.textContent = '✨';
+                sparkle.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${16 + Math.random() * 10}px;`;
+                layer.appendChild(sparkle);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 80 + Math.random() * 60;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist - 20;
+                const dur = 900 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(sparkle, { x: 0, y: 0, opacity: 0 }, { x: dx, y: dy, opacity: 1, duration: dur / 1000, ease: 'sine.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        sparkle.style.transform = `translate(${dx * e}px, ${dy * e}px)`;
+                        sparkle.style.opacity = String(e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1600);
+        }
+
         function createWrongEffect() {
             // Create a red flash effect
             const flash = document.createElement('div');
@@ -5818,7 +6267,7 @@
 
             if (letter === currentLetter) {
                 clickedButton.classList.add('correct');
-                createConfetti(clickedButton);
+                createLetterCelebration(currentLetter, clickedButton);
                 roundCorrect++;
                 correctAnswers++;
                 const responseTime = (Date.now() - questionStartTime) / 1000;
@@ -6374,6 +6823,7 @@
             // Clear any pending auto-advance from prior round and unlock
             if (drawAdvanceTimeout) { try { clearTimeout(drawAdvanceTimeout); } catch (e) {} drawAdvanceTimeout = null; }
             drawAdvanceLocked = false;
+            drawHasAdvanced = false;
             currentLetter = getRandomLetter();
             // reset hint state
             hintWasShown = false;
@@ -6424,9 +6874,8 @@
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
 
-            // Cancel any queued speech and speak prompt with a slight pause to avoid overlap
-            cancelSpeech();
-            setTimeout(() => speakPhrase(`Trace the letter ${currentLetter}`), 80);
+            // Speak prompt using two-part sequence to avoid stutter on some engines
+            speakTracePrompt(currentLetter);
             // start idle hint timer after the initial prompt
             startIdleHintTimer();
         }
@@ -6648,7 +7097,8 @@
                 'x': 6, 'X': 6, 'y': 6, 'Y': 6,
                 't': 6, 'T': 6, 'f': 6, 'F': 6,
                 'q': 6, 'Q': 6, 'g': 6, 'G': 6,
-                'a': 4, 'A': 6, 'h': 4, 'H': 6, 'r': 4, 'R': 6, 'p': 4, 'P': 6, 'B': 6, 'D': 6, 'E': 6
+                'a': 4, 'A': 6, 'h': 4, 'H': 6, 'r': 4, 'R': 6, 'p': 4, 'P': 6, 'B': 6, 'D': 6, 'E': 6,
+                'o': 10, 'O': 10 // accept imperfect circles/ovals
             };
             effectiveTolerance += baseForgiveness + (toleranceBoosts[currentLetter] || 0);
 
@@ -6676,7 +7126,7 @@
             })));
             // Some letters are often drawn as several smaller strokes instead of one continuous path
             const allowSplitConcat = new Set(['z', 'Z', 'w', 'W', 'm', 'M', 'n', 'N', 'x', 'X', 'y', 'Y', 'b', 'B', 'p', 'P', 'd', 'D', 'q', 'Q']).has(currentLetter);
-            const allowStrokeReuse = new Set(['x', 'X', 'y', 'Y', 't', 'T', 'a', 'A', 'h', 'H', 'b', 'B', 'p', 'P', 'd', 'D', 'q', 'Q']).has(currentLetter);
+            const allowStrokeReuse = new Set(['x', 'X', 'y', 'Y', 't', 'T', 'a', 'A', 'h', 'H', 'b', 'B', 'p', 'P', 'd', 'D', 'q', 'Q', 'I']).has(currentLetter);
 
             const buildComposedStrokes = (strokes, maxSegments) => {
                 const out = [];
@@ -6721,11 +7171,30 @@
                 : [...normalizedUserStrokes];
             const avail = [...candidates];
             letterData.strokes.forEach(req => {
+                // For uppercase I, the horizontal bars are optional if a good vertical stroke exists
+                const isUpperI = currentLetter === 'I';
                 for (let i = 0; i < avail.length; i++) {
                     if (isStrokeMatch(avail[i], req, effectiveTolerance)) {
                         matched++;
                         if (!allowStrokeReuse) { avail.splice(i, 1); }
                         break;
+                    }
+                    if (isUpperI) {
+                        // If req is a short horizontal (top/bottom bar), allow skipping it when a tall vertical exists
+                        const reqSpanX = Math.abs(req[req.length - 1].x - req[0].x);
+                        const reqSpanY = Math.abs(req[req.length - 1].y - req[0].y);
+                        const looksHorizontal = reqSpanX >= 30 && reqSpanY <= 5;
+                        if (looksHorizontal) {
+                            const hasTallVertical = candidates.some(st => {
+                                const dy = Math.abs(st[st.length - 1].y - st[0].y);
+                                const dx = Math.abs(st[st.length - 1].x - st[0].x);
+                                return dy >= 70 && dx <= 15; // tall, mostly vertical
+                            });
+                            if (hasTallVertical) {
+                                matched++;
+                                break;
+                            }
+                        }
                     }
                 }
             });
@@ -6770,13 +7239,7 @@
                 // After the praise finishes (or immediately if speech is off), advance to the next letter
                 cancelSpeech();
                 speakPhrase(`Wow! That's a great ${currentLetter}!`, () => {
-                    if (drawAdvanceLocked) return;
-                    drawAdvanceLocked = true;
-                    const modal = document.getElementById('roundModal');
-                    const isModalVisible = modal ? window.getComputedStyle(modal).display !== 'none' : false;
-                    if (!isModalVisible) {
-                        startDrawGame();
-                    }
+                    advanceToNextDrawLetterOnce();
                 });
                 const container = document.querySelector('.canvas-container');
                 if (container) {
@@ -6787,13 +7250,7 @@
 
                 // Also schedule a backup auto-advance in case speech callbacks are delayed
                 drawAdvanceTimeout = setTimeout(() => {
-                    if (drawAdvanceLocked) return;
-                    drawAdvanceLocked = true;
-                    const modal = document.getElementById('roundModal');
-                    const isModalVisible = modal ? window.getComputedStyle(modal).display !== 'none' : false;
-                    if (!isModalVisible) {
-                        startDrawGame();
-                    }
+                    advanceToNextDrawLetterOnce();
                 }, 2200);
             } else {
                 const msg = matched > 0 ? letterData.feedback.incomplete : letterData.feedback.wrong;
