@@ -10375,7 +10375,7 @@
             // Blend decision
             const BASE_ACCEPT = 0.46;
             const LETTER_EASING = new Map([
-                ...['S', 's', 'G', 'g', 'Z', 'z', 'V', 'v', 'N', 'n', 'e', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.06]),
+                ...['S', 's', 'G', 'g', 'Z', 'z', 'V', 'v', 'N', 'n', 'i', 'e', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.06]),
                 ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
@@ -10385,7 +10385,7 @@
                 // Straight/diagonal-heavy letters should rely more on cloud shape
                 ['V', 0.44], ['v', 0.44], ['W', 0.44], ['w', 0.44], ['N', 0.44], ['n', 0.44], ['M', 0.44], ['m', 0.44], ['Z', 0.44], ['z', 0.44],
                 // Curvy letters get a slightly lower floor
-                ['S', 0.42], ['s', 0.42], ['G', 0.42], ['g', 0.42], ['Q', 0.42], ['q', 0.42]
+                ['S', 0.42], ['s', 0.42], ['G', 0.42], ['g', 0.42], ['Q', 0.42], ['q', 0.42], ['e', 0.40]
             ]);
             const floor = letterFloors.get(currentLetter) || 0.40;
             let finalScore = classicalScore;
@@ -10395,7 +10395,7 @@
                 if (deepScore >= 0.78) acceptThresh = Math.min(acceptThresh, 0.46);
             }
             if (classicalMargin >= 0.08) acceptThresh -= 0.02;
-            if (needDot && !dotOK) acceptThresh += 0.02;
+            if (needDot && !dotOK) acceptThresh += (currentLetter === 'i' ? 0.01 : 0.02);
             if (needCrossbar && !crossbarOK) acceptThresh += 0.01;
             acceptThresh = clamp(acceptThresh, 0.40, 0.58);
 
