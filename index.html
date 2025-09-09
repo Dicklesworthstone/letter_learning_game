@@ -10340,8 +10340,15 @@
             acceptThresh = clamp(acceptThresh, 0.32, 0.52);
 
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
-            // Emergency ultra-permissive acceptance (temporary while system is tuned)
-            const passed = true;
+            // Middle-ground easy gate: accept on any of these low bars, else blended threshold
+            const easyCloud = cloudSim >= Math.max(0.28, floor - 0.06);
+            const easyClassical = classicalScore >= (acceptThresh - 0.10);
+            const easyIoU = visual >= 0.24;
+            const easyDeep = deepOk && deepScore >= 0.60;
+            const extraLenient = ((currentLetter === 'Q' || currentLetter === 'q' || currentLetter === 'g' || currentLetter === 'G') &&
+                (cloudSim >= 0.24 || classicalScore >= 0.26 || visual >= 0.18 || (deepOk && deepScore >= 0.54)));
+            const meetsEasyGate = easyCloud || easyClassical || easyIoU || easyDeep || extraLenient;
+            const passed = meetsEasyGate || (finalScore >= acceptThresh);
 
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
             if (passed) {
