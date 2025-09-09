@@ -5309,11 +5309,11 @@
 
         // Letter names spelled to coerce clear pronunciation on basic TTS engines
         const letterNamePronunciations = {
-            'a': 'ay',
+            'a': 'aye',
             'b': 'bee',
             'c': 'see',
             'd': 'dee',
-            'e': 'ee',
+            'e': 'eeh',
             'f': 'eff',
             'g': 'gee',
             'h': 'aitch',
@@ -5326,13 +5326,13 @@
             'o': 'oh',
             'p': 'pee',
             'q': 'cue',
-            'r': 'ar',
+            'r': 'are',
             's': 'ess',
             't': 'tee',
             'u': 'yoo',
             'v': 'vee',
             'w': 'double you',
-            'x': 'ex',
+            'x': 'eks',
             'y': 'why',
             'z': 'zee'
         };
@@ -7513,128 +7513,10 @@
                 } else {
                     timerElement.innerHTML = '🗣️';  // Speaker icon for pronunciation phase
                     if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
-                    speakPhonetics(currentLetter, () => {
-                        // Interactive echo step: mic-based when available, fallback repeat button otherwise
-                        const phaseEl = gameArea.querySelector('.phonics-phase');
-                        const canUseMic = !!voiceRecordingEnabled
-                            && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
-                            && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
-
-                        // Keep phonics active during echo so skip still works
-                        waitingForPhonics = true;
-
-                        const finishEcho = (delayMs) => {
-                            waitingForPhonics = false;
-                            try { gameArea.removeEventListener('click', skipPhonicsHandler); } catch (e) { }
-                            setTimeout(() => startIdentifyGame(), delayMs);
-                            phonicsEchoCleanup = null;
-                        };
-
-                        function setupRepeatButton() {
-                            const instructionEl = phaseEl ? phaseEl.querySelector('.phonics-instruction') : null;
-                            if (instructionEl) instructionEl.textContent = 'Repeat after me!';
-                            let repeatBtn = phaseEl ? phaseEl.querySelector('.phonics-repeat') : null;
-                            if (!repeatBtn && phaseEl) {
-                                repeatBtn = document.createElement('button');
-                                repeatBtn.className = 'phonics-repeat';
-                                repeatBtn.textContent = 'Repeat after me 🔁';
-                                repeatBtn.setAttribute('aria-label', 'Repeat after me');
-                                repeatBtn.onclick = () => {
-                                    cancelSpeech();
-                                    speakPhonetics(currentLetter);
-                                    if (phonicsRepeatCount < 2) {
-                                        phonicsRepeatCount++;
-                                        score += 3;
-                                        updateScoreDisplay();
-                                        checkAchievement('score', score);
-                                        showFeedback('Great repeating! +3', 'success');
-                                    }
-                                };
-                                phaseEl.appendChild(repeatBtn);
-                            }
-
-                            phonicsEchoCleanup = () => {
-                                if (repeatBtn && repeatBtn.parentNode) {
-                                    repeatBtn.parentNode.removeChild(repeatBtn);
-                                }
-                            };
-
-                            setTimeout(() => {
-                                if (phonicsEchoCleanup) { try { phonicsEchoCleanup(); } catch (e) { } }
-                                finishEcho(0);
-                            }, 3500);
-                        }
-
-                        if (canUseMic) {
-                            const instructionEl = phaseEl ? phaseEl.querySelector('.phonics-instruction') : null;
-                            if (instructionEl) instructionEl.textContent = 'Your turn! Say it!';
-                            let stopped = false;
-
-                            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-                                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                                const audioCtx = new AudioCtx();
-                                const source = audioCtx.createMediaStreamSource(stream);
-                                const analyser = audioCtx.createAnalyser();
-                                analyser.fftSize = 2048;
-                                source.connect(analyser);
-                                const data = new Uint8Array(analyser.fftSize);
-
-                                let speakingSince = null;
-                                const startAt = performance.now();
-                                const listenMs = 2200;
-
-                                function stopAll() {
-                                    if (stopped) return;
-                                    stopped = true;
-                                    try { stream.getTracks().forEach(t => t.stop()); } catch (e) { }
-                                    try { audioCtx.close(); } catch (e) { }
-                                }
-
-                                function tick(now) {
-                                    if (stopped) return;
-                                    analyser.getByteTimeDomainData(data);
-                                    let sum = 0;
-                                    for (let i = 0; i < data.length; i++) {
-                                        const v = (data[i] - 128) / 128;
-                                        sum += v * v;
-                                    }
-                                    const rms = Math.sqrt(sum / data.length);
-                                    const threshold = 0.08;
-
-                                    if (rms > threshold) {
-                                        if (speakingSince === null) speakingSince = now;
-                                        if (now - speakingSince > 250) {
-                                            stopAll();
-                                            score += 5;
-                                            updateScoreDisplay();
-                                            checkAchievement('score', score);
-                                            showFeedback('Nice echo! +5', 'success');
-                                            finishEcho(800);
-                                            return;
-                                        }
-                                    } else {
-                                        speakingSince = null;
-                                    }
-
-                                    if (now - startAt < listenMs) {
-                                        requestAnimationFrame(tick);
-                                    } else {
-                                        stopAll();
-                                        finishEcho(800);
-                                    }
-                                }
-
-                                phonicsEchoCleanup = () => { stopAll(); };
-                                requestAnimationFrame(tick);
-                            }).catch(() => {
-                                // Fallback to button if mic fails
-                                setupRepeatButton();
-                            });
-                        } else {
-                            // No mic: show repeat button and track engagement
-                            setupRepeatButton();
-                        }
-                    });
+                    // After phonetics, auto-advance without repeat/echo
+                    waitingForPhonics = false;
+                    try { gameArea.removeEventListener('click', skipPhonicsHandler); } catch (e) { }
+                    setTimeout(() => startIdentifyGame(), 300);
                 }
             }
 
