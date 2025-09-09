@@ -10332,7 +10332,7 @@
             // Blend decision
             const BASE_ACCEPT = 0.36;
             const LETTER_EASING = new Map([
-                ...['S', 's', 'G', 'g', 'Q', 'q', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'E', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.10]),
+                ...['S', 's', 'G', 'g', 'Q', 'q', 'O', 'o', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'E', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.10]),
                 ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
@@ -10372,7 +10372,9 @@
             if (passed) {
                 const loopish = new Set(['o','O','Q','q','g','G','a','A','d','D','p','P','b','B']);
                 if (loopish.has(currentLetter)) {
-                    if (visual < 0.20) passed = false;
+                    // Lower IoU bar for pure loops to reduce false rejections
+                    const minIoU = (currentLetter === 'o' || currentLetter === 'O') ? 0.12 : 0.20;
+                    if (visual < minIoU) passed = false;
                 }
             }
 
