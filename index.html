@@ -10375,7 +10375,7 @@
             // Blend decision
             const BASE_ACCEPT = 0.46;
             const LETTER_EASING = new Map([
-                ...['S', 's', 'G', 'g', 'Z', 'z', 'V', 'v', 'N', 'n', 'i', 'e', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.06]),
+                ...['S', 's', 'G', 'g', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.06]),
                 ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
@@ -10397,14 +10397,14 @@
             if (classicalMargin >= 0.08) acceptThresh -= 0.02;
             if (needDot && !dotOK) acceptThresh += (currentLetter === 'i' ? 0.01 : 0.02);
             if (needCrossbar && !crossbarOK) acceptThresh += 0.01;
-            acceptThresh = clamp(acceptThresh, 0.40, 0.58);
+            acceptThresh = clamp(acceptThresh, 0.38, 0.56);
 
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
             const cloudGate = cloudSim >= (floor - 0.05);
             const bothBad = (classicalScore < (floor - 0.08)) && (!deepOk || deepScore < (floor - 0.10));
             const passed = cloudGate && (!bothBad) && (
                 finalScore >= acceptThresh ||
-                (finalScore >= Math.max(0.42, floor) && (classicalMargin >= 0.05 || deepMargin >= 0.05))
+                (finalScore >= Math.max(0.40, floor) && (classicalMargin >= 0.04 || deepMargin >= 0.04))
             );
 
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
