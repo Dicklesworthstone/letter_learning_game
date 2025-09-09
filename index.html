@@ -5856,11 +5856,18 @@
                     'X': () => createXMarksTheSpot(element)
                 };
 
+                // Always do a letter-specific hero burst first
+                try {
+                    const theme = getLetterTheme(upper);
+                    createHeroLetterBurst(upper, element, theme);
+                } catch (_) { /* non-fatal */ }
+
+                // Then run the per-letter animation; fallback to a star burst
                 const specific = celebrations[upper];
-                if (specific && Math.random() < 0.5) {
+                if (specific) {
                     specific();
                 } else {
-                    createConfetti(element);
+                    createStarExplosion(element);
                 }
             } catch (e) {
                 // Fallback if anything goes wrong
@@ -5894,6 +5901,121 @@
                 if (p < 1) requestAnimationFrame(step); else if (onComplete) onComplete();
             }
             requestAnimationFrame(step);
+        }
+
+        // Letter-specific visual theme configuration
+        function getLetterTheme(letter) {
+            const themes = {
+                'A': { base: '#60a5fa', accent: '#93c5fd', emojis: ['☁️','✨','✈️'] },
+                'B': { base: '#f472b6', accent: '#fb7185', emojis: ['🎈','✨'] },
+                'C': { base: '#f59e0b', accent: '#fbbf24', emojis: ['🎉','🎊','✨'] },
+                'D': { base: '#93c5fd', accent: '#a78bfa', emojis: ['🥁','🎵'] },
+                'E': { base: '#fcd34d', accent: '#fde68a', emojis: ['⭐','🌟'] },
+                'F': { base: '#ef4444', accent: '#f97316', emojis: ['🎆','🎇','✨'] },
+                'G': { base: '#f59e0b', accent: '#fbbf24', emojis: ['🎸','🎵'] },
+                'H': { base: '#ef4444', accent: '#f472b6', emojis: ['❤️','💖'] },
+                'I': { base: '#93c5fd', accent: '#bfdbfe', emojis: ['❄️','✨'] },
+                'J': { base: '#06b6d4', accent: '#22d3ee', emojis: ['🪼','✨','💧'] },
+                'K': { base: '#34d399', accent: '#10b981', emojis: ['🪁','✨'] },
+                'L': { base: '#a78bfa', accent: '#8b5cf6', emojis: ['⚡','✨'] },
+                'M': { base: '#f472b6', accent: '#e879f9', emojis: ['🪄','✨'] },
+                'N': { base: '#0ea5e9', accent: '#38bdf8', emojis: ['🌙','⭐'] },
+                'O': { base: '#22d3ee', accent: '#67e8f9', emojis: ['🫧','✨'] },
+                'P': { base: '#f97316', accent: '#fdba74', emojis: ['🍿','✨'] },
+                'Q': { base: '#eab308', accent: '#fde047', emojis: ['👑','✨'] },
+                'R': { base: '#ef4444', accent: '#f59e0b', emojis: ['🌈','✨'] },
+                'S': { base: '#10b981', accent: '#34d399', emojis: ['🐍','🟢'] },
+                'T': { base: '#f59e0b', accent: '#fbbf24', emojis: ['🏆','✨'] },
+                'U': { base: '#06b6d4', accent: '#22d3ee', emojis: ['☔','💧'] },
+                'V': { base: '#f472b6', accent: '#e879f9', emojis: ['✌️','✨'] },
+                'W': { base: '#60a5fa', accent: '#93c5fd', emojis: ['🌊','💦'] },
+                'X': { base: '#ef4444', accent: '#f59e0b', emojis: ['❌','💥'] },
+                'Y': { base: '#a78bfa', accent: '#8b5cf6', emojis: ['🪀','✨'] },
+                'Z': { base: '#0ea5e9', accent: '#38bdf8', emojis: ['🚀','🔥'] }
+            };
+            return themes[letter] || { base: '#f472b6', accent: '#fbcfe8', emojis: ['✨','🎉'] };
+        }
+
+        // Big hero burst around the selected letter location
+        function createHeroLetterBurst(letter, element, theme) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+
+            const size = 160;
+            const ring = document.createElement('div');
+            ring.style.cssText = `position:absolute; left:${origin.x - size/2}px; top:${origin.y - size/2}px; width:${size}px; height:${size}px; border-radius:50%; background: radial-gradient(circle at 50% 50%, ${theme.accent}b3 0%, ${theme.base}66 55%, transparent 70%); filter: blur(1px); opacity:0;`;
+            layer.appendChild(ring);
+
+            const big = document.createElement('div');
+            big.textContent = letter;
+            big.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; transform: translate(-50%, -50%); font-size:104px; font-weight:900; line-height:1; background: linear-gradient(135deg, ${theme.base}, ${theme.accent}); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 8px 0 rgba(0,0,0,.08), 0 0 28px ${theme.accent}99;`;
+            layer.appendChild(big);
+
+            // Sparkles
+            const sparkleCount = 10;
+            for (let i = 0; i < sparkleCount; i++) {
+                const star = document.createElement('span');
+                star.textContent = '✨';
+                star.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${14 + Math.random() * 10}px; opacity:0;`;
+                layer.appendChild(star);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 90 + Math.random() * 70;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist;
+                const dur = 800 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(star, { x: 0, y: 0, opacity: 0 }, { x: dx, y: dy, opacity: 1, duration: dur / 1000, ease: 'sine.out' });
+                    gsap.to(star, { opacity: 0, duration: 0.3, delay: (dur / 1000) - 0.15, ease: 'sine.in' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        star.style.transform = `translate(${dx * e}px, ${dy * e}px)`;
+                        star.style.opacity = String(e < 0.85 ? e : Math.max(0, 1 - (e - 0.85) * 6));
+                    });
+                }
+            }
+
+            // Themed emoji particles
+            const particles = theme.emojis || ['✨'];
+            const particleCount = 14;
+            for (let i = 0; i < particleCount; i++) {
+                const p = document.createElement('span');
+                p.textContent = particles[Math.floor(Math.random() * particles.length)];
+                p.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${18 + Math.random() * 12}px; opacity:1;`;
+                layer.appendChild(p);
+                const angle = (Math.PI * 2) * (i / particleCount) + (Math.random() * 0.6 - 0.3);
+                const dist = 120 + Math.random() * 120;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist - 30;
+                const rot = (Math.random() * 360 - 180);
+                const dur = 1000 + Math.random() * 400;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(p, { x: 0, y: 0, rotation: 0, opacity: 1, scale: 0.8 }, { x: dx, y: dy, rotation: rot, opacity: 0, scale: 1.1, duration: dur / 1000, ease: 'power2.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        p.style.transform = `translate(${dx * e}px, ${dy * e}px) rotate(${rot * e}deg) scale(${0.8 + 0.3 * e})`;
+                        p.style.opacity = String(1 - e);
+                    });
+                }
+            }
+
+            // Animate hero letter and ring
+            if (typeof gsap !== 'undefined') {
+                const tl = gsap.timeline();
+                tl.fromTo(big, { scale: 0, rotation: -10, opacity: 0 }, { scale: 1.2, rotation: 0, opacity: 1, duration: 0.5, ease: 'back.out(1.8)' })
+                  .to(big, { scale: 1, duration: 0.2, ease: 'power1.out' }, '-=0.05');
+                gsap.fromTo(ring, { scale: 0.2, opacity: 0.6 }, { scale: 1.6, opacity: 0, duration: 0.8, ease: 'sine.out' });
+            } else {
+                animateWithRAF(700, (e) => {
+                    big.style.transform = `translate(-50%, -50%) scale(${e * 1.2})`;
+                    big.style.opacity = String(e);
+                });
+                animateWithRAF(800, (e) => {
+                    ring.style.transform = `scale(${0.2 + 1.4 * e})`;
+                    ring.style.opacity = String(0.6 * (1 - e));
+                });
+            }
+
+            setTimeout(() => layer.remove(), 1600);
         }
 
         // Individual animations
@@ -7848,6 +7970,8 @@
             const toleranceBoosts = {
                 // common tricky letters or with optional ornaments/crossbars
                 'k': 6, 'K': 6,
+                'r': 6, 'R': 8,
+                'v': 6, 'V': 6,
                 'i': 5, 'j': 5, 'I': 4, 'J': 5,
                 's': 6, 'S': 6,
                 'z': 8, 'Z': 8, // allow zig segments and optional slash
@@ -7855,7 +7979,7 @@
                 'x': 6, 'X': 6, 'y': 6, 'Y': 6,
                 't': 6, 'T': 6, 'f': 6, 'F': 6,
                 'q': 6, 'Q': 6, 'g': 6, 'G': 6,
-                'a': 4, 'A': 6, 'h': 4, 'H': 6, 'r': 4, 'R': 6, 'p': 4, 'P': 6, 'B': 6, 'D': 6, 'E': 6,
+                'a': 6, 'A': 8, 'h': 4, 'H': 6, 'p': 4, 'P': 6, 'B': 6, 'D': 6, 'E': 6,
                 'o': 10, 'O': 10 // accept imperfect circles/ovals
             };
             effectiveTolerance += baseForgiveness + (toleranceBoosts[currentLetter] || 0);
@@ -7883,8 +8007,8 @@
                 y: height === 0 ? 50 : ((p.y - minY) / height) * 100
             })));
             // Some letters are often drawn as several smaller strokes instead of one continuous path
-            const allowSplitConcat = new Set(['z', 'Z', 'w', 'W', 'm', 'M', 'n', 'N', 'x', 'X', 'y', 'Y', 'b', 'B', 'p', 'P', 'd', 'D', 'q', 'Q']).has(currentLetter);
-            const allowStrokeReuse = new Set(['x', 'X', 'y', 'Y', 't', 'T', 'a', 'A', 'h', 'H', 'b', 'B', 'p', 'P', 'd', 'D', 'q', 'Q', 'I']).has(currentLetter);
+            const allowSplitConcat = new Set(['z', 'Z', 'w', 'W', 'm', 'M', 'n', 'N', 'x', 'X', 'y', 'Y', 'b', 'B', 'p', 'P', 'd', 'D', 'q', 'Q', 'g', 'G']).has(currentLetter);
+            const allowStrokeReuse = new Set(['x', 'X', 'y', 'Y', 't', 'T', 'a', 'A', 'h', 'H', 'b', 'B', 'p', 'P', 'd', 'D', 'q', 'Q', 'I', 'g', 'G']).has(currentLetter);
 
             const buildComposedStrokes = (strokes, maxSegments) => {
                 const out = [];
@@ -8022,6 +8146,16 @@
             const baseVariant = normalizedUserStrokes;
             const horizVariant = rotateAndNormalize(normalizedUserStrokes, -pca.angle);
             const vertVariant = rotateAndNormalize(normalizedUserStrokes, (Math.PI / 2) - pca.angle);
+            const reflectHorizontal = (strokes) => strokes.map(s => s.map(p => ({ x: 100 - p.x, y: p.y })));
+            let variants = [baseVariant, horizVariant, vertVariant];
+            // Mirror-acceptance for letters where tail direction varies (e.g., 'g')
+            if (({ 'g': 1, 'G': 1 })[currentLetter]) {
+                const mirroredBase = reflectHorizontal(baseVariant);
+                const pcaMir = computePCAAngle(flattenPoints(mirroredBase));
+                const mirroredHoriz = rotateAndNormalize(mirroredBase, -pcaMir.angle);
+                const mirroredVert = rotateAndNormalize(mirroredBase, (Math.PI / 2) - pcaMir.angle);
+                variants = variants.concat([mirroredBase, mirroredHoriz, mirroredVert]);
+            }
 
             let matched = 0;
             let dottedHeuristicOK = false;
@@ -8069,7 +8203,12 @@
                         const dSym = hausdorff(userDs, reqDs);
                         if (dSym <= distTol) { bestIdx = i; break; }
                         // For letters like 'K', allow extra user stroke content using directed Hausdorff (template→user)
-                        if (currentLetter === 'K' || currentLetter === 'k') {
+                        // Letters prone to merged/extra stroke content: allow directed Hausdorff (template→user)
+                        if (({
+                            'K':1,'k':1,'R':1,'r':1,'M':1,'m':1,'W':1,'w':1,'N':1,'n':1,
+                            'Z':1,'z':1,'V':1,'v':1,'F':1,'f':1,'E':1,'e':1,'A':1,'a':1,
+                            'Q':1,'q':1,'X':1,'x':1,'Y':1,'y':1,'G':1,'g':1
+                        })[currentLetter]) {
                             const dDir = oneSidedHd(reqDs, userDs);
                             if (dDir <= distTol) { bestIdx = i; break; }
                         }
@@ -8110,7 +8249,6 @@
                 return { matchedCount, dotOK };
             };
 
-            const variants = [baseVariant, horizVariant, vertVariant];
             for (const variant of variants) {
                 const { matchedCount, dotOK } = tryVariant(variant);
                 if (matchedCount === requiredStrokes || dotOK) {
