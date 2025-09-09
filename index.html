@@ -9887,7 +9887,7 @@
             const pathLength = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += dist(pts[i - 1], pts[i]); return d; };
             const smoothStroke = (s) => { if (s.length < 3) return s.slice(); const out = [s[0]]; for (let i = 1; i < s.length - 1; i++) out.push({ x: (s[i - 1].x + s[i].x + s[i + 1].x) / 3, y: (s[i - 1].y + s[i].y + s[i + 1].y) / 3 }); out.push(s[s.length - 1]); return out; };
             const normalizeStrokesToBox = (strokes) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = 100 / Math.max(w, h), ox = bb.minX, oy = bb.minY; return strokes.map(s => s.map(p => ({ x: (p.x - ox) * scale, y: (p.y - oy) * scale }))); };
-            const N_RESAMPLE = 84, ROT_MAX_DEG = 20, ROT_STEP_DEG = 4, CLOUD_NORM = 22;
+            const N_RESAMPLE = 64, ROT_MAX_DEG = 45, ROT_STEP_DEG = 4, CLOUD_NORM = 28;
             const resampleStroke = (pts, n) => { if (pts.length === 0) return []; const I = pathLength(pts) / (n - 1); let D = 0, out = [{ ...pts[0] }]; for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], L = dist(a, b); if (!L) continue; while (D + L >= I) { const t = (I - D) / L; const q = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) }; out.push(q); pts.splice(i, 0, q); D = 0; break; } D += L; } if (out.length < n) out.push({ ...pts[pts.length - 1] }); return out.length === n ? out : (out.length > n ? out.slice(0, n) : out); };
             const centroid = (pts) => { let cx = 0, cy = 0; for (const p of pts) { cx += p.x; cy += p.y; } return { x: cx / pts.length, y: cy / pts.length }; };
             const rotatePoints = (pts, rad) => { const c = centroid(pts), cs = Math.cos(rad), sn = Math.sin(rad); return pts.map(p => ({ x: (p.x - c.x) * cs - (p.y - c.y) * sn + c.x, y: (p.x - c.x) * sn + (p.y - c.y) * cs + c.y })); };
@@ -9898,7 +9898,7 @@
             const analyzeStrokesRaw = (strokes) => { const bb = bboxOfStrokes(strokes); const area = bb.width * bb.height; let totalLen = 0; const boxes = []; for (const s of strokes) { if (s.length < 1) continue; totalLen += pathLength(s); const b = bboxOfStrokes([s]); b.area = b.width * b.height; boxes.push(b); } return { bb, area, totalLen, boxes }; };
             const hasDotAboveMain = (strokesNorm) => { const { boxes } = analyzeStrokesRaw(strokesNorm); if (boxes.length < 2) return false; const main = boxes.reduce((a, b) => a.area > b.area ? a : b); const dots = boxes.filter(b => b.area < main.area * 0.12); const mainTop = main.minY + main.height * 0.2; return dots.some(d => d.maxY < mainTop); };
             const hasMidCrossbar = (strokesNorm) => { const bb = bboxOfStrokes(strokesNorm); const y1 = bb.minY + bb.height * 0.35, y2 = bb.minY + bb.height * 0.65; let horiz = 0, total = 0; for (const s of strokesNorm) { for (let i = 1; i < s.length; i++) { total++; const a = s[i - 1], b = s[i]; const dy = Math.abs(b.y - a.y), dx = Math.abs(b.x - a.x); const ymid = (a.y + b.y) / 2; if (dx > dy * 2 && ymid >= y1 && ymid <= y2) horiz++; } } return horiz >= Math.max(2, Math.floor(total * 0.06)); };
-            const looksLikeScribble = (strokes, canvas) => { const { bb, totalLen } = analyzeStrokesRaw(strokes); const lenRatio = totalLen / (Math.max(1, Math.max(bb.width, bb.height))); const tiny = bb.width < canvas.width * 0.15 || bb.height < canvas.height * 0.15; return (!tiny && lenRatio > 16); };
+            const looksLikeScribble = (strokes, canvas) => { const { bb, totalLen } = analyzeStrokesRaw(strokes); const lenRatio = totalLen / (Math.max(1, Math.max(bb.width, bb.height))); const tiny = false; return (lenRatio > 28); };
             const renderStrokesToCanvas = (strokes, size = 224, lw = 24) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = (size * 0.84) / Math.max(w, h), pad = size * 0.08; const c = document.createElement('canvas'); c.width = size; c.height = size; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, size, size); g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#000'; g.lineWidth = lw; g.fillStyle = '#000'; for (const s of strokes) { if (s.length < 2) { const p = s[0]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; g.beginPath(); g.arc(x, y, lw * 0.45, 0, Math.PI * 2); g.fill(); continue; } g.beginPath(); for (let i = 0; i < s.length; i++) { const p = s[i]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke(); } return c; };
             const l2norm = (arr) => { let s = 0; for (let i = 0; i < arr.length; i++) s += arr[i] * arr[i]; s = Math.sqrt(s) || 1; for (let i = 0; i < arr.length; i++) arr[i] /= s; return arr; };
             const cosine = (a, b) => { let s = 0, n = Math.min(a.length, b.length); for (let i = 0; i < n; i++) s += a[i] * b[i]; return s; };
@@ -9967,8 +9967,8 @@
             const userCloud = resampleStroke(joinStrokes(userNorm), N_RESAMPLE);
             const meCloudD = greedyCloudMatch(userCloud, tmpl.cloud);
             const cloudSim = 1 - clamp(meCloudD / CLOUD_NORM, 0, 1);
-            const visual = iou(userNorm, tmpl.strokesNorm, 64, 12);
-            const classicalScore = 0.6 * cloudSim + 0.4 * visual;
+            const visual = iou(userNorm, tmpl.strokesNorm, 56, 16);
+            const classicalScore = 0.7 * cloudSim + 0.3 * visual;
 
             // Best-other classical margin
             let bestOtherClassical = -1;
@@ -9977,8 +9977,8 @@
                 const s = C.tmplCache[L]; if (!s) continue;
                 const d = greedyCloudMatch(userCloud, s.cloud);
                 const cs = 1 - clamp(d / CLOUD_NORM, 0, 1);
-                const vv = iou(userNorm, s.strokesNorm, 64, 12);
-                const comb = 0.6 * cs + 0.4 * vv;
+                const vv = iou(userNorm, s.strokesNorm, 56, 16);
+                const comb = 0.7 * cs + 0.3 * vv;
                 if (comb > bestOtherClassical) bestOtherClassical = comb;
             }
             const classicalMargin = classicalScore - bestOtherClassical;
@@ -10010,24 +10010,24 @@
             // Blend decision
             const BASE_ACCEPT = 0.42;
             const LETTER_EASING = new Map([
-                ...['S','s','G','g','e','B','R','W','w','M','m','K','k'].map(L => [L, -0.03]),
-                ...['l','I','t','T','v','V'].map(L => [L, +0.03])
+                ...['S','s','G','g','e','B','R','W','w','M','m','K','k'].map(L => [L, -0.06]),
+                ...['l','I','t','T','v','V'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
             let acceptThresh = BASE_ACCEPT + easing;
             let finalScore = classicalScore;
             if (deepOk) {
-                finalScore = 0.55 * classicalScore + 0.45 * deepScore;
-                if (deepMargin >= 0.08) acceptThresh -= 0.03;
-                if (deepScore >= 0.78) acceptThresh = Math.min(acceptThresh, 0.48);
+                finalScore = 0.50 * classicalScore + 0.50 * deepScore;
+                if (deepMargin >= 0.06) acceptThresh -= 0.03;
+                if (deepScore >= 0.74) acceptThresh = Math.min(acceptThresh, 0.46);
             }
-            if (classicalMargin >= 0.08) acceptThresh -= 0.02;
+            if (classicalMargin >= 0.06) acceptThresh -= 0.02;
             if (needDot && !dotOK) acceptThresh += 0.02;
             if (needCrossbar && !crossbarOK) acceptThresh += 0.01;
-            acceptThresh = clamp(acceptThresh, 0.38, 0.56);
+            acceptThresh = clamp(acceptThresh, 0.34, 0.52);
 
-            const bothBad = (classicalScore < 0.40) && (!deepOk || deepScore < 0.46);
-            const passed = (!bothBad) && (finalScore >= acceptThresh || (finalScore >= 0.42 && (classicalMargin >= 0.04 || deepMargin >= 0.04)));
+            const bothBad = false;
+            const passed = (finalScore >= acceptThresh || (finalScore >= 0.38 && (classicalMargin >= 0.03 || deepMargin >= 0.03)));
 
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
             if (passed) {
