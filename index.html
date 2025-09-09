@@ -8366,7 +8366,9 @@
                 }
                 return worst;
             };
-            const distTol = Math.max(10, Math.min(22, Math.round(effectiveTolerance * 0.4)));
+            // Allow slightly higher tolerance cap for complex curved letters like G/g
+            const letterMaxTol = ({ 'G': 28, 'g': 26 })[currentLetter] || 22;
+            const distTol = Math.max(10, Math.min(letterMaxTol, Math.round(effectiveTolerance * 0.4)));
 
             // Template prep: densify polylines for stable Hausdorff, then (light) downsample
             const templateStrokes = letterData.strokes.map(s => downsampleStroke(densifyStroke(s, 64), 64));
@@ -8441,6 +8443,11 @@
                         })[currentLetter]) {
                             const dDir = oneSidedHd(reqDs, userDs);
                             if (dDir <= distTol) { bestIdx = i; break; }
+                        }
+                        // For G/g specifically, also accept when the user's stroke is a subset of the template (user→template)
+                        if (currentLetter === 'G' || currentLetter === 'g') {
+                            const dUserToReq = oneSidedHd(userDs, reqDs);
+                            if (dUserToReq <= distTol) { bestIdx = i; break; }
                         }
                     }
                     if (bestIdx !== -1) {
