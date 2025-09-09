@@ -4233,6 +4233,69 @@
             .options { gap: clamp(8px, 2vmin, 14px); padding-top: clamp(28px, 7.5vmin, 52px); max-width: 340px; }
             .instruction { font-size: clamp(14px, 2.2vmin, 18px); margin: 4px 0 6px; }
         }
+
+        /* Desktop layout improvements: only on wide pointer/hover devices (keeps iPhone/mobile unchanged) */
+        @media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+            /* Constrain primary sections and center for symmetry */
+            .header,
+            .player-selector,
+            .score-panel,
+            .mode-selector,
+            .game-area {
+                width: min(980px, 92vw);
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .header {
+                margin-top: 16px;
+                border-radius: 16px;
+            }
+
+            .score-panel {
+                margin-top: 12px;
+                border-radius: 14px;
+                padding: 16px 24px;
+                gap: 12px;
+            }
+
+            .game-area {
+                margin-top: 12px;
+                border-radius: 28px 28px 0 0;
+                padding: 16px 24px 24px;
+            }
+
+            /* Larger, cleaner tiles on desktop while keeping 2x2 grid */
+            .options {
+                max-width: 540px;
+                gap: 20px;
+                padding-top: clamp(48px, 8vmin, 80px);
+            }
+
+            .option-btn {
+                min-height: 150px;
+                font-size: clamp(48px, 5vmin, 72px);
+                border-radius: 20px;
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.06);
+            }
+
+            /* Slightly increase the prominence of the sound button */
+            .game-area.with-sound .sound-btn {
+                width: clamp(96px, 10vmin, 128px);
+                height: clamp(96px, 10vmin, 128px);
+                transform: translate(-50%, -60%);
+            }
+
+            .instruction {
+                font-size: 20px;
+                margin: 8px 0 12px;
+            }
+
+            .controls {
+                max-width: 420px;
+                gap: 16px;
+            }
+        }
     </style>
 </head>
 
@@ -4934,6 +4997,7 @@
         let phonicsTimer = null;
         let speakPromptTimeout = null;
         let speakLetterTimeout = null;
+        let isProcessing = false;
         let isDrawing = false;
         let ctx = null;
         let voiceRecordingEnabled = false; // Hidden by default
