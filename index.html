@@ -434,7 +434,7 @@
             border-radius: 999px;
             min-width: 16px;
             height: 16px;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             text-align: center;
@@ -4389,11 +4389,11 @@
                     <div class="about-content">
                         <div class="about-title">💝 About This Game</div>
                         <div class="about-text">
-                            This game was created with love by <strong>Jeffrey Emanuel</strong> for his own children and
+                            This game was created by <strong>Jeffrey Emanuel</strong> for his own children and
                             is made freely available to all families.
                         </div>
                         <div class="about-text">
-                            We believe every child deserves access to quality educational tools.
+                            Every child should have free access to quality educational tools without annoying ads and mind-numbing animations!
                         </div>
                         <a href="https://github.com/Dicklesworthstone/letter_learning_game" target="_blank"
                             class="github-link">
@@ -4404,7 +4404,7 @@
                             <span>View Source Code on GitHub</span>
                         </a>
                         <div class="about-footer">
-                            Made with ❤️ for children everywhere
+                            🥳 Reading is FUNdamental! 🥳
                         </div>
                     </div>
                 </div>
@@ -5302,22 +5302,27 @@
             const anchorIdx = phonetic.toLowerCase().indexOf('as in');
             const anchor = anchorIdx !== -1 ? phonetic.slice(anchorIdx + 5).trim() : '';
 
-            const phrases = [
-                `The letter ${letterName} makes the sound: ${sound}, ${sound}, ${sound}${anchor ? ', as in ' + anchor : ''}.`,
-                `Here's the sound for ${letterName}: ${sound}${anchor ? ', as in ' + anchor : ''}.`,
-                `${letterName} says: ${sound}${anchor ? ', ' + sound + ', like in the word ' + anchor : ''}.`
-            ];
-            let phraseToSpeak = phrases[Math.floor(Math.random() * phrases.length)];
-            // Improve pacing for basic TTS: break commas into short pauses
-            const textForTTS = phraseToSpeak.replace(/,/g, '. ');
-            const utterance = new SpeechSynthesisUtterance(textForTTS);
-            utterance.rate = 0.8;
-            utterance.pitch = 1.05;
-            utterance.volume = 1;
+            // Speak as multiple utterances for reliable pauses on mobile TTS
             const selectedVoice = getBestVoice();
-            if (selectedVoice) utterance.voice = selectedVoice;
-            utterance.onend = () => { if (callback) callback(); };
-            speechSynthesis.speak(utterance);
+            const parts = [
+                `${sound}.`,
+                `${sound}.`,
+                `${sound}.`
+            ];
+            if (anchor) parts.push(`as in ${anchor}.`);
+
+            let idx = 0;
+            const speakNext = () => {
+                if (idx >= parts.length) { if (callback) callback(); return; }
+                const u = new SpeechSynthesisUtterance(parts[idx]);
+                u.rate = 0.8;
+                u.pitch = 1.05;
+                u.volume = 1;
+                if (selectedVoice) u.voice = selectedVoice;
+                u.onend = () => { idx++; setTimeout(speakNext, 60); };
+                speechSynthesis.speak(u);
+            };
+            speakNext();
         }
 
         function updateScoreDisplay() {
@@ -6609,7 +6614,14 @@
 
                 const pointsGained = Math.max(0, base - penalty);
                 showFeedback(`That's a perfect "${currentLetter}"! +${pointsGained} ✨`, 'success');
-                speakPhrase(`Wow! That's a great ${currentLetter}!`);
+                // After the praise finishes (or immediately if speech is off), advance to the next letter
+                speakPhrase(`Wow! That's a great ${currentLetter}!`, () => {
+                    const modal = document.getElementById('roundModal');
+                    const isModalVisible = modal ? window.getComputedStyle(modal).display !== 'none' : false;
+                    if (!isModalVisible) {
+                        startDrawGame();
+                    }
+                });
                 const container = document.querySelector('.canvas-container');
                 if (container) {
                     container.style.boxShadow = '0 10px 30px rgba(74, 222, 128, 0.5)';
@@ -6617,14 +6629,14 @@
                     setTimeout(() => { container.style.boxShadow = ''; container.style.transform = ''; }, 1000);
                 }
 
+                // Also schedule a backup auto-advance in case speech callbacks are delayed
                 setTimeout(() => {
-                    checkRoundCompletion();
                     const modal = document.getElementById('roundModal');
-                    // If a round modal did not open, proceed to the next tracing letter automatically
-                    if (!modal || modal.style.display === 'none') {
+                    const isModalVisible = modal ? window.getComputedStyle(modal).display !== 'none' : false;
+                    if (!isModalVisible) {
                         startDrawGame();
                     }
-                }, 1800);
+                }, 2200);
             } else {
                 const msg = matched > 0 ? letterData.feedback.incomplete : letterData.feedback.wrong;
                 showFeedback(msg, 'error');
