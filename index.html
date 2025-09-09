@@ -7261,9 +7261,9 @@
             }
 
             gameArea.innerHTML = `
-                <div class="instruction">Tap the speaker, then find the letter!</div>
                 <div class="options">${optionsHTML}</div>
                 <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">🔊</button>
+                <div class="instruction">Tap the speaker, then find the letter!</div>
                 ${voiceRecordingEnabled ? getVoiceRecorderHTML() : ''}
             `;
             // Reserve space so the floating sound button doesn't overlap content
@@ -7284,12 +7284,7 @@
                         speakLetter(thisQuestionLetter);
                     }, 1000);
                 };
-                if (currentTheme === 'animals' && letterAssociations[thisQuestionLetter.toLowerCase()]) {
-                    const assoc = letterAssociations[thisQuestionLetter.toLowerCase()];
-                    speakPhrase(`Find the letter ${letterNameSpoken} for ${assoc.word}.`, afterPrompt);
-                } else {
-                    speakPhrase(`Find the letter ${letterNameSpoken}.`, afterPrompt);
-                }
+                speakPhrase(`Find the letter ${letterNameSpoken}.`, afterPrompt);
             }, 300);
         }
 
@@ -7390,7 +7385,39 @@
                     const extraDelay = (!phonicsEnabled && showedExamples) ? 300 : 0;
                     if (phonicsEnabled) {
                         if (phonicsPhaseTimeout) { clearTimeout(phonicsPhaseTimeout); phonicsPhaseTimeout = null; }
-                        phonicsPhaseTimeout = setTimeout(() => { isProcessing = false; startPhonicsPhase(); }, baseDelay + extraDelay);
+                        phonicsPhaseTimeout = setTimeout(() => {
+                            isProcessing = false;
+                            // Start phonics phase: ask child to say the sound (3s), then pronounce + mention word
+                            const gameArea = document.getElementById('gameArea');
+                            const assoc = letterAssociations[currentLetter.toLowerCase()];
+                            // Reuse startPhonicsPhase layout but condensed
+                            gameArea.innerHTML = `
+                                <div class="phonics-phase">
+                                    <div class="phonics-instruction">What sound does "${currentLetter}" make?</div>
+                                    <div class="phonics-timer" id="phonicsTimer">3</div>
+                                    <div class="phonics-letter">${currentLetter}</div>
+                                </div>
+                            `;
+                            let t = 3;
+                            const timerEl = document.getElementById('phonicsTimer');
+                            const tick = () => {
+                                t -= 1;
+                                if (t > 0) {
+                                    timerEl.textContent = String(t);
+                                    setTimeout(tick, 1000);
+                                } else {
+                                    timerEl.textContent = '';
+                                    // Say phonetics and association after countdown
+                                    speakPhonetics(currentLetter, () => {
+                                        if (assoc) {
+                                            try { speakPhrase(`${currentLetter} is for ${assoc.word}.`); } catch (e) {}
+                                        }
+                                        setTimeout(() => startIdentifyGame(), 500);
+                                    });
+                                }
+                            };
+                            try { speakPhrase(`What sound does ${letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter} make?`, () => setTimeout(tick, 1000)); } catch (e) { setTimeout(tick, 1000); }
+                        }, baseDelay + extraDelay);
                     } else {
                         setTimeout(() => { isProcessing = false; startIdentifyGame(); }, baseDelay + extraDelay);
                         // Re-enable buttons only if not transitioning into phonics
