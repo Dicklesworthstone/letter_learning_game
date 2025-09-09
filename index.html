@@ -9949,11 +9949,7 @@
             const scale = 100 / Math.max(w, h);
             const userNorm = raw.map(s => s.map(p => ({ x: (p.x - bb.minX) * scale, y: (p.y - bb.minY) * scale })));
 
-            if (bb.width < canvas.width * 0.18 || bb.height < canvas.height * 0.18) {
-                showFeedback('Try to make your letter bigger! 🎨', 'info');
-                speakPhrase('Try making your letter a little bigger.');
-                return;
-            }
+            // Do not reject based on size; kids may draw smaller and still be correct
             if (looksLikeScribble(raw, canvas)) {
                 showFeedback('Hmm, that looks a bit scribbly. Try a smoother shape for the letter.', 'error');
                 speakPhrase('Try a smoother shape for the letter.');
