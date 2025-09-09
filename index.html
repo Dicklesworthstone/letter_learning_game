@@ -1301,6 +1301,8 @@
             margin-bottom: clamp(6px, 1.6vmin, 12px);
             font-weight: 600;
             animation: fadeIn 0.5s;
+            position: relative;
+            z-index: 10050; /* ensure above any warning/flash overlays */
         }
 
         @keyframes fadeIn {
@@ -5276,6 +5278,35 @@
             'z': 'zuh, zuh, zuh, as in zebra'
         };
 
+        // Emoji choices for phonics anchor words (only where a clear emoji exists)
+        const anchorEmojiMap = {
+            'apple': '🍎',
+            'ball': '🏀',
+            'cat': '🐱',
+            'dog': '🐶',
+            'egg': '🥚',
+            'fish': '🐟',
+            'goat': '🐐',
+            'hat': '🎩',
+            'ice': '🧊',
+            'kite': '🪁',
+            'lion': '🦁',
+            'moon': '🌙',
+            'nose': '👃',
+            'octopus': '🐙',
+            'pig': '🐷',
+            'queen': '👑',
+            'rabbit': '🐰',
+            'snake': '🐍',
+            'turtle': '🐢',
+            'umbrella': '☂️',
+            'violin': '🎻',
+            'whale': '🐳',
+            'fox': '🦊',
+            'yellow': '🟨',
+            'zebra': '🦓'
+        };
+
         // Letter names spelled to coerce clear pronunciation on basic TTS engines
         const letterNamePronunciations = {
             'a': 'ay',
@@ -5616,10 +5647,79 @@
                 u.pitch = 1.05;
                 u.volume = 1;
                 if (selectedVoice) u.voice = selectedVoice;
+                // When we reach the anchor phrase, show the matching emoji with a cute animation
+                if (anchor && idx === parts.length - 1) {
+                    try { showAnchorEmojiForWord(anchor); } catch (e) { }
+                }
                 u.onend = () => { idx++; setTimeout(speakNext, 60); };
                 speechSynthesis.speak(u);
             };
             speakNext();
+        }
+
+        // Display an animated emoji for the phonics anchor word near the letter on screen
+        function showAnchorEmojiForWord(word) {
+            if (!word) return;
+            const key = String(word).toLowerCase().trim();
+            const emoji = anchorEmojiMap[key];
+            if (!emoji) return;
+
+            // Respect reduced motion/focus mode by showing a brief, gentle display
+            const minimal = !!(typeof reduceMotionEnabled !== 'undefined' && reduceMotionEnabled) ||
+                            !!(typeof focusModeEnabled !== 'undefined' && focusModeEnabled);
+
+            const target = document.querySelector('.phonics-letter');
+            const rect = target ? target.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
+            const originX = rect.left + (rect.width || 0) / 2;
+            const originY = rect.top + (rect.height || 0) / 2;
+
+            const el = document.createElement('div');
+            el.setAttribute('aria-hidden', 'true');
+            el.textContent = emoji;
+            const sizePx = Math.min(120, Math.max(64, Math.floor(window.innerWidth * 0.15)));
+            el.style.cssText = [
+                'position:fixed',
+                `left:${originX}px`,
+                `top:${originY}px`,
+                'transform:translate(-50%, -50%) scale(0.7)',
+                `font-size:${sizePx}px`,
+                'z-index:10001',
+                'pointer-events:none',
+                'opacity:0',
+                'will-change:transform,opacity',
+                'font-family:-apple-system, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
+            ].join(';');
+            document.body.appendChild(el);
+
+            // Minimal gentle fade if motion is reduced
+            if (minimal || typeof el.animate !== 'function') {
+                try {
+                    el.style.transition = 'opacity 200ms ease-out';
+                    el.style.opacity = '1';
+                    setTimeout(() => { el.style.opacity = '0'; }, 700);
+                    setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 950);
+                } catch (e) {
+                    setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 800);
+                }
+                return;
+            }
+
+            // Playful pop + float animation using WAAPI
+            try {
+                const anim = el.animate([
+                    { transform: 'translate(-50%, -50%) scale(0.7)', opacity: 0 },
+                    { transform: 'translate(-50%, -50%) scale(1.15)', opacity: 1, offset: 0.22 },
+                    { transform: 'translate(-50%, -62%) scale(1.0)', opacity: 1, offset: 0.7 },
+                    { transform: 'translate(-50%, -74%) scale(1.0)', opacity: 0 }
+                ], {
+                    duration: 1100,
+                    easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                    fill: 'forwards'
+                });
+                anim.onfinish = () => { if (el && el.parentNode) el.parentNode.removeChild(el); };
+            } catch (e) {
+                setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 1200);
+            }
         }
 
         function updateScoreDisplay() {
@@ -9887,7 +9987,7 @@
             const pathLength = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += dist(pts[i - 1], pts[i]); return d; };
             const smoothStroke = (s) => { if (s.length < 3) return s.slice(); const out = [s[0]]; for (let i = 1; i < s.length - 1; i++) out.push({ x: (s[i - 1].x + s[i].x + s[i + 1].x) / 3, y: (s[i - 1].y + s[i].y + s[i + 1].y) / 3 }); out.push(s[s.length - 1]); return out; };
             const normalizeStrokesToBox = (strokes) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = 100 / Math.max(w, h), ox = bb.minX, oy = bb.minY; return strokes.map(s => s.map(p => ({ x: (p.x - ox) * scale, y: (p.y - oy) * scale }))); };
-            const N_RESAMPLE = 64, ROT_MAX_DEG = 45, ROT_STEP_DEG = 4, CLOUD_NORM = 28;
+            const N_RESAMPLE = 80, ROT_MAX_DEG = 30, ROT_STEP_DEG = 4, CLOUD_NORM = 24;
             const resampleStroke = (pts, n) => { if (pts.length === 0) return []; const I = pathLength(pts) / (n - 1); let D = 0, out = [{ ...pts[0] }]; for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], L = dist(a, b); if (!L) continue; while (D + L >= I) { const t = (I - D) / L; const q = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) }; out.push(q); pts.splice(i, 0, q); D = 0; break; } D += L; } if (out.length < n) out.push({ ...pts[pts.length - 1] }); return out.length === n ? out : (out.length > n ? out.slice(0, n) : out); };
             const centroid = (pts) => { let cx = 0, cy = 0; for (const p of pts) { cx += p.x; cy += p.y; } return { x: cx / pts.length, y: cy / pts.length }; };
             const rotatePoints = (pts, rad) => { const c = centroid(pts), cs = Math.cos(rad), sn = Math.sin(rad); return pts.map(p => ({ x: (p.x - c.x) * cs - (p.y - c.y) * sn + c.x, y: (p.x - c.x) * sn + (p.y - c.y) * cs + c.y })); };
@@ -9977,8 +10077,8 @@
                 const s = C.tmplCache[L]; if (!s) continue;
                 const d = greedyCloudMatch(userCloud, s.cloud);
                 const cs = 1 - clamp(d / CLOUD_NORM, 0, 1);
-                const vv = iou(userNorm, s.strokesNorm, 56, 16);
-                const comb = 0.7 * cs + 0.3 * vv;
+                const vv = iou(userNorm, s.strokesNorm, 60, 14);
+                const comb = 0.75 * cs + 0.25 * vv;
                 if (comb > bestOtherClassical) bestOtherClassical = comb;
             }
             const classicalMargin = classicalScore - bestOtherClassical;
@@ -10008,7 +10108,7 @@
             const crossbarOK = hasMidCrossbar(userNorm);
 
             // Blend decision
-            const BASE_ACCEPT = 0.42;
+            const BASE_ACCEPT = 0.46;
             const LETTER_EASING = new Map([
                 ...['S','s','G','g','e','B','R','W','w','M','m','K','k'].map(L => [L, -0.06]),
                 ...['l','I','t','T','v','V'].map(L => [L, +0.02])
@@ -10017,17 +10117,17 @@
             let acceptThresh = BASE_ACCEPT + easing;
             let finalScore = classicalScore;
             if (deepOk) {
-                finalScore = 0.50 * classicalScore + 0.50 * deepScore;
-                if (deepMargin >= 0.06) acceptThresh -= 0.03;
-                if (deepScore >= 0.74) acceptThresh = Math.min(acceptThresh, 0.46);
+                finalScore = 0.55 * classicalScore + 0.45 * deepScore;
+                if (deepMargin >= 0.08) acceptThresh -= 0.02;
+                if (deepScore >= 0.78) acceptThresh = Math.min(acceptThresh, 0.46);
             }
-            if (classicalMargin >= 0.06) acceptThresh -= 0.02;
+            if (classicalMargin >= 0.08) acceptThresh -= 0.02;
             if (needDot && !dotOK) acceptThresh += 0.02;
             if (needCrossbar && !crossbarOK) acceptThresh += 0.01;
-            acceptThresh = clamp(acceptThresh, 0.34, 0.52);
+            acceptThresh = clamp(acceptThresh, 0.40, 0.58);
 
-            const bothBad = false;
-            const passed = (finalScore >= acceptThresh || (finalScore >= 0.38 && (classicalMargin >= 0.03 || deepMargin >= 0.03)));
+            const bothBad = (classicalScore < 0.36) && (!deepOk || deepScore < 0.40);
+            const passed = (!bothBad) && (finalScore >= acceptThresh || (finalScore >= 0.44 && (classicalMargin >= 0.05 || deepMargin >= 0.05)));
 
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
             if (passed) {
