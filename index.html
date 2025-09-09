@@ -10349,6 +10349,10 @@
                 (cloudSim >= 0.24 || classicalScore >= 0.26 || visual >= 0.18 || (deepOk && deepScore >= 0.54)));
             const meetsEasyGate = easyCloud || easyClassical || easyIoU || easyDeep || extraLenient;
             let passed = meetsEasyGate || (finalScore >= acceptThresh);
+            // Generic guard: if another letter dominates the target by a clear margin, reject
+            const wrongDominatesClassical = (bestOtherClassical - classicalScore) > 0.08;
+            const wrongDominatesDeep = deepOk && (deepMargin < -0.10);
+            if (passed && (wrongDominatesClassical || wrongDominatesDeep)) passed = false;
             // Minimal shape guard: loop-like letters should overlap template at least a bit (prevents 'X' for 'O')
             if (passed) {
                 const loopish = new Set(['o','O','Q','q','g','G','a','A','d','D','p','P','b','B']);
