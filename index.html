@@ -1474,6 +1474,32 @@
             overscroll-behavior: contain;
         }
 
+        /* Polished scrollbars scoped to settings modal */
+        .settings-content::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .settings-content::-webkit-scrollbar-track {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(17, 24, 39, 0.04) 100%);
+            border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+        }
+
+        .settings-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--gray-300), var(--gray-400));
+            border-radius: 9999px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .settings-content:hover::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+        }
+
+        /* Firefox */
+        .settings-content {
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary) rgba(17, 24, 39, 0.06);
+        }
+
         @keyframes modalSlideUp {
             from {
                 transform: translateY(20px) scale(0.98);
@@ -1909,6 +1935,25 @@
             overscroll-behavior: contain;
         }
 
+        /* Polished scrollbars scoped to achievements overlay */
+        .achievement-modal::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .achievement-modal::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .achievement-modal::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #6b7280, #4b5563);
+            border-radius: 9999px;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+        }
+
+        .achievement-modal:hover::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #7c3aed, #4f46e5);
+        }
+
         .achievement-content {
             background: linear-gradient(135deg, #ffffff, #f9fafb);
             padding: 30px;
@@ -1919,6 +1964,32 @@
             overflow-y: auto;
             box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
             animation: achievementSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Polished scrollbars scoped to achievements content */
+        .achievement-content::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .achievement-content::-webkit-scrollbar-track {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(17, 24, 39, 0.04) 100%);
+            border-radius: 0 0 24px 24px;
+        }
+
+        .achievement-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--gray-300), var(--gray-400));
+            border-radius: 9999px;
+            border: 2px solid rgba(255, 255, 255, 0.9);
+        }
+
+        .achievement-content:hover::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--secondary), var(--secondary-dark));
+        }
+
+        /* Firefox */
+        .achievement-content {
+            scrollbar-width: thin;
+            scrollbar-color: var(--secondary) rgba(17, 24, 39, 0.06);
         }
 
         @keyframes achievementSlideIn {
@@ -2056,6 +2127,23 @@
             padding: 20px;
             border-radius: 20px;
             margin-bottom: 20px;
+        }
+
+        /* Mastery pie container and canvas styling */
+        .mastery-pie-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 0 18px;
+        }
+
+        #masteryPie {
+            display: block;
+            width: 180px;
+            height: 180px;
+            border-radius: 24px;
+            background: radial-gradient(120px 120px at 50% 40%, rgba(118, 75, 162, 0.10), rgba(102, 126, 234, 0.06) 60%, rgba(255, 255, 255, 0) 61%);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
         .stat-row {
@@ -4608,8 +4696,8 @@
                 </div>
 
                 <div class="achievement-stats">
-                    <div style="display:flex; align-items:center; justify-content:center; padding: 4px 0 16px;">
-                        <canvas id="masteryPie" width="200" height="200" aria-label="Letters mastered progress" style="display:block; width:180px; height:180px;"></canvas>
+                    <div class="mastery-pie-wrap">
+                        <canvas id="masteryPie" width="200" height="200" aria-label="Letters mastered progress"></canvas>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Total Stars Earned:</span>
@@ -8923,37 +9011,101 @@
             const mastered = Math.max(0, Math.min(total, lettersMastered.size || 0));
             const progress = mastered / total;
 
-            // Clear
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Handle HiDPI crispness based on CSS size
+            const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+            const cssW = canvas.clientWidth || 200;
+            const cssH = canvas.clientHeight || 200;
+            const targetW = Math.round(cssW * dpr);
+            const targetH = Math.round(cssH * dpr);
+            if (canvas.width !== targetW || canvas.height !== targetH) {
+                canvas.width = targetW;
+                canvas.height = targetH;
+            }
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(dpr, dpr);
 
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const r = Math.min(cx, cy) - 10;
+            // Clear in CSS pixel space
+            ctx.clearRect(0, 0, cssW, cssH);
+
+            const size = Math.min(cssW, cssH);
+            const cx = size / 2;
+            const cy = size / 2;
+            const ringWidth = 18;
+            const r = Math.min(cx, cy) - (ringWidth / 2) - 6;
 
             // Background ring
             ctx.beginPath();
             ctx.arc(cx, cy, r, 0, Math.PI * 2);
             ctx.strokeStyle = '#e5e7eb';
-            ctx.lineWidth = 18;
+            ctx.lineWidth = ringWidth;
             ctx.lineCap = 'round';
             ctx.stroke();
 
-            // Progress arc
-            if (progress > 0) {
+            // Subtle ticks (26 letters)
+            ctx.save();
+            ctx.strokeStyle = 'rgba(107,114,128,0.28)';
+            ctx.lineWidth = 1.5;
+            const tickCount = 26;
+            for (let i = 0; i < tickCount; i++) {
+                const a = -Math.PI / 2 + (Math.PI * 2 * i) / tickCount;
+                const cos = Math.cos(a), sin = Math.sin(a);
+                const inner = r - ringWidth * 0.45;
+                const outer = r + ringWidth * 0.45;
                 ctx.beginPath();
-                ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress, false);
-                ctx.strokeStyle = '#10b981';
-                ctx.lineWidth = 18;
-                ctx.lineCap = 'round';
+                ctx.moveTo(cx + cos * inner, cy + sin * inner);
+                ctx.lineTo(cx + cos * outer, cy + sin * outer);
                 ctx.stroke();
+            }
+            ctx.restore();
+
+            // Progress arc with brand gradient and soft glow
+            if (progress > 0) {
+                const start = -Math.PI / 2;
+                const end = start + Math.PI * 2 * progress;
+                const grad = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+                grad.addColorStop(0, '#667eea');
+                grad.addColorStop(1, '#764ba2');
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, start, end, false);
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = ringWidth;
+                ctx.lineCap = 'round';
+                ctx.shadowColor = 'rgba(118, 75, 162, 0.35)';
+                ctx.shadowBlur = 8;
+                ctx.stroke();
+                ctx.restore();
+
+                // Endcap dot
+                const ex = cx + Math.cos(end) * r;
+                const ey = cy + Math.sin(end) * r;
+                ctx.save();
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(ex, ey, Math.max(4, ringWidth * 0.32), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+                ctx.stroke();
+                ctx.restore();
             }
 
             // Center text
-            ctx.fillStyle = '#111827';
-            ctx.font = 'bold 20px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`${mastered}/26`, cx, cy);
+            // Value
+            const valueY = cy - 4;
+            const textGrad = ctx.createLinearGradient(cx - 20, valueY - 10, cx + 20, valueY + 10);
+            textGrad.addColorStop(0, '#667eea');
+            textGrad.addColorStop(1, '#764ba2');
+            ctx.font = '600 22px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+            ctx.fillStyle = textGrad;
+            ctx.fillText(`${mastered}/26`, cx, valueY);
+            // Label
+            ctx.font = '600 11px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+            ctx.fillStyle = '#6b7280';
+            ctx.fillText('MASTERED', cx, valueY + 18);
         }
 
         // Multiplayer Functions
