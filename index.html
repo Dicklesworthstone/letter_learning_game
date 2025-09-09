@@ -701,12 +701,14 @@
         .game-area:has(.start-screen) {
             justify-content: flex-start;
             padding-top: clamp(8px, 2vh, 16px);
+            /* Ensure CTA isn't clipped by rounded container + safe area */
+            padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
         }
 
         /* When a prominent sound button is present, reserve top space so nothing overlaps it */
         .game-area.with-sound {
             /* Minimal top padding – speaker floats over the grid */
-            padding-top: clamp(12px, 2vmin, 20px);
+            padding-top: clamp(8px, 1.8vmin, 16px);
         }
 
         /* Keep speaker visible using a separate composited layer */
@@ -764,8 +766,8 @@
 
         /* Enhanced Sound Button */
         .sound-btn {
-            width: clamp(84px, 18vmin, 120px);
-            height: clamp(84px, 18vmin, 120px);
+            width: clamp(80px, 17.5vmin, 118px);
+            height: clamp(80px, 17.5vmin, 118px);
             border-radius: 50%;
             background: linear-gradient(135deg, white 0%, var(--gray-50) 100%);
             border: none;
@@ -875,11 +877,11 @@
         .options {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: clamp(10px, 2.6vmin, 18px);
+            gap: clamp(8px, 2.4vmin, 16px);
             width: 100%;
             max-width: 360px;
             /* create space under floating speaker so boxes are never covered */
-            padding-top: clamp(44px, 11vmin, 80px);
+            padding-top: clamp(36px, 9.5vmin, 72px);
         }
 
         .option-btn {
@@ -1387,7 +1389,8 @@
             animation: bounce 2s infinite;
             box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+            /* Add a comfortable breathing room below CTA on iPhone */
+            margin-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
         }
 
         .start-btn:hover {
@@ -2767,9 +2770,12 @@
 
         .formation-controls {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             margin-top: 20px;
             justify-content: center;
+            width: 100%;
+            max-width: 350px; /* align with main controls width */
+            align-items: stretch;
         }
 
         .formation-btn {
@@ -2781,6 +2787,8 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1; /* equal widths */
+            text-align: center;
         }
 
         .formation-btn:hover {
@@ -4148,6 +4156,17 @@
             .mode-selector {
                 padding: 6px 10px;
             }
+        }
+
+        /* Compact portrait (most phones): tighten spacing so 2 rows fit cleanly */
+        @media (max-width: 430px) and (orientation: portrait) {
+            .score-panel { padding: 12px 16px; }
+            .mode-selector { padding: 10px 12px; gap: 8px; }
+            .game-area { padding: 8px 12px 12px; padding-bottom: max(16px, calc(12px + env(safe-area-inset-bottom, 0px))); }
+            .game-area.with-sound { padding-top: clamp(6px, 1.6vmin, 12px); }
+            .game-area.with-sound .sound-btn { width: clamp(64px, 14vmin, 96px); height: clamp(64px, 14vmin, 96px); transform: translate(-50%, -61%); }
+            .options { gap: clamp(8px, 2vmin, 14px); padding-top: clamp(28px, 7.5vmin, 52px); max-width: 340px; }
+            .instruction { font-size: clamp(14px, 2.2vmin, 18px); margin: 4px 0 6px; }
         }
     </style>
 </head>
@@ -6383,8 +6402,9 @@
 
             if (!letterData) {
                 // Fallback for letters without formation data
+                const size = Math.min(guide.clientWidth || 300, guide.clientHeight || 300);
                 guide.innerHTML = `
-                    <text x="175" y="175" font-size="200" fill="#667eea" opacity="0.2" text-anchor="middle" dominant-baseline="middle">
+                    <text x="50%" y="50%" font-size="${Math.floor(size * 0.7)}" fill="#667eea" opacity="0.25" text-anchor="middle" dominant-baseline="middle">
                         ${currentLetter}
                     </text>
                 `;
@@ -6392,6 +6412,12 @@
             }
 
             guide.innerHTML = '';
+
+            // Scale paths to fit within viewBox proportionally (letter data is on 100x100 grid)
+            const bboxSize = Math.min(guide.clientWidth || 300, guide.clientHeight || 300);
+            guide.setAttribute('viewBox', '0 0 100 100');
+            guide.style.width = '100%';
+            guide.style.height = '100%';
 
             letterData.forEach((stroke, index) => {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -6407,8 +6433,9 @@
                     const number = document.createElement('div');
                     number.className = 'stroke-number';
                     number.textContent = stroke.strokes;
-                    number.style.left = `${startX * 5}px`;
-                    number.style.top = `${startY * 5}px`;
+                    // Position using percentage within the container to keep inside bounds
+                    number.style.left = `${startX}%`;
+                    number.style.top = `${startY}%`;
                     number.style.animationDelay = `${index * 2}s`;
                     guide.parentElement.appendChild(number);
                 }
@@ -6422,6 +6449,8 @@
             guide.innerHTML = '';
             const numbers = document.querySelectorAll('.stroke-number');
             numbers.forEach(n => n.remove());
+            // remove viewBox so future resizes reset cleanly
+            guide.removeAttribute('viewBox');
         }
 
         function setupCanvas() {
@@ -6591,10 +6620,11 @@
                 setTimeout(() => {
                     checkRoundCompletion();
                     const modal = document.getElementById('roundModal');
+                    // If a round modal did not open, proceed to the next tracing letter automatically
                     if (!modal || modal.style.display === 'none') {
                         startDrawGame();
                     }
-                }, 2500);
+                }, 1800);
             } else {
                 const msg = matched > 0 ? letterData.feedback.incomplete : letterData.feedback.wrong;
                 showFeedback(msg, 'error');
