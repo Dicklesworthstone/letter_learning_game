@@ -10,7 +10,7 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-VL7P50J3HQ"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
+        function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
 
         gtag('config', 'G-VL7P50J3HQ');
@@ -701,7 +701,8 @@
             position: relative;
             padding: 12px 16px 16px;
             padding-bottom: max(28px, calc(28px + env(safe-area-inset-bottom, 0px)));
-            overflow: hidden; /* absolutely no scrolling for kids */
+            overflow: hidden;
+            /* absolutely no scrolling for kids */
             background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(15px) saturate(150%);
             -webkit-backdrop-filter: blur(15px) saturate(150%);
@@ -1108,7 +1109,8 @@
             background: linear-gradient(white, white) padding-box,
                 linear-gradient(90deg, #667eea, #764ba2) border-box;
             border-radius: 25px;
-            overflow: hidden; /* prevent content from bleeding outside rounded corners */
+            overflow: hidden;
+            /* prevent content from bleeding outside rounded corners */
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
@@ -1128,7 +1130,8 @@
             transform: translate(-50%, -50%);
             font-size: 220px;
             color: #667eea;
-            opacity: 0; /* hidden by default; will fade in as hint */
+            opacity: 0;
+            /* hidden by default; will fade in as hint */
             transition: opacity 0.6s linear;
             pointer-events: none;
             font-family: 'Georgia', serif;
@@ -1186,7 +1189,8 @@
             color: white;
             padding: 24px 48px;
             border-radius: var(--radius-xl);
-            z-index: 20000; /* ensure feedback appears above modals/dashboards */
+            z-index: 20000;
+            /* ensure feedback appears above modals/dashboards */
             display: none;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
@@ -1302,7 +1306,8 @@
             font-weight: 600;
             animation: fadeIn 0.5s;
             position: relative;
-            z-index: 10050; /* ensure above any warning/flash overlays */
+            z-index: 10050;
+            /* ensure above any warning/flash overlays */
         }
 
         @keyframes fadeIn {
@@ -2944,7 +2949,8 @@
             margin-top: 20px;
             justify-content: center;
             width: 100%;
-            max-width: 350px; /* align with main controls width */
+            max-width: 350px;
+            /* align with main controls width */
             align-items: stretch;
         }
 
@@ -2957,7 +2963,8 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            flex: 1; /* equal widths */
+            flex: 1;
+            /* equal widths */
             text-align: center;
         }
 
@@ -4330,19 +4337,50 @@
 
         /* Compact portrait (most phones): tighten spacing so 2 rows fit cleanly */
         @media (max-width: 430px) and (orientation: portrait) {
-            .score-panel { padding: 12px 16px; }
-            .mode-selector { padding: 10px 12px; gap: 8px; }
-            .game-area { padding: 8px 12px 12px; padding-bottom: max(16px, calc(12px + env(safe-area-inset-bottom, 0px))); }
-            .game-area.with-sound { padding-top: clamp(6px, 1.6vmin, 12px); }
-            .game-area.with-sound .sound-btn { width: clamp(64px, 14vmin, 96px); height: clamp(64px, 14vmin, 96px); transform: translate(-50%, -61%); }
-            .options { gap: clamp(8px, 2vmin, 14px); padding-top: clamp(28px, 7.5vmin, 52px); max-width: 340px; }
-            .instruction { font-size: clamp(14px, 2.2vmin, 18px); margin: 4px 0 6px; }
+            .score-panel {
+                padding: 12px 16px;
+            }
+
+            .mode-selector {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+
+            .game-area {
+                padding: 8px 12px 12px;
+                padding-bottom: max(16px, calc(12px + env(safe-area-inset-bottom, 0px)));
+            }
+
+            .game-area.with-sound {
+                padding-top: clamp(6px, 1.6vmin, 12px);
+            }
+
+            .game-area.with-sound .sound-btn {
+                width: clamp(64px, 14vmin, 96px);
+                height: clamp(64px, 14vmin, 96px);
+                transform: translate(-50%, -61%);
+            }
+
+            .options {
+                gap: clamp(8px, 2vmin, 14px);
+                padding-top: clamp(28px, 7.5vmin, 52px);
+                max-width: 340px;
+            }
+
+            .instruction {
+                font-size: clamp(14px, 2.2vmin, 18px);
+                margin: 4px 0 6px;
+            }
+
             /* Nudge instruction slightly lower when sound button is present to avoid top overlap on iPhone */
-            .game-area.with-sound .instruction { margin-top: clamp(6px, 1.8vmin, 10px); }
+            .game-area.with-sound .instruction {
+                margin-top: clamp(6px, 1.8vmin, 10px);
+            }
         }
 
         /* Desktop layout improvements: only on wide pointer/hover devices (keeps iPhone/mobile unchanged) */
         @media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+
             /* Center and normalize background to avoid right-side banding */
             body {
                 background-position: center center;
@@ -4359,6 +4397,7 @@
                 margin-right: auto;
                 border-radius: 24px;
             }
+
             /* Constrain primary sections and center for symmetry */
             .header,
             .player-selector,
@@ -4536,12 +4575,14 @@
                             <div class="callout-title">Parent Dashboard</div>
                             <div class="callout-subtitle">See progress, trends, and manage learning options.</div>
                         </div>
-                        <button class="parent-cta" onclick="openParentDashboardViaSettings()" aria-label="Open Parent Dashboard">Open</button>
+                        <button class="parent-cta" onclick="openParentDashboardViaSettings()"
+                            aria-label="Open Parent Dashboard">Open</button>
                     </div>
                     <div class="settings-section">
                         <div class="settings-section-title">Basic Settings</div>
                         <div class="setting-group">
-                            <label class="setting-label">Timer <span class="info-tip" title="Set a countdown for each question.">?</span></label>
+                            <label class="setting-label">Timer <span class="info-tip"
+                                    title="Set a countdown for each question.">?</span></label>
                             <div class="toggle-group">
                                 <button class="toggle-btn" id="timerOff" onclick="setTimerMode('off')"
                                     aria-pressed="false" aria-label="Turn timer off">Off</button>
@@ -4550,7 +4591,8 @@
                             </div>
                         </div>
                         <div class="setting-group">
-                            <label class="setting-label">Letters <span class="info-tip" title="Choose which letter case to practice.">?</span></label>
+                            <label class="setting-label">Letters <span class="info-tip"
+                                    title="Choose which letter case to practice.">?</span></label>
                             <div class="toggle-group">
                                 <button class="toggle-btn" id="caseLower" onclick="setCaseMode('lower')"
                                     aria-pressed="false" aria-label="Use lowercase letters">abc</button>
@@ -4561,7 +4603,8 @@
                             </div>
                         </div>
                         <div class="setting-group">
-                            <label class="setting-label">Phonics <span class="info-tip" title="Enable phonics-style prompts and guidance.">?</span></label>
+                            <label class="setting-label">Phonics <span class="info-tip"
+                                    title="Enable phonics-style prompts and guidance.">?</span></label>
                             <div class="toggle-group">
                                 <button class="toggle-btn active" id="phonicsOn" onclick="setPhonicsMode('on')"
                                     aria-pressed="true" aria-label="Enable phonics flow">On</button>
@@ -4570,7 +4613,8 @@
                             </div>
                         </div>
                         <div class="setting-group">
-                            <label class="setting-label">Sound <span class="info-tip" title="Turn game sounds and speech on or off.">?</span></label>
+                            <label class="setting-label">Sound <span class="info-tip"
+                                    title="Turn game sounds and speech on or off.">?</span></label>
                             <div class="toggle-group">
                                 <button class="toggle-btn active" id="soundOn" onclick="setSoundMode('on')"
                                     aria-pressed="true" aria-label="Turn sound on">On</button>
@@ -4601,7 +4645,8 @@
                     <details class="settings-section advanced-settings" open>
                         <summary class="settings-section-title">Advanced Settings</summary>
                         <div class="setting-group">
-                            <label class="setting-label">Voice Recording <span class="info-tip" title="Record the child's voice to practice and compare." >?</span></label>
+                            <label class="setting-label">Voice Recording <span class="info-tip"
+                                    title="Record the child's voice to practice and compare.">?</span></label>
                             <div class="toggle-switch">
                                 <input type="checkbox" id="voiceToggle" onchange="toggleVoiceRecording(this.checked)">
                                 <label for="voiceToggle" class="toggle-switch-label"></label>
@@ -4610,7 +4655,8 @@
                         <div class="setting-group">
                             <label class="setting-label"
                                 style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                                <span>Focus Mode <span class="info-tip" title="Hide distractions to help kids focus.">?</span></span>
+                                <span>Focus Mode <span class="info-tip"
+                                        title="Hide distractions to help kids focus.">?</span></span>
                                 <div class="toggle-switch">
                                     <input type="checkbox" id="focusModeCheck" onchange="toggleFocusMode()">
                                     <label for="focusModeCheck" class="toggle-switch-label"></label>
@@ -4620,7 +4666,8 @@
                         <div class="setting-group">
                             <label class="setting-label"
                                 style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                                <span>High Contrast <span class="info-tip" title="Boost contrast for better visibility.">?</span></span>
+                                <span>High Contrast <span class="info-tip"
+                                        title="Boost contrast for better visibility.">?</span></span>
                                 <div class="toggle-switch">
                                     <input type="checkbox" id="highContrastCheck" onchange="toggleHighContrast()">
                                     <label for="highContrastCheck" class="toggle-switch-label"></label>
@@ -4630,7 +4677,8 @@
                         <div class="setting-group">
                             <label class="setting-label"
                                 style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                                <span>Reduce Motion <span class="info-tip" title="Reduce animations for sensitive users or older devices.">?</span></span>
+                                <span>Reduce Motion <span class="info-tip"
+                                        title="Reduce animations for sensitive users or older devices.">?</span></span>
                                 <div class="toggle-switch">
                                     <input type="checkbox" id="reduceMotionCheck" onchange="toggleReduceMotion()">
                                     <label for="reduceMotionCheck" class="toggle-switch-label"></label>
@@ -4659,7 +4707,8 @@
                             is made freely available to all families.
                         </div>
                         <div class="about-text">
-                            Every child should have free access to quality educational tools without annoying ads and mind-numbing animations!
+                            Every child should have free access to quality educational tools without annoying ads and
+                            mind-numbing animations!
                         </div>
                         <a href="https://github.com/Dicklesworthstone/letter_learning_game" target="_blank"
                             class="github-link">
@@ -4672,14 +4721,20 @@
                         <div class="about-footer">
                             🥳 Reading is FUNdamental! 🥳
                             <div style="margin-top:8px;">
-                                <form action="https://www.paypal.com/donate" method="post" target="_top" style="display:inline-block;">
+                                <form action="https://www.paypal.com/donate" method="post" target="_top"
+                                    style="display:inline-block;">
                                     <input type="hidden" name="business" value="B9JY8A3YAK84J" />
                                     <input type="hidden" name="amount" value="5" />
                                     <input type="hidden" name="no_recurring" value="1" />
-                                    <input type="hidden" name="item_name" value="If you found this app helpful for your child and want to support this work, here is a donation button." />
+                                    <input type="hidden" name="item_name"
+                                        value="If you found this app helpful for your child and want to support this work, here is a donation button." />
                                     <input type="hidden" name="currency_code" value="USD" />
-                                    <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" name="submit" title="Donate (PayPal)" alt="Donate with PayPal button" style="width:128px; height:auto; opacity:0.8; filter:saturate(0.7);" />
-                                    <img alt="" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" style="display:none;" />
+                                    <input type="image"
+                                        src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" name="submit"
+                                        title="Donate (PayPal)" alt="Donate with PayPal button"
+                                        style="width:128px; height:auto; opacity:0.8; filter:saturate(0.7);" />
+                                    <img alt="" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1"
+                                        style="display:none;" />
                                 </form>
                             </div>
                         </div>
@@ -4698,7 +4753,8 @@
 
                 <div class="achievement-stats">
                     <div class="mastery-pie-wrap">
-                        <canvas id="masteryPie" width="200" height="200" aria-label="Letters mastered progress"></canvas>
+                        <canvas id="masteryPie" width="200" height="200"
+                            aria-label="Letters mastered progress"></canvas>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Total Stars Earned:</span>
@@ -4829,8 +4885,10 @@
                         <span>Data Management</span>
                     </div>
                     <div style="display:flex; gap:12px; flex-wrap: wrap;">
-                        <button class="toggle-btn" onclick="resetAllStatistics()" aria-label="Reset all statistics">Reset All Statistics</button>
-                        <button class="toggle-btn" onclick="resetCurrentPlayerStatistics()" aria-label="Reset current player statistics">Reset Current Player</button>
+                        <button class="toggle-btn" onclick="resetAllStatistics()"
+                            aria-label="Reset all statistics">Reset All Statistics</button>
+                        <button class="toggle-btn" onclick="resetCurrentPlayerStatistics()"
+                            aria-label="Reset current player statistics">Reset Current Player</button>
                     </div>
                 </div>
             </div>
@@ -5151,7 +5209,7 @@
         function advanceToNextDrawLetterOnce() {
             if (drawHasAdvanced) return;
             drawHasAdvanced = true;
-            if (drawAdvanceTimeout) { try { clearTimeout(drawAdvanceTimeout); } catch (e) {} drawAdvanceTimeout = null; }
+            if (drawAdvanceTimeout) { try { clearTimeout(drawAdvanceTimeout); } catch (e) { } drawAdvanceTimeout = null; }
             const modal = document.getElementById('roundModal');
             const isModalVisible = modal ? window.getComputedStyle(modal).display !== 'none' : false;
             if (!isModalVisible) {
@@ -5767,7 +5825,7 @@
 
             // Respect reduced motion/focus mode by showing a brief, gentle display
             const minimal = !!(typeof reduceMotionEnabled !== 'undefined' && reduceMotionEnabled) ||
-                            !!(typeof focusModeEnabled !== 'undefined' && focusModeEnabled);
+                !!(typeof focusModeEnabled !== 'undefined' && focusModeEnabled);
 
             const target = document.querySelector('.phonics-letter');
             const rect = target ? target.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
@@ -5956,7 +6014,7 @@
             score = Math.max(0, score - 10);
             trackLetterError(currentLetter);
             // Treat timeout as an incorrect attempt for SRS scheduling and per-letter scoring
-            try { updateLetterPerformance(currentLetter, false, 0, -10); } catch (e) {}
+            try { updateLetterPerformance(currentLetter, false, 0, -10); } catch (e) { }
             showFeedback('Too slow! ⏰', 'error');
             createWrongEffect();
             setTimeout(() => { isProcessing = false; startIdentifyGame(); }, 2000);
@@ -6092,7 +6150,7 @@
                 }
             } catch (e) {
                 // Fallback if anything goes wrong
-                try { createConfetti(element); } catch (_) {}
+                try { createConfetti(element); } catch (_) { }
             }
         }
 
@@ -6155,7 +6213,7 @@
             const layer = createCelebrationLayer();
             const ring = document.createElement('div');
             const size = 120;
-            ring.style.cssText = `position:absolute; left:${x - size/2}px; top:${y - size/2}px; width:${size}px; height:${size}px; border-radius:50%; border: 4px solid ${color}; opacity: 0.9;`;
+            ring.style.cssText = `position:absolute; left:${x - size / 2}px; top:${y - size / 2}px; width:${size}px; height:${size}px; border-radius:50%; border: 4px solid ${color}; opacity: 0.9;`;
             layer.appendChild(ring);
             if (typeof gsap !== 'undefined') {
                 gsap.fromTo(ring, { scale: 0.2, opacity: 0.9 }, { scale: maxScale, opacity: 0, duration: duration / 1000, ease: 'sine.out', onComplete: () => layer.remove() });
@@ -6163,41 +6221,41 @@
                 animateWithRAF(duration, (e) => {
                     ring.style.transform = `scale(${0.2 + (maxScale - 0.2) * e})`;
                     ring.style.opacity = String(0.9 * (1 - e));
-                }, () => { try { layer.remove(); } catch (_) {} });
+                }, () => { try { layer.remove(); } catch (_) { } });
             }
         }
 
         // Letter-specific visual theme configuration
         function getLetterTheme(letter) {
             const themes = {
-                'A': { base: '#60a5fa', accent: '#93c5fd', emojis: ['☁️','✨','✈️'] },
-                'B': { base: '#f472b6', accent: '#fb7185', emojis: ['🎈','✨'] },
-                'C': { base: '#f59e0b', accent: '#fbbf24', emojis: ['🎉','🎊','✨'] },
-                'D': { base: '#93c5fd', accent: '#a78bfa', emojis: ['🥁','🎵'] },
-                'E': { base: '#fcd34d', accent: '#fde68a', emojis: ['⭐','🌟'] },
-                'F': { base: '#ef4444', accent: '#f97316', emojis: ['🎆','🎇','✨'] },
-                'G': { base: '#f59e0b', accent: '#fbbf24', emojis: ['🎸','🎵'] },
-                'H': { base: '#ef4444', accent: '#f472b6', emojis: ['❤️','💖'] },
-                'I': { base: '#93c5fd', accent: '#bfdbfe', emojis: ['❄️','✨'] },
-                'J': { base: '#06b6d4', accent: '#22d3ee', emojis: ['🪼','✨','💧'] },
-                'K': { base: '#34d399', accent: '#10b981', emojis: ['🪁','✨'] },
-                'L': { base: '#a78bfa', accent: '#8b5cf6', emojis: ['⚡','✨'] },
-                'M': { base: '#f472b6', accent: '#e879f9', emojis: ['🪄','✨'] },
-                'N': { base: '#0ea5e9', accent: '#38bdf8', emojis: ['🌙','⭐'] },
-                'O': { base: '#22d3ee', accent: '#67e8f9', emojis: ['🫧','✨'] },
-                'P': { base: '#f97316', accent: '#fdba74', emojis: ['🍿','✨'] },
-                'Q': { base: '#eab308', accent: '#fde047', emojis: ['👑','✨'] },
-                'R': { base: '#ef4444', accent: '#f59e0b', emojis: ['🌈','✨'] },
-                'S': { base: '#10b981', accent: '#34d399', emojis: ['🐍','🟢'] },
-                'T': { base: '#f59e0b', accent: '#fbbf24', emojis: ['🏆','✨'] },
-                'U': { base: '#06b6d4', accent: '#22d3ee', emojis: ['☔','💧'] },
-                'V': { base: '#f472b6', accent: '#e879f9', emojis: ['✌️','✨'] },
-                'W': { base: '#60a5fa', accent: '#93c5fd', emojis: ['🌊','💦'] },
-                'X': { base: '#ef4444', accent: '#f59e0b', emojis: ['❌','💥'] },
-                'Y': { base: '#a78bfa', accent: '#8b5cf6', emojis: ['🪀','✨'] },
-                'Z': { base: '#0ea5e9', accent: '#38bdf8', emojis: ['🚀','🔥'] }
+                'A': { base: '#60a5fa', accent: '#93c5fd', emojis: ['☁️', '✨', '✈️'] },
+                'B': { base: '#f472b6', accent: '#fb7185', emojis: ['🎈', '✨'] },
+                'C': { base: '#f59e0b', accent: '#fbbf24', emojis: ['🎉', '🎊', '✨'] },
+                'D': { base: '#93c5fd', accent: '#a78bfa', emojis: ['🥁', '🎵'] },
+                'E': { base: '#fcd34d', accent: '#fde68a', emojis: ['⭐', '🌟'] },
+                'F': { base: '#ef4444', accent: '#f97316', emojis: ['🎆', '🎇', '✨'] },
+                'G': { base: '#f59e0b', accent: '#fbbf24', emojis: ['🎸', '🎵'] },
+                'H': { base: '#ef4444', accent: '#f472b6', emojis: ['❤️', '💖'] },
+                'I': { base: '#93c5fd', accent: '#bfdbfe', emojis: ['❄️', '✨'] },
+                'J': { base: '#06b6d4', accent: '#22d3ee', emojis: ['🪼', '✨', '💧'] },
+                'K': { base: '#34d399', accent: '#10b981', emojis: ['🪁', '✨'] },
+                'L': { base: '#a78bfa', accent: '#8b5cf6', emojis: ['⚡', '✨'] },
+                'M': { base: '#f472b6', accent: '#e879f9', emojis: ['🪄', '✨'] },
+                'N': { base: '#0ea5e9', accent: '#38bdf8', emojis: ['🌙', '⭐'] },
+                'O': { base: '#22d3ee', accent: '#67e8f9', emojis: ['🫧', '✨'] },
+                'P': { base: '#f97316', accent: '#fdba74', emojis: ['🍿', '✨'] },
+                'Q': { base: '#eab308', accent: '#fde047', emojis: ['👑', '✨'] },
+                'R': { base: '#ef4444', accent: '#f59e0b', emojis: ['🌈', '✨'] },
+                'S': { base: '#10b981', accent: '#34d399', emojis: ['🐍', '🟢'] },
+                'T': { base: '#f59e0b', accent: '#fbbf24', emojis: ['🏆', '✨'] },
+                'U': { base: '#06b6d4', accent: '#22d3ee', emojis: ['☔', '💧'] },
+                'V': { base: '#f472b6', accent: '#e879f9', emojis: ['✌️', '✨'] },
+                'W': { base: '#60a5fa', accent: '#93c5fd', emojis: ['🌊', '💦'] },
+                'X': { base: '#ef4444', accent: '#f59e0b', emojis: ['❌', '💥'] },
+                'Y': { base: '#a78bfa', accent: '#8b5cf6', emojis: ['🪀', '✨'] },
+                'Z': { base: '#0ea5e9', accent: '#38bdf8', emojis: ['🚀', '🔥'] }
             };
-            return themes[letter] || { base: '#f472b6', accent: '#fbcfe8', emojis: ['✨','🎉'] };
+            return themes[letter] || { base: '#f472b6', accent: '#fbcfe8', emojis: ['✨', '🎉'] };
         }
 
         // Big hero burst around the selected letter location
@@ -6207,7 +6265,7 @@
 
             const size = 160;
             const ring = document.createElement('div');
-            ring.style.cssText = `position:absolute; left:${origin.x - size/2}px; top:${origin.y - size/2}px; width:${size}px; height:${size}px; border-radius:50%; background: radial-gradient(circle at 50% 50%, ${theme.accent}b3 0%, ${theme.base}66 55%, transparent 70%); filter: blur(1px); opacity:0;`;
+            ring.style.cssText = `position:absolute; left:${origin.x - size / 2}px; top:${origin.y - size / 2}px; width:${size}px; height:${size}px; border-radius:50%; background: radial-gradient(circle at 50% 50%, ${theme.accent}b3 0%, ${theme.base}66 55%, transparent 70%); filter: blur(1px); opacity:0;`;
             layer.appendChild(ring);
 
             const big = document.createElement('div');
@@ -6266,7 +6324,7 @@
             if (typeof gsap !== 'undefined') {
                 const tl = gsap.timeline();
                 tl.fromTo(big, { scale: 0, rotation: -10, opacity: 0 }, { scale: 1.2, rotation: 0, opacity: 1, duration: 0.5, ease: 'back.out(1.8)' })
-                  .to(big, { scale: 1, duration: 0.2, ease: 'power1.out' }, '-=0.05');
+                    .to(big, { scale: 1, duration: 0.2, ease: 'power1.out' }, '-=0.05');
                 gsap.fromTo(ring, { scale: 0.2, opacity: 0.6 }, { scale: 1.6, opacity: 0, duration: 0.8, ease: 'sine.out' });
             } else {
                 animateWithRAF(700, (e) => {
@@ -6836,7 +6894,7 @@
             }
             for (let i = 0; i < 6; i++) {
                 const note = document.createElement('span');
-                note.textContent = ['🎵','🎶'][i % 2];
+                note.textContent = ['🎵', '🎶'][i % 2];
                 note.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${18 + Math.random() * 10}px;`;
                 layer.appendChild(note);
                 const dx = (Math.random() * 160 - 80);
@@ -6861,7 +6919,7 @@
             for (let i = 0; i < count; i++) {
                 const heart = document.createElement('span');
                 heart.textContent = i % 2 === 0 ? '❤️' : '💖';
-                heart.style.cssText = `position:absolute; left:${origin.x + (Math.random()*160-80)}px; top:${origin.y - 120}px; font-size:${20 + Math.random() * 16}px;`;
+                heart.style.cssText = `position:absolute; left:${origin.x + (Math.random() * 160 - 80)}px; top:${origin.y - 120}px; font-size:${20 + Math.random() * 16}px;`;
                 layer.appendChild(heart);
                 const dy = 200 + Math.random() * 120;
                 const duration = 1200 + Math.random() * 500;
@@ -7002,7 +7060,7 @@
             for (let i = 0; i < 8; i++) {
                 const star = document.createElement('span');
                 star.textContent = '⭐';
-                star.style.cssText = `position:absolute; left:${origin.x + (Math.random()*200-100)}px; top:${origin.y - 120 + (Math.random()*60-30)}px; font-size:${14 + Math.random() * 10}px;`;
+                star.style.cssText = `position:absolute; left:${origin.x + (Math.random() * 200 - 100)}px; top:${origin.y - 120 + (Math.random() * 60 - 30)}px; font-size:${14 + Math.random() * 10}px;`;
                 layer.appendChild(star);
                 const dur = 1000 + Math.random() * 400;
                 if (typeof gsap !== 'undefined') {
@@ -7072,7 +7130,7 @@
             for (let i = 0; i < 10; i++) {
                 const drop = document.createElement('span');
                 drop.textContent = '💧';
-                drop.style.cssText = `position:absolute; left:${origin.x + (Math.random()*120-60)}px; top:${origin.y - 20}px; font-size:${14 + Math.random() * 8}px;`;
+                drop.style.cssText = `position:absolute; left:${origin.x + (Math.random() * 120 - 60)}px; top:${origin.y - 20}px; font-size:${14 + Math.random() * 8}px;`;
                 layer.appendChild(drop);
                 const dy = 140 + Math.random() * 100;
                 const dur = 900 + Math.random() * 300;
@@ -7481,7 +7539,7 @@
                 let showedExamples = false; // declared early so TTS callback can reference it
                 const scheduleAdvance = () => {
                     // Clear fallback if it was set (e.g., in case TTS onend fires)
-                    if (advanceFallback) { try { clearTimeout(advanceFallback); } catch (e) {} advanceFallback = null; }
+                    if (advanceFallback) { try { clearTimeout(advanceFallback); } catch (e) { } advanceFallback = null; }
                     const baseDelay = phonicsEnabled ? 1500 : 1200;
                     const extraDelay = (!phonicsEnabled && showedExamples) ? 300 : 0;
                     if (phonicsEnabled) {
@@ -8164,7 +8222,7 @@
             clearAllTimers();
             cancelSpeech();
             // Clear any pending auto-advance from prior round
-            if (drawAdvanceTimeout) { try { clearTimeout(drawAdvanceTimeout); } catch (e) {} drawAdvanceTimeout = null; }
+            if (drawAdvanceTimeout) { try { clearTimeout(drawAdvanceTimeout); } catch (e) { } drawAdvanceTimeout = null; }
             drawHasAdvanced = false;
             currentLetter = getRandomLetter();
             // reset hint state
@@ -8222,7 +8280,7 @@
             startIdleHintTimer();
             // Start timing and warm up deep model (optional)
             drawQuestionStartTime = Date.now();
-            try { if (typeof mobilenet !== 'undefined' && typeof tf !== 'undefined') { /* warm */ } } catch (e) {}
+            try { if (typeof mobilenet !== 'undefined' && typeof tf !== 'undefined') { /* warm */ } } catch (e) { }
         }
 
         function resizeDrawLayout() {
@@ -8421,7 +8479,7 @@
             }, 300);
         }
 
-        
+
 
         function getDrawingBounds() {
             if (drawingPoints.length === 0) return { width: 0, height: 0 };
@@ -10317,8 +10375,8 @@
             // Blend decision
             const BASE_ACCEPT = 0.46;
             const LETTER_EASING = new Map([
-                ...['S','s','G','g','Z','z','V','v','N','n','e','B','R','W','w','M','m','K','k'].map(L => [L, -0.06]),
-                ...['l','I','t','T'].map(L => [L, +0.02])
+                ...['S', 's', 'G', 'g', 'Z', 'z', 'V', 'v', 'N', 'n', 'e', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.06]),
+                ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
             let acceptThresh = BASE_ACCEPT + easing;
