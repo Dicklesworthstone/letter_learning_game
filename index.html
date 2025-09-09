@@ -5389,7 +5389,7 @@
             'j': 'juh, juh, juh, as in jump',
             'k': 'kah, kah, kah, as in kite',
             'l': 'luh, luh, luh, as in lion',
-            'm': 'ehm, ehm, ehm, as in moon',
+            'm': 'em, em, em, as in moon',
             'n': 'nuh, nuh, nuh, as in nose',
             'o': 'ah, ah, ah, as in octopus',
             'p': 'puh, puh, puh, as in pig',
@@ -10348,7 +10348,14 @@
             const extraLenient = ((currentLetter === 'Q' || currentLetter === 'q' || currentLetter === 'g' || currentLetter === 'G') &&
                 (cloudSim >= 0.24 || classicalScore >= 0.26 || visual >= 0.18 || (deepOk && deepScore >= 0.54)));
             const meetsEasyGate = easyCloud || easyClassical || easyIoU || easyDeep || extraLenient;
-            const passed = meetsEasyGate || (finalScore >= acceptThresh);
+            let passed = meetsEasyGate || (finalScore >= acceptThresh);
+            // Minimal shape guard: loop-like letters should overlap template at least a bit (prevents 'X' for 'O')
+            if (passed) {
+                const loopish = new Set(['o','O','Q','q','g','G','a','A','d','D','p','P','b','B']);
+                if (loopish.has(currentLetter)) {
+                    if (visual < 0.20) passed = false;
+                }
+            }
 
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
             if (passed) {
