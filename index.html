@@ -649,7 +649,6 @@
                 opacity: 0.8;
             }
         }
-
         @keyframes shake {
 
             0%,
@@ -1292,7 +1291,6 @@
                 transform: translate(-50%, -50%) scale(1) rotate(0deg);
             }
         }
-
         .instruction {
             text-align: center;
             font-size: clamp(16px, 2.6vmin, 20px);
@@ -1940,7 +1938,6 @@
         .achievement-modal::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.06);
         }
-
         .achievement-modal::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, #6b7280, #4b5563);
             border-radius: 9999px;
@@ -3975,7 +3972,6 @@
                 filter: drop-shadow(0 0 40px rgba(251, 191, 36, 0.8));
             }
         }
-
         .streak-milestone-title {
             font-size: 32px;
             font-weight: bold;
@@ -5376,7 +5372,6 @@
 
         // Speech settings
         let speechSupported = 'speechSynthesis' in window;
-
         // Letter collections
         const lowerLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
         const upperLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -10201,7 +10196,7 @@
             const pathLength = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += dist(pts[i - 1], pts[i]); return d; };
             const smoothStroke = (s) => { if (s.length < 3) return s.slice(); const out = [s[0]]; for (let i = 1; i < s.length - 1; i++) out.push({ x: (s[i - 1].x + s[i].x + s[i + 1].x) / 3, y: (s[i - 1].y + s[i].y + s[i + 1].y) / 3 }); out.push(s[s.length - 1]); return out; };
             const normalizeStrokesToBox = (strokes) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = 100 / Math.max(w, h), ox = bb.minX, oy = bb.minY; return strokes.map(s => s.map(p => ({ x: (p.x - ox) * scale, y: (p.y - oy) * scale }))); };
-            const N_RESAMPLE = 64, ROT_MAX_DEG = 45, ROT_STEP_DEG = 4, CLOUD_NORM = 30;
+            const N_RESAMPLE = 48, ROT_MAX_DEG = 60, ROT_STEP_DEG = 4, CLOUD_NORM = 34;
             const resampleStroke = (pts, n) => { if (pts.length === 0) return []; const I = pathLength(pts) / (n - 1); let D = 0, out = [{ ...pts[0] }]; for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], L = dist(a, b); if (!L) continue; while (D + L >= I) { const t = (I - D) / L; const q = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) }; out.push(q); pts.splice(i, 0, q); D = 0; break; } D += L; } if (out.length < n) out.push({ ...pts[pts.length - 1] }); return out.length === n ? out : (out.length > n ? out.slice(0, n) : out); };
             const centroid = (pts) => { let cx = 0, cy = 0; for (const p of pts) { cx += p.x; cy += p.y; } return { x: cx / pts.length, y: cy / pts.length }; };
             const rotatePoints = (pts, rad) => { const c = centroid(pts), cs = Math.cos(rad), sn = Math.sin(rad); return pts.map(p => ({ x: (p.x - c.x) * cs - (p.y - c.y) * sn + c.x, y: (p.x - c.x) * sn + (p.y - c.y) * cs + c.y })); };
@@ -10281,7 +10276,7 @@
             const userCloud = resampleStroke(joinStrokes(userNorm), N_RESAMPLE);
             const meCloudD = greedyCloudMatch(userCloud, tmpl.cloud);
             const cloudSim = 1 - clamp(meCloudD / CLOUD_NORM, 0, 1);
-            const visual = iou(userNorm, tmpl.strokesNorm, 56, 18);
+            const visual = iou(userNorm, tmpl.strokesNorm, 54, 22);
             const classicalScore = 0.75 * cloudSim + 0.25 * visual;
 
             // Best-other classical margin
@@ -10291,7 +10286,7 @@
                 const s = C.tmplCache[L]; if (!s) continue;
                 const d = greedyCloudMatch(userCloud, s.cloud);
                 const cs = 1 - clamp(d / CLOUD_NORM, 0, 1);
-                const vv = iou(userNorm, s.strokesNorm, 56, 18);
+                const vv = iou(userNorm, s.strokesNorm, 54, 22);
                 const comb = 0.75 * cs + 0.25 * vv;
                 if (comb > bestOtherClassical) bestOtherClassical = comb;
             }
@@ -10322,9 +10317,9 @@
             const crossbarOK = hasMidCrossbar(userNorm);
 
             // Blend decision
-            const BASE_ACCEPT = 0.42;
+            const BASE_ACCEPT = 0.36;
             const LETTER_EASING = new Map([
-                ...['S', 's', 'G', 'g', 'Q', 'q', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.07]),
+                ...['S', 's', 'G', 'g', 'Q', 'q', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'E', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.10]),
                 ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
@@ -10334,9 +10329,9 @@
                 // Straight/diagonal-heavy letters should rely more on cloud shape
                 ['V', 0.42], ['v', 0.42], ['W', 0.42], ['w', 0.42], ['N', 0.42], ['n', 0.40], ['M', 0.40], ['m', 0.40], ['Z', 0.42], ['z', 0.42],
                 // Curvy letters get a slightly lower floor
-                ['S', 0.38], ['s', 0.38], ['G', 0.38], ['g', 0.38], ['Q', 0.38], ['q', 0.38], ['e', 0.36]
+                ['S', 0.34], ['s', 0.34], ['G', 0.34], ['g', 0.34], ['Q', 0.34], ['q', 0.34], ['E', 0.34], ['e', 0.34]
             ]);
-            const floor = letterFloors.get(currentLetter) || 0.38;
+            const floor = letterFloors.get(currentLetter) || 0.34;
             let finalScore = classicalScore;
             if (deepOk) {
                 finalScore = 0.55 * classicalScore + 0.45 * deepScore;
@@ -10345,8 +10340,8 @@
             }
             if (classicalMargin >= 0.08) acceptThresh -= 0.02;
             if (needDot && !dotOK) acceptThresh += (currentLetter === 'i' ? 0.01 : 0.02);
-            if (needCrossbar && !crossbarOK) acceptThresh += 0.01;
-            acceptThresh = clamp(acceptThresh, 0.36, 0.54);
+            if (needCrossbar && !crossbarOK) acceptThresh += (currentLetter === 'E' ? 0.005 : 0.01);
+            acceptThresh = clamp(acceptThresh, 0.32, 0.52);
 
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
             const cloudGate = cloudSim >= (floor - 0.10);
