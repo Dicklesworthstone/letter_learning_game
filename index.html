@@ -10208,6 +10208,23 @@
             const hasDotAboveMain = (strokesNorm) => { const { boxes } = analyzeStrokesRaw(strokesNorm); if (boxes.length < 2) return false; const main = boxes.reduce((a, b) => a.area > b.area ? a : b); const dots = boxes.filter(b => b.area < main.area * 0.12); const mainTop = main.minY + main.height * 0.2; return dots.some(d => d.maxY < mainTop); };
             const hasMidCrossbar = (strokesNorm) => { const bb = bboxOfStrokes(strokesNorm); const y1 = bb.minY + bb.height * 0.35, y2 = bb.minY + bb.height * 0.65; let horiz = 0, total = 0; for (const s of strokesNorm) { for (let i = 1; i < s.length; i++) { total++; const a = s[i - 1], b = s[i]; const dy = Math.abs(b.y - a.y), dx = Math.abs(b.x - a.x); const ymid = (a.y + b.y) / 2; if (dx > dy * 2 && ymid >= y1 && ymid <= y2) horiz++; } } return horiz >= Math.max(2, Math.floor(total * 0.06)); };
             const looksLikeScribble = (strokes, canvas) => { const { bb, totalLen } = analyzeStrokesRaw(strokes); const lenRatio = totalLen / (Math.max(1, Math.max(bb.width, bb.height))); const tiny = false; return (lenRatio > 28); };
+            // Simple cross (X-like) detector to stop X from passing for many letters
+            const looksLikeCross = (strokesNorm) => {
+                if (!strokesNorm || strokesNorm.length < 2) return false;
+                const strokeWithLen = strokesNorm.map(s => ({ s, L: pathLength(s) })).sort((a,b)=>b.L-a.L);
+                const a = strokeWithLen[0], b = strokeWithLen[1];
+                if (!a || !b || a.L < 20 || b.L < 20) return false;
+                const endAng = (st) => { const p0 = st[0], p1 = st[st.length-1]; let deg = Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180/Math.PI; deg = (deg % 180 + 180) % 180; return deg; };
+                const a1 = endAng(a.s), a2 = endAng(b.s);
+                const diff = Math.abs(Math.abs(a1 - a2) - 90);
+                const diagish = (d)=> (Math.min(Math.abs(d-45), Math.abs(d-135)) < 25);
+                if (!(diff < 22 && diagish(a1) && diagish(a2))) return false;
+                const bb = bboxOfStrokes(strokesNorm);
+                const center = (st)=>{ let sx=0, sy=0; const n=st.length; for(const p of st){ sx+=p.x; sy+=p.y; } return {x:sx/n, y:sy/n}; };
+                const ca = center(a.s), cb = center(b.s);
+                const cdx = Math.abs(ca.x - cb.x), cdy = Math.abs(ca.y - cb.y);
+                return (cdx < bb.width * 0.28) && (cdy < bb.height * 0.28);
+            };
             const renderStrokesToCanvas = (strokes, size = 224, lw = 24) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = (size * 0.84) / Math.max(w, h), pad = size * 0.08; const c = document.createElement('canvas'); c.width = size; c.height = size; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, size, size); g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#000'; g.lineWidth = lw; g.fillStyle = '#000'; for (const s of strokes) { if (s.length < 2) { const p = s[0]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; g.beginPath(); g.arc(x, y, lw * 0.45, 0, Math.PI * 2); g.fill(); continue; } g.beginPath(); for (let i = 0; i < s.length; i++) { const p = s[i]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke(); } return c; };
             const l2norm = (arr) => { let s = 0; for (let i = 0; i < arr.length; i++) s += arr[i] * arr[i]; s = Math.sqrt(s) || 1; for (let i = 0; i < arr.length; i++) arr[i] /= s; return arr; };
             const cosine = (a, b) => { let s = 0, n = Math.min(a.length, b.length); for (let i = 0; i < n; i++) s += a[i] * b[i]; return s; };
@@ -10341,18 +10358,16 @@
 
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
             // Middle-ground easy gate: accept on any of these low bars, else blended threshold
-            const easyCloud = cloudSim >= Math.max(0.28, floor - 0.06);
-            const easyClassical = classicalScore >= (acceptThresh - 0.10);
-            const easyIoU = visual >= 0.24;
-            const easyDeep = deepOk && deepScore >= 0.60;
-            const extraLenient = ((currentLetter === 'Q' || currentLetter === 'q' || currentLetter === 'g' || currentLetter === 'G') &&
-                (cloudSim >= 0.24 || classicalScore >= 0.26 || visual >= 0.18 || (deepOk && deepScore >= 0.54)));
-            const meetsEasyGate = easyCloud || easyClassical || easyIoU || easyDeep || extraLenient;
-            let passed = meetsEasyGate || (finalScore >= acceptThresh);
+            // Middle-ground: accept if target is near top among letters (very low absolute bars), else blended threshold
+            const classicalTopOk = (classicalScore + 0.01) >= bestOtherClassical && classicalScore >= Math.max(0.28, floor - 0.04);
+            const deepTopOk = deepOk && deepMargin >= -0.02 && deepScore >= 0.55;
+            let passed = classicalTopOk || deepTopOk || (finalScore >= acceptThresh);
             // Generic guard: if another letter dominates the target by a clear margin, reject
             const wrongDominatesClassical = (bestOtherClassical - classicalScore) > 0.08;
             const wrongDominatesDeep = deepOk && (deepMargin < -0.10);
             if (passed && (wrongDominatesClassical || wrongDominatesDeep)) passed = false;
+            // Hard guard: if the drawing looks like a clear X/cross and currentLetter is not X/x, reject
+            if (passed && looksLikeCross(userNorm) && !(currentLetter === 'X' || currentLetter === 'x')) passed = false;
             // Minimal shape guard: loop-like letters should overlap template at least a bit (prevents 'X' for 'O')
             if (passed) {
                 const loopish = new Set(['o','O','Q','q','g','G','a','A','d','D','p','P','b','B']);
