@@ -1489,6 +1489,71 @@
             padding: 30px;
         }
 
+        .settings-callout {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, #f5f3ff, #fce7f3);
+            border: 1px solid var(--gray-100);
+        }
+
+        .settings-callout .callout-title {
+            font-weight: 700;
+            color: #4c1d95;
+            letter-spacing: -0.01em;
+        }
+
+        .settings-callout .callout-subtitle {
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .parent-cta {
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(102, 126, 234, 0.3);
+            transition: transform 0.15s ease, box-shadow 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .parent-cta:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 26px rgba(102, 126, 234, 0.35);
+        }
+
+        .info-tip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            margin-left: 6px;
+            border-radius: 999px;
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-200);
+            font-size: 11px;
+            line-height: 1;
+            cursor: help;
+            vertical-align: middle;
+        }
+
+        .info-tip:hover {
+            background: #eef2ff;
+            color: #4f46e5;
+            border-color: #c7d2fe;
+        }
+
         .settings-section {
             background: white;
             border-radius: var(--radius-md);
@@ -4272,10 +4337,17 @@
             <div class="settings-content">
                 <div class="settings-header">Game Settings</div>
                 <div class="settings-body">
+                    <div class="settings-callout" role="region" aria-label="Parent dashboard quick access">
+                        <div class="callout-text">
+                            <div class="callout-title">Parent Dashboard</div>
+                            <div class="callout-subtitle">See progress, trends, and manage learning options.</div>
+                        </div>
+                        <button class="parent-cta" onclick="openParentDashboardViaSettings()" aria-label="Open Parent Dashboard">Open</button>
+                    </div>
                     <div class="settings-section">
                         <div class="settings-section-title">Basic Settings</div>
                         <div class="setting-group">
-                            <label class="setting-label">Timer</label>
+                            <label class="setting-label">Timer <span class="info-tip" title="Set a countdown for each question.">?</span></label>
                             <div class="toggle-group">
                                 <button class="toggle-btn" id="timerOff" onclick="setTimerMode('off')"
                                     aria-pressed="false" aria-label="Turn timer off">Off</button>
@@ -4284,7 +4356,7 @@
                             </div>
                         </div>
                         <div class="setting-group">
-                            <label class="setting-label">Letters</label>
+                            <label class="setting-label">Letters <span class="info-tip" title="Choose which letter case to practice.">?</span></label>
                             <div class="toggle-group">
                                 <button class="toggle-btn" id="caseLower" onclick="setCaseMode('lower')"
                                     aria-pressed="false" aria-label="Use lowercase letters">abc</button>
@@ -4295,7 +4367,7 @@
                             </div>
                         </div>
                         <div class="setting-group">
-                            <label class="setting-label">Phonics</label>
+                            <label class="setting-label">Phonics <span class="info-tip" title="Enable phonics-style prompts and guidance.">?</span></label>
                             <div class="toggle-group">
                                 <button class="toggle-btn active" id="phonicsOn" onclick="setPhonicsMode('on')"
                                     aria-pressed="true" aria-label="Enable phonics flow">On</button>
@@ -4304,7 +4376,7 @@
                             </div>
                         </div>
                         <div class="setting-group">
-                            <label class="setting-label">Sound</label>
+                            <label class="setting-label">Sound <span class="info-tip" title="Turn game sounds and speech on or off.">?</span></label>
                             <div class="toggle-group">
                                 <button class="toggle-btn active" id="soundOn" onclick="setSoundMode('on')"
                                     aria-pressed="true" aria-label="Turn sound on">On</button>
@@ -4335,7 +4407,7 @@
                     <details class="settings-section advanced-settings" open>
                         <summary class="settings-section-title">Advanced Settings</summary>
                         <div class="setting-group">
-                            <label class="setting-label">Voice Recording</label>
+                            <label class="setting-label">Voice Recording <span class="info-tip" title="Record the child's voice to practice and compare." >?</span></label>
                             <div class="toggle-switch">
                                 <input type="checkbox" id="voiceToggle" onchange="toggleVoiceRecording(this.checked)">
                                 <label for="voiceToggle" class="toggle-switch-label"></label>
@@ -4344,7 +4416,7 @@
                         <div class="setting-group">
                             <label class="setting-label"
                                 style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                                <span>Focus Mode</span>
+                                <span>Focus Mode <span class="info-tip" title="Hide distractions to help kids focus.">?</span></span>
                                 <div class="toggle-switch">
                                     <input type="checkbox" id="focusModeCheck" onchange="toggleFocusMode()">
                                     <label for="focusModeCheck" class="toggle-switch-label"></label>
@@ -4354,7 +4426,7 @@
                         <div class="setting-group">
                             <label class="setting-label"
                                 style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                                <span>High Contrast</span>
+                                <span>High Contrast <span class="info-tip" title="Boost contrast for better visibility.">?</span></span>
                                 <div class="toggle-switch">
                                     <input type="checkbox" id="highContrastCheck" onchange="toggleHighContrast()">
                                     <label for="highContrastCheck" class="toggle-switch-label"></label>
@@ -4364,7 +4436,7 @@
                         <div class="setting-group">
                             <label class="setting-label"
                                 style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
-                                <span>Reduce Motion</span>
+                                <span>Reduce Motion <span class="info-tip" title="Reduce animations for sensitive users or older devices.">?</span></span>
                                 <div class="toggle-switch">
                                     <input type="checkbox" id="reduceMotionCheck" onchange="toggleReduceMotion()">
                                     <label for="reduceMotionCheck" class="toggle-switch-label"></label>
@@ -4860,6 +4932,9 @@
         let idleHintTimeout = null;
         let idleHintInterval = null;
         let hintFadeOpacity = 0; // 0 → 0.12
+        // Draw-mode advancement guards to avoid duplicate next prompts
+        let drawAdvanceTimeout = null;
+        let drawAdvanceLocked = false;
         let hintWasShown = false; // used to reduce score when hint helped
         let hasStartedTrace = false; // first stroke gate to cancel hint
 
@@ -4994,24 +5069,24 @@
 
         // Phonetic sounds spelled out for primitive TTS systems (natural pacing + anchor word)
         const phoneticSounds = {
-            'a': 'ah, ah, ah, as in apple',
+            'a': 'aah, aah, aah, as in apple',
             'b': 'buh, buh, buh, as in ball',
-            'c': 'kuh, kuh, kuh, as in cat',
-            'd': 'duh, duh, duh, as in dog',
+            'c': 'cah, cah, cah, as in cat',
+            'd': 'dah, dah, dah, as in dog',
             'e': 'eh, eh, eh, as in egg',
-            'f': 'fuh, fuh, fuh, as in fish',
-            'g': 'guh, guh, guh, as in goat',
-            'h': 'huh, huh, huh, as in hat',
+            'f': 'fih, fih, fih, as in fish',
+            'g': 'goh, goh, goh, as in goat',
+            'h': 'hah, hah, hah, as in hat',
             'i': 'ih, ih, ih, as in igloo',
             'j': 'juh, juh, juh, as in jump',
-            'k': 'kuh, kuh, kuh, as in kite',
-            'l': 'luh, luh, luh, as in lion',
+            'k': 'kye, kye, kye, as in kite',
+            'l': 'lah, lah, lah, as in lion',
             'm': 'mmm, mmm, mmm, as in moon',
             'n': 'nuh, nuh, nuh, as in nose',
             'o': 'aw, aw, aw, as in octopus',
-            'p': 'puh, puh, puh, as in pig',
+            'p': 'pih, pih, pih, as in pig',
             'q': 'kwuh, kwuh, kwuh, as in queen',
-            'r': 'ruh, ruh, ruh, as in rabbit',
+            'r': 'rah, rah, rah, as in rabbit',
             's': 'sss, sss, sss, as in snake',
             't': 'tuh, tuh, tuh, as in turtle',
             'u': 'uh, uh, uh, as in umbrella',
@@ -6296,6 +6371,9 @@
             scoreAtRoundStart = currentPlayer ? currentPlayer.score : score;
             clearAllTimers();
             cancelSpeech();
+            // Clear any pending auto-advance from prior round and unlock
+            if (drawAdvanceTimeout) { try { clearTimeout(drawAdvanceTimeout); } catch (e) {} drawAdvanceTimeout = null; }
+            drawAdvanceLocked = false;
             currentLetter = getRandomLetter();
             // reset hint state
             hintWasShown = false;
@@ -6346,7 +6424,9 @@
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
 
-            speakPhrase(`Trace the letter ${currentLetter}`);
+            // Cancel any queued speech and speak prompt with a slight pause to avoid overlap
+            cancelSpeech();
+            setTimeout(() => speakPhrase(`Trace the letter ${currentLetter}`), 80);
             // start idle hint timer after the initial prompt
             startIdleHintTimer();
         }
@@ -6555,6 +6635,23 @@
                 return;
             }
 
+            // Slightly more forgiving tolerance, with per-letter boosts for tricky shapes
+            let effectiveTolerance = (letterData && typeof letterData.tolerance === 'number') ? letterData.tolerance : 28;
+            const baseForgiveness = 8; // global softening on 100x100 grid
+            const toleranceBoosts = {
+                // common tricky letters or with optional ornaments/crossbars
+                'k': 6, 'K': 6,
+                'i': 5, 'j': 5, 'I': 4, 'J': 5,
+                's': 6, 'S': 6,
+                'z': 8, 'Z': 8, // allow zig segments and optional slash
+                'w': 6, 'W': 6, 'm': 6, 'M': 6, 'n': 6, 'N': 6,
+                'x': 6, 'X': 6, 'y': 6, 'Y': 6,
+                't': 6, 'T': 6, 'f': 6, 'F': 6,
+                'q': 6, 'Q': 6, 'g': 6, 'G': 6,
+                'a': 4, 'A': 6, 'h': 4, 'H': 6, 'r': 4, 'R': 6, 'p': 4, 'P': 6, 'B': 6, 'D': 6, 'E': 6
+            };
+            effectiveTolerance += baseForgiveness + (toleranceBoosts[currentLetter] || 0);
+
             // Phase 2: normalize strokes to 100x100 grid
             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
             drawingPoints.forEach(p => { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); });
@@ -6577,32 +6674,88 @@
                 x: width === 0 ? 50 : ((p.x - minX) / width) * 100,
                 y: height === 0 ? 50 : ((p.y - minY) / height) * 100
             })));
+            // Some letters are often drawn as several smaller strokes instead of one continuous path
+            const allowSplitConcat = new Set(['z', 'Z', 'w', 'W', 'm', 'M', 'n', 'N', 'x', 'X', 'y', 'Y', 'b', 'B', 'p', 'P', 'd', 'D', 'q', 'Q']).has(currentLetter);
+            const allowStrokeReuse = new Set(['x', 'X', 'y', 'Y', 't', 'T', 'a', 'A', 'h', 'H', 'b', 'B', 'p', 'P', 'd', 'D', 'q', 'Q']).has(currentLetter);
+
+            const buildComposedStrokes = (strokes, maxSegments) => {
+                const out = [];
+                for (let i = 0; i < strokes.length; i++) {
+                    // concatenate up to maxSegments consecutive strokes
+                    let acc = [];
+                    for (let len = 2; len <= maxSegments && i + len - 1 < strokes.length; len++) {
+                        if (len === 2) {
+                            acc = [...strokes[i], ...strokes[i + 1]];
+                            out.push(acc);
+                        } else {
+                            acc = [...acc, ...strokes[i + len - 1]];
+                            out.push(acc);
+                        }
+                    }
+                }
+                return out;
+            };
 
             // Phase 3: matching
-            const isStrokeMatch = (userStroke, checkpoints) => {
-                let lastIdx = -1;
-                for (const cp of checkpoints) {
-                    let found = false;
-                    for (let i = lastIdx + 1; i < userStroke.length; i++) {
-                        const u = userStroke[i];
-                        const dist = Math.hypot(u.x - cp.x, u.y - cp.y);
-                        if (dist < letterData.tolerance) { lastIdx = i; found = true; break; }
+            const isStrokeMatch = (userStroke, checkpoints, tol) => {
+                const matchInDirection = (stroke) => {
+                    let lastIdx = -1;
+                    for (const cp of checkpoints) {
+                        let found = false;
+                        for (let i = lastIdx + 1; i < stroke.length; i++) {
+                            const u = stroke[i];
+                            const dist = Math.hypot(u.x - cp.x, u.y - cp.y);
+                            if (dist <= tol) { lastIdx = i; found = true; break; }
+                        }
+                        if (!found) return false;
                     }
-                    if (!found) return false;
-                }
-                return true;
+                    return true;
+                };
+                // Allow reversed stroke direction as a fallback (kids may draw segments backwards)
+                return matchInDirection(userStroke) || matchInDirection([...userStroke].slice().reverse());
             };
 
             let matched = 0;
-            const avail = [...normalizedUserStrokes];
+            const candidates = allowSplitConcat && normalizedUserStrokes.length > 1
+                ? [...normalizedUserStrokes, ...buildComposedStrokes(normalizedUserStrokes, 3)]
+                : [...normalizedUserStrokes];
+            const avail = [...candidates];
             letterData.strokes.forEach(req => {
                 for (let i = 0; i < avail.length; i++) {
-                    if (isStrokeMatch(avail[i], req)) { matched++; avail.splice(i, 1); break; }
+                    if (isStrokeMatch(avail[i], req, effectiveTolerance)) {
+                        matched++;
+                        if (!allowStrokeReuse) { avail.splice(i, 1); }
+                        break;
+                    }
                 }
             });
 
+            // Special-case heuristic for dotted letters ('i' and 'j'): accept a small dot above a tall stroke
+            let dottedHeuristicOK = false;
+            if ((currentLetter === 'i' || currentLetter === 'j') && normalizedUserStrokes.length >= 2) {
+                const strokeBounds = (s) => {
+                    let sx = Infinity, sy = Infinity, bx = -Infinity, by = -Infinity;
+                    for (const p of s) { if (p.x < sx) sx = p.x; if (p.x > bx) bx = p.x; if (p.y < sy) sy = p.y; if (p.y > by) by = p.y; }
+                    const cx = (sx + bx) / 2; const cy = (sy + by) / 2;
+                    const len = Math.hypot(s[0].x - s[s.length - 1].x, s[0].y - s[s.length - 1].y);
+                    return { minX: sx, minY: sy, maxX: bx, maxY: by, width: bx - sx, height: by - sy, cx, cy, endToEnd: len };
+                };
+                const boundsList = normalizedUserStrokes.map(strokeBounds);
+                // Main long stroke: tall and relatively narrow
+                const mainIdx = boundsList.reduce((best, b, i) => (b.height > (boundsList[best]?.height || 0) ? i : best), 0);
+                const main = boundsList[mainIdx];
+                const dotCandidates = boundsList.map((b, i) => ({ b, i })).filter(({ i }) => i !== mainIdx);
+                // Dot: small area/length
+                const smallDot = dotCandidates.find(({ b }) => b.width <= 16 && b.height <= 16 && b.endToEnd <= 20);
+                if (main && main.height >= 40 && smallDot) {
+                    const dx = Math.abs(smallDot.b.cx - main.cx);
+                    const above = smallDot.b.cy <= (main.minY + 15); // near or above the top of the main stroke
+                    if (dx <= 20 && above) dottedHeuristicOK = true;
+                }
+            }
+
             // Phase 4: feedback and progression
-            if (matched === letterData.strokes.length) {
+            if (matched === letterData.strokes.length || dottedHeuristicOK) {
                 // Apply base points, with a small penalty if a hint was shown
                 const base = 25;
                 const penalty = hintWasShown ? 10 : 0; // fewer points if hint displayed
@@ -6615,7 +6768,10 @@
                 const pointsGained = Math.max(0, base - penalty);
                 showFeedback(`That's a perfect "${currentLetter}"! +${pointsGained} ✨`, 'success');
                 // After the praise finishes (or immediately if speech is off), advance to the next letter
+                cancelSpeech();
                 speakPhrase(`Wow! That's a great ${currentLetter}!`, () => {
+                    if (drawAdvanceLocked) return;
+                    drawAdvanceLocked = true;
                     const modal = document.getElementById('roundModal');
                     const isModalVisible = modal ? window.getComputedStyle(modal).display !== 'none' : false;
                     if (!isModalVisible) {
@@ -6630,7 +6786,9 @@
                 }
 
                 // Also schedule a backup auto-advance in case speech callbacks are delayed
-                setTimeout(() => {
+                drawAdvanceTimeout = setTimeout(() => {
+                    if (drawAdvanceLocked) return;
+                    drawAdvanceLocked = true;
                     const modal = document.getElementById('roundModal');
                     const isModalVisible = modal ? window.getComputedStyle(modal).display !== 'none' : false;
                     if (!isModalVisible) {
