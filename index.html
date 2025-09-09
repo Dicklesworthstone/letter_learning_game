@@ -4477,6 +4477,17 @@
                         </a>
                         <div class="about-footer">
                             🥳 Reading is FUNdamental! 🥳
+                            <div style="margin-top:8px;">
+                                <form action="https://www.paypal.com/donate" method="post" target="_top" style="display:inline-block;">
+                                    <input type="hidden" name="business" value="B9JY8A3YAK84J" />
+                                    <input type="hidden" name="amount" value="5" />
+                                    <input type="hidden" name="no_recurring" value="1" />
+                                    <input type="hidden" name="item_name" value="If you found this app helpful for your child and want to support this work, here is a donation button." />
+                                    <input type="hidden" name="currency_code" value="USD" />
+                                    <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" name="submit" title="Donate (PayPal)" alt="Donate with PayPal button" style="width:128px; height:auto; opacity:0.8; filter:saturate(0.7);" />
+                                    <img alt="" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" style="display:none;" />
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4492,6 +4503,9 @@
                 </div>
 
                 <div class="achievement-stats">
+                    <div style="display:flex; align-items:center; justify-content:center; padding: 4px 0 16px;">
+                        <canvas id="masteryPie" width="200" height="200" aria-label="Letters mastered progress" style="display:block; width:180px; height:180px;"></canvas>
+                    </div>
                     <div class="stat-row">
                         <span class="stat-label">Total Stars Earned:</span>
                         <span class="stat-value" id="totalStarsEarned">0</span>
@@ -4911,6 +4925,7 @@
         let lastDrawTime = 0;
         let timerBarInterval = null;
         let questionStartTime = 0;
+        let drawQuestionStartTime = 0;
         let responseTimes = [];
         let letterErrors = {};
         let problemLetters = [];
@@ -4922,6 +4937,8 @@
         let isDrawing = false;
         let ctx = null;
         let voiceRecordingEnabled = false; // Hidden by default
+        let phonicsRepeatCount = 0; // counts fallback repeats per phonics step
+        let phonicsEchoCleanup = null; // cleanup function for active echo step
         let drawingPoints = [];
         let recentLetters = [];
         let isAnswering = false; // lock input during answer animations
@@ -4961,6 +4978,23 @@
         let roundsCompleted = 0;
         let difficultyLevel = 1; // 1-5 scale
         let adaptivePool = [];
+
+        // Shape-similarity tiers for targeted practice after errors
+        const shapeSimilarityGroups = {
+            curvedBowls: ['b', 'd', 'p', 'q'],
+            straightSticks: ['i', 'l', 't'],
+            humps: ['m', 'n', 'r', 'h'],
+            diagonals: ['v', 'w', 'y']
+        };
+        const letterToShapeGroupLower = {};
+        Object.entries(shapeSimilarityGroups).forEach(([groupKey, letters]) => {
+            letters.forEach(l => { letterToShapeGroupLower[l] = groupKey; });
+        });
+        // Persist last computed weights (per concrete letter, including case)
+        let latestLetterWeights = {};
+        // Temporary bias window following an error to reinforce similar-shape distinctions
+        let shapeBiasTargetLower = null;
+        let shapeBiasRoundsRemaining = 0;
 
         // Achievement State
         let unlockedAchievements = new Set();
@@ -5028,6 +5062,36 @@
             'x': { icon: '🎸', word: 'Xylophone' },
             'y': { icon: '🧡', word: 'Yo-yo' },
             'z': { icon: '🦓', word: 'Zebra' }
+        };
+
+        // Child-friendly word examples for each letter (used for brief, non-disruptive overlays)
+        const letterWords = {
+            'a': ['ant', 'apple', 'arm'],
+            'b': ['ball', 'bear', 'bed'],
+            'c': ['cat', 'car', 'cup'],
+            'd': ['dog', 'duck', 'dad'],
+            'e': ['egg', 'elephant', 'ear'],
+            'f': ['fish', 'frog', 'fan'],
+            'g': ['goat', 'game', 'girl'],
+            'h': ['hat', 'hand', 'house'],
+            'i': ['ice', 'igloo', 'insect'],
+            'j': ['jam', 'jet', 'jelly'],
+            'k': ['kite', 'key', 'kid'],
+            'l': ['lion', 'leaf', 'leg'],
+            'm': ['moon', 'milk', 'map'],
+            'n': ['nose', 'nest', 'net'],
+            'o': ['owl', 'orange', 'octopus'],
+            'p': ['pig', 'pen', 'pizza'],
+            'q': ['queen', 'quilt', 'quack'],
+            'r': ['rabbit', 'rainbow', 'ring'],
+            's': ['sun', 'sock', 'snake'],
+            't': ['tree', 'tiger', 'top'],
+            'u': ['umbrella', 'unicorn', 'up'],
+            'v': ['van', 'violin', 'vest'],
+            'w': ['worm', 'water', 'wagon'],
+            'x': ['x-ray', 'xylophone', 'x-ray fish'],
+            'y': ['yo-yo', 'yellow', 'yogurt'],
+            'z': ['zebra', 'zoo', 'zip']
         };
 
         // Mini-games State
@@ -5153,7 +5217,28 @@
 
             // Use adaptive pool if available
             if (adaptivePool.length > 0) {
-                const selected = adaptivePool[Math.floor(Math.random() * adaptivePool.length)];
+                // Apply post-error shape bias to reinforce distinctions among similar letters
+                let selectionPool = adaptivePool;
+                if (shapeBiasRoundsRemaining > 0 && shapeBiasTargetLower) {
+                    const groupKey = letterToShapeGroupLower[shapeBiasTargetLower];
+                    if (groupKey) {
+                        const peerSetLower = new Set(
+                            (shapeSimilarityGroups[groupKey] || []).filter(l => l !== shapeBiasTargetLower)
+                        );
+                        // Create a copy and add ~50% more weight to shape peers (excluding the target itself)
+                        selectionPool = adaptivePool.slice();
+                        letters.forEach(letter => {
+                            const lower = letter.toLowerCase();
+                            if (peerSetLower.has(lower)) {
+                                const baseWeight = Math.ceil((latestLetterWeights[letter] || 1));
+                                const extra = Math.max(1, Math.floor(baseWeight * 0.5));
+                                for (let i = 0; i < extra; i++) selectionPool.push(letter);
+                            }
+                        });
+                    }
+                    shapeBiasRoundsRemaining = Math.max(0, shapeBiasRoundsRemaining - 1);
+                }
+                const selected = selectionPool[Math.floor(Math.random() * selectionPool.length)];
 
                 // Track recent letters (keep last 3)
                 recentLetters.push(selected.toLowerCase());
@@ -5217,6 +5302,7 @@
             // Build weighted pool
             availableLetters.forEach(letter => {
                 const weight = Math.ceil(letterWeights[letter]);
+                latestLetterWeights[letter] = weight;
                 for (let i = 0; i < weight; i++) {
                     adaptivePool.push(letter);
                 }
@@ -5228,10 +5314,10 @@
             }
         }
 
-        function updateLetterPerformance(letter, correct, responseTime) {
+        function updateLetterPerformance(letter, correct, responseTime, pointsDelta = 0) {
             const key = letter.toLowerCase();
             if (!letterPerformance[key]) {
-                letterPerformance[key] = { correct: 0, total: 0, avgTime: 0, times: [] };
+                letterPerformance[key] = { correct: 0, total: 0, avgTime: 0, times: [], score: 0 };
             }
 
             const perf = letterPerformance[key];
@@ -5252,6 +5338,9 @@
                     checkAchievement('mastery', lettersMastered.size);
                 }
             }
+
+            // Track per-letter score for personalized challenges
+            perf.score = (perf.score || 0) + (typeof pointsDelta === 'number' ? pointsDelta : 0);
 
             // Update difficulty level based on overall performance
             updateDifficultyLevel();
@@ -5484,6 +5573,7 @@
             let startTime = Date.now();
 
             currentTimer = setInterval(() => {
+                if (isProcessing) return; // lock prevents overlapping actions
                 const elapsed = (Date.now() - startTime) / 1000;
                 timeLeft = Math.max(0, Math.ceil(duration - elapsed));
 
@@ -5511,9 +5601,13 @@
                     timerDisplay.innerHTML = "⏰ Time's up!";
                     timerBarFill.style.width = '0%';
                     speakPhrase("Time's up!");
-                    setTimeout(() => {
-                        handleTimeUp();
-                    }, 1000);
+                    if (!isProcessing) {
+                        isProcessing = true;
+                        setTimeout(() => {
+                            isProcessing = false;
+                            handleTimeUp();
+                        }, 1000);
+                    }
                 }
             }, 100);
         }
@@ -5534,34 +5628,14 @@
 
         function clearAllTimers() {
             clearTimer();
-            if (phonicsTimer) {
-                clearTimeout(phonicsTimer);
-                phonicsTimer = null;
-            }
-            if (phonicsPhaseTimeout) {
-                clearTimeout(phonicsPhaseTimeout);
-                phonicsPhaseTimeout = null;
-            }
-            if (speakPromptTimeout) {
-                clearTimeout(speakPromptTimeout);
-                speakPromptTimeout = null;
-            }
-            if (speakLetterTimeout) {
-                clearTimeout(speakLetterTimeout);
-                speakLetterTimeout = null;
-            }
-            if (rainGameInterval) {
-                clearInterval(rainGameInterval);
-                rainGameInterval = null;
-            }
-            if (minigameTimer) {
-                clearInterval(minigameTimer);
-                minigameTimer = null;
-            }
-            if (dashboardTimer) {
-                clearTimeout(dashboardTimer);
-                dashboardTimer = null;
-            }
+            if (phonicsTimer) { window.clearTimeout(phonicsTimer); phonicsTimer = null; }
+            if (phonicsPhaseTimeout) { window.clearTimeout(phonicsPhaseTimeout); phonicsPhaseTimeout = null; }
+            if (speakPromptTimeout) { window.clearTimeout(speakPromptTimeout); speakPromptTimeout = null; }
+            if (speakLetterTimeout) { window.clearTimeout(speakLetterTimeout); speakLetterTimeout = null; }
+            if (rainGameInterval) { window.clearInterval(rainGameInterval); rainGameInterval = null; }
+            if (minigameTimer) { window.clearInterval(minigameTimer); minigameTimer = null; }
+            if (dashboardTimer) { window.clearTimeout(dashboardTimer); dashboardTimer = null; }
+            if (typeof drawAdvanceTimeout !== 'undefined' && drawAdvanceTimeout) { window.clearTimeout(drawAdvanceTimeout); drawAdvanceTimeout = null; }
             // Also clear any idle hint timers used by tracing mode
             if (typeof clearIdleHintTimers === 'function') {
                 try { clearIdleHintTimers(); } catch (e) { }
@@ -5569,21 +5643,27 @@
         }
 
         function handleTimeUp() {
-            if (waitingForPhonics) return;
+            if (waitingForPhonics || isProcessing) return;
+            isProcessing = true;
 
             roundWrong++;
             wrongAnswers++;
             totalQuestions++;
             score = Math.max(0, score - 10);
             trackLetterError(currentLetter);
+            // Treat timeout as an incorrect attempt for SRS scheduling and per-letter scoring
+            try { updateLetterPerformance(currentLetter, false, 0, -10); } catch (e) {}
             showFeedback('Too slow! ⏰', 'error');
             createWrongEffect();
-            setTimeout(() => startIdentifyGame(), 2000);
+            setTimeout(() => { isProcessing = false; startIdentifyGame(); }, 2000);
         }
 
         function trackLetterError(letter) {
             const key = letter.toLowerCase();
             letterErrors[key] = (letterErrors[key] || 0) + 1;
+            // Trigger a brief shape-bias window to reinforce similar-shape distinctions
+            shapeBiasTargetLower = key;
+            shapeBiasRoundsRemaining = 3; // bias for next few selections
         }
 
         let lastCelebrationTime = 0;
@@ -5668,13 +5748,28 @@
                     'A': () => createAirplaneTakeoff(element),
                     'B': () => createBalloonFloat(element),
                     'C': () => createConfettiBurst(element),
+                    'D': () => createDrumRoll(element),
+                    'F': () => createFireworksBurst(element),
+                    'G': () => createGuitarStrum(element),
+                    'H': () => createHeartsRain(element),
+                    'I': () => createIceSparkle(element),
+                    'J': () => createJellyfishFloat(element),
+                    'K': () => createKiteSoar(element),
                     'E': () => createStarExplosion(element),
+                    'M': () => createMagicWand(element),
+                    'N': () => createNightSky(element),
                     'L': () => createLightningStrike(element),
                     'O': () => createBubbleRise(element),
                     'P': () => createPopcornPop(element),
+                    'Q': () => createQueenCrown(element),
                     'R': () => createRainbowArc(element),
                     'S': () => createSnakeWiggle(element),
                     'T': () => createTrophyShine(element),
+                    'U': () => createUmbrellaSprinkle(element),
+                    'V': () => createVictoryV(element),
+                    'W': () => createWaveSplash(element),
+                    'Y': () => createYoYoBounce(element),
+                    'Z': () => createZoomRocket(element),
                     'X': () => createXMarksTheSpot(element)
                 };
 
@@ -6069,6 +6164,458 @@
             setTimeout(() => layer.remove(), 1600);
         }
 
+        // New animations for more letters
+        function createDrumRoll(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            for (let i = 0; i < 2; i++) {
+                const drum = document.createElement('span');
+                drum.textContent = i === 0 ? '🥁' : '🎵';
+                drum.style.cssText = `position:absolute; left:${origin.x - 24 + i * 36}px; top:${origin.y}px; font-size:48px;`;
+                layer.appendChild(drum);
+                const duration = 900 + i * 100;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(drum, { y: 0, scale: 0.8, opacity: 0.9 }, { y: -60, scale: 1.1, opacity: 0, duration: duration / 1000, ease: 'back.out(1.5)' });
+                } else {
+                    animateWithRAF(duration, (e) => {
+                        drum.style.transform = `translate(0px, ${-60 * e}px) scale(${0.8 + 0.3 * e})`;
+                        drum.style.opacity = String(0.9 - 0.9 * e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1400);
+        }
+
+        function createFireworksBurst(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const colors = ['🎆', '🎇', '✨'];
+            for (let i = 0; i < 3; i++) {
+                const fw = document.createElement('span');
+                fw.textContent = colors[i % colors.length];
+                fw.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${50 + i * 8}px;`;
+                layer.appendChild(fw);
+                const dx = (i - 1) * 140;
+                const dy = -120 - i * 20;
+                const duration = 1000 + i * 150;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(fw, { x: 0, y: 0, scale: 0.4, opacity: 0.8 }, { x: dx, y: dy, scale: 1, opacity: 0, duration: duration / 1000, ease: 'power2.out' });
+                } else {
+                    animateWithRAF(duration, (e) => {
+                        fw.style.transform = `translate(${dx * e}px, ${dy * e}px) scale(${0.4 + 0.6 * e})`;
+                        fw.style.opacity = String(0.8 - 0.8 * e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1700);
+        }
+
+        function createGuitarStrum(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const guitar = document.createElement('span');
+            guitar.textContent = '🎸';
+            guitar.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:56px;`;
+            layer.appendChild(guitar);
+            const duration = 900;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(guitar, { rotation: -15, scale: 0.9, opacity: 1 }, { rotation: 15, scale: 1.1, opacity: 0.9, duration: duration / 1000, ease: 'sine.inOut', yoyo: true, repeat: 1 });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    const angle = -15 + 30 * e;
+                    guitar.style.transform = `translate(-28px, -28px) rotate(${angle}deg) scale(${0.9 + 0.2 * e})`;
+                });
+            }
+            for (let i = 0; i < 6; i++) {
+                const note = document.createElement('span');
+                note.textContent = ['🎵','🎶'][i % 2];
+                note.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${18 + Math.random() * 10}px;`;
+                layer.appendChild(note);
+                const dx = (Math.random() * 160 - 80);
+                const dy = - (80 + Math.random() * 120);
+                const dur = 1000 + Math.random() * 400;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(note, { x: 0, y: 0, opacity: 1 }, { x: dx, y: dy, opacity: 0, duration: dur / 1000, ease: 'power2.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        note.style.transform = `translate(${dx * e}px, ${dy * e}px)`;
+                        note.style.opacity = String(1 - e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1700);
+        }
+
+        function createHeartsRain(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const count = 10;
+            for (let i = 0; i < count; i++) {
+                const heart = document.createElement('span');
+                heart.textContent = i % 2 === 0 ? '❤️' : '💖';
+                heart.style.cssText = `position:absolute; left:${origin.x + (Math.random()*160-80)}px; top:${origin.y - 120}px; font-size:${20 + Math.random() * 16}px;`;
+                layer.appendChild(heart);
+                const dy = 200 + Math.random() * 120;
+                const duration = 1200 + Math.random() * 500;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(heart, { y: -40, opacity: 0.9 }, { y: dy, opacity: 0, duration: duration / 1000, ease: 'sine.in' });
+                } else {
+                    animateWithRAF(duration, (e) => {
+                        heart.style.transform = `translate(0px, ${(-40 + dy * e)}px)`;
+                        heart.style.opacity = String(0.9 - 0.9 * e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1900);
+        }
+
+        function createIceSparkle(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            for (let i = 0; i < 8; i++) {
+                const ice = document.createElement('span');
+                ice.textContent = i % 2 === 0 ? '❄️' : '✨';
+                ice.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${18 + Math.random() * 12}px;`;
+                layer.appendChild(ice);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 120 + Math.random() * 80;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist;
+                const duration = 1100 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(ice, { x: 0, y: 0, opacity: 1 }, { x: dx, y: dy, opacity: 0, duration: duration / 1000, ease: 'power1.out' });
+                } else {
+                    animateWithRAF(duration, (e) => {
+                        ice.style.transform = `translate(${dx * e}px, ${dy * e}px)`;
+                        ice.style.opacity = String(1 - e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1600);
+        }
+
+        function createJellyfishFloat(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const jelly = document.createElement('span');
+            jelly.textContent = '🪼';
+            jelly.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:56px;`;
+            layer.appendChild(jelly);
+            const dx = (Math.random() * 80 - 40);
+            const dy = -160;
+            const duration = 1600;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(jelly, { x: 0, y: 0, opacity: 1 }, { x: dx, y: dy, opacity: 0, duration: duration / 1000, ease: 'sine.out' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    const bob = Math.sin(e * Math.PI * 4) * 10;
+                    jelly.style.transform = `translate(${dx * e}px, ${dy * e + bob}px)`;
+                    jelly.style.opacity = String(1 - e);
+                });
+            }
+            setTimeout(() => layer.remove(), 1700);
+        }
+
+        function createKiteSoar(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const kite = document.createElement('span');
+            kite.textContent = '🪁';
+            kite.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:56px;`;
+            layer.appendChild(kite);
+            const dx = 260, dy = -180;
+            const duration = 1400;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(kite, { x: 0, y: 0, rotation: -10, opacity: 1 }, { x: dx, y: dy, rotation: 10, opacity: 0.9, duration: duration / 1000, ease: 'sine.inOut' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    const sway = Math.sin(e * Math.PI * 2) * 10;
+                    kite.style.transform = `translate(${dx * e}px, ${dy * e}px) rotate(${(-10 + 20 * e)}deg)`;
+                    kite.style.opacity = String(0.8 + 0.2 * e);
+                });
+            }
+            setTimeout(() => layer.remove(), 1700);
+        }
+
+        function createMagicWand(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const wand = document.createElement('span');
+            wand.textContent = '🪄';
+            wand.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:52px;`;
+            layer.appendChild(wand);
+            const duration = 800;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(wand, { scale: 0, rotation: -20, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: duration / 1000, ease: 'back.out(1.7)' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    wand.style.transform = `translate(-26px, -26px) rotate(${-20 + 20 * e}deg) scale(${e})`;
+                    wand.style.opacity = String(e);
+                });
+            }
+            for (let i = 0; i < 8; i++) {
+                const spark = document.createElement('span');
+                spark.textContent = '✨';
+                spark.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${14 + Math.random() * 10}px;`;
+                layer.appendChild(spark);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 120 + Math.random() * 60;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist;
+                const dur = 900 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(spark, { x: 0, y: 0, opacity: 0 }, { x: dx, y: dy, opacity: 1, duration: dur / 1000, ease: 'sine.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        spark.style.transform = `translate(${dx * e}px, ${dy * e}px)`;
+                        spark.style.opacity = String(e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1600);
+        }
+
+        function createNightSky(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const moon = document.createElement('span');
+            moon.textContent = '🌙';
+            moon.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:64px;`;
+            layer.appendChild(moon);
+            const duration = 1200;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(moon, { y: 0, opacity: 0.8 }, { y: -120, opacity: 1, duration: duration / 1000, ease: 'sine.out' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    moon.style.transform = `translate(0px, ${-120 * e}px)`;
+                    moon.style.opacity = String(0.8 + 0.2 * e);
+                });
+            }
+            for (let i = 0; i < 8; i++) {
+                const star = document.createElement('span');
+                star.textContent = '⭐';
+                star.style.cssText = `position:absolute; left:${origin.x + (Math.random()*200-100)}px; top:${origin.y - 120 + (Math.random()*60-30)}px; font-size:${14 + Math.random() * 10}px;`;
+                layer.appendChild(star);
+                const dur = 1000 + Math.random() * 400;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(star, { opacity: 0 }, { opacity: 1, duration: dur / 1000, ease: 'sine.inOut', yoyo: true, repeat: 1 });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        star.style.opacity = String(e < 0.5 ? e * 2 : (1 - (e - 0.5) * 2));
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1800);
+        }
+
+        function createQueenCrown(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const crown = document.createElement('span');
+            crown.textContent = '👑';
+            crown.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:64px;`;
+            layer.appendChild(crown);
+            const duration = 800;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(crown, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: duration / 1000, ease: 'back.out(1.7)' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    crown.style.transform = `translate(-32px, -32px) scale(${e})`;
+                    crown.style.opacity = String(e);
+                });
+            }
+            for (let i = 0; i < 6; i++) {
+                const sparkle = document.createElement('span');
+                sparkle.textContent = '✨';
+                sparkle.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${16 + Math.random() * 8}px;`;
+                layer.appendChild(sparkle);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 90 + Math.random() * 50;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist;
+                const dur = 900 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(sparkle, { x: 0, y: 0, opacity: 0 }, { x: dx, y: dy, opacity: 1, duration: dur / 1000, ease: 'sine.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        sparkle.style.transform = `translate(${dx * e}px, ${dy * e}px)`;
+                        sparkle.style.opacity = String(e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1600);
+        }
+
+        function createUmbrellaSprinkle(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const umbrella = document.createElement('span');
+            umbrella.textContent = '☔';
+            umbrella.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:56px;`;
+            layer.appendChild(umbrella);
+            const duration = 1000;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(umbrella, { y: 0, opacity: 1 }, { y: -20, opacity: 1, duration: duration / 1000, ease: 'sine.inOut' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    umbrella.style.transform = `translate(0px, ${-20 * e}px)`;
+                });
+            }
+            for (let i = 0; i < 10; i++) {
+                const drop = document.createElement('span');
+                drop.textContent = '💧';
+                drop.style.cssText = `position:absolute; left:${origin.x + (Math.random()*120-60)}px; top:${origin.y - 20}px; font-size:${14 + Math.random() * 8}px;`;
+                layer.appendChild(drop);
+                const dy = 140 + Math.random() * 100;
+                const dur = 900 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(drop, { y: 0, opacity: 1 }, { y: dy, opacity: 0, duration: dur / 1000, ease: 'sine.in' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        drop.style.transform = `translate(0px, ${dy * e}px)`;
+                        drop.style.opacity = String(1 - e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1600);
+        }
+
+        function createVictoryV(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const v = document.createElement('span');
+            v.textContent = '✌️';
+            v.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:64px;`;
+            layer.appendChild(v);
+            const duration = 900;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(v, { scale: 0, opacity: 0 }, { scale: 1.1, opacity: 1, duration: duration / 1000, ease: 'back.out(1.7)' });
+                gsap.to(v, { scale: 1, duration: 0.2, delay: duration / 1000 });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    v.style.transform = `translate(-32px, -32px) scale(${e * 1.1})`;
+                    v.style.opacity = String(e);
+                });
+            }
+            for (let i = 0; i < 6; i++) {
+                const sparkle = document.createElement('span');
+                sparkle.textContent = '✨';
+                sparkle.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${14 + Math.random() * 8}px;`;
+                layer.appendChild(sparkle);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 80 + Math.random() * 50;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist - 20;
+                const dur = 900 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(sparkle, { x: 0, y: 0, opacity: 0 }, { x: dx, y: dy, opacity: 1, duration: dur / 1000, ease: 'sine.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        sparkle.style.transform = `translate(${dx * e}px, ${dy * e}px)`;
+                        sparkle.style.opacity = String(e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1600);
+        }
+
+        function createWaveSplash(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const wave = document.createElement('span');
+            wave.textContent = '🌊';
+            wave.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:64px;`;
+            layer.appendChild(wave);
+            const dx = 220, dy = -40;
+            const duration = 1100;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(wave, { x: 0, y: 0, rotation: 0, opacity: 1 }, { x: dx, y: dy, rotation: 0, opacity: 0.9, duration: duration / 1000, ease: 'sine.inOut' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    const roll = Math.sin(e * Math.PI * 2) * 6;
+                    wave.style.transform = `translate(${dx * e}px, ${dy * e}px) rotate(${roll}deg)`;
+                    wave.style.opacity = String(0.8 + 0.2 * e);
+                });
+            }
+            for (let i = 0; i < 5; i++) {
+                const splash = document.createElement('span');
+                splash.textContent = '💦';
+                splash.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${18 + Math.random() * 8}px;`;
+                layer.appendChild(splash);
+                const angle = -Math.PI / 2 + (Math.random() * 0.8 - 0.4);
+                const dist = 120 + Math.random() * 60;
+                const dx2 = Math.cos(angle) * dist;
+                const dy2 = Math.sin(angle) * dist;
+                const dur = 900 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(splash, { x: 0, y: 0, opacity: 1 }, { x: dx2, y: dy2, opacity: 0, duration: dur / 1000, ease: 'power1.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        splash.style.transform = `translate(${dx2 * e}px, ${dy2 * e}px)`;
+                        splash.style.opacity = String(1 - e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1700);
+        }
+
+        function createYoYoBounce(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const yoyo = document.createElement('span');
+            yoyo.textContent = '🪀';
+            yoyo.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:56px;`;
+            layer.appendChild(yoyo);
+            const dy = 140;
+            const duration = 900;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(yoyo, { y: 0, opacity: 1 }, { y: dy, opacity: 0.9, duration: duration / 1000, ease: 'bounce.out' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    const bounce = Math.sin(e * Math.PI) * dy;
+                    yoyo.style.transform = `translate(0px, ${bounce}px)`;
+                });
+            }
+            setTimeout(() => layer.remove(), 1300);
+        }
+
+        function createZoomRocket(element) {
+            const origin = getOriginFromElement(element);
+            const layer = createCelebrationLayer();
+            const rocket = document.createElement('span');
+            rocket.textContent = '🚀';
+            rocket.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:56px;`;
+            layer.appendChild(rocket);
+            const dx = 280, dy = -220;
+            const duration = 1100;
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(rocket, { x: 0, y: 0, rotation: -20, opacity: 1 }, { x: dx, y: dy, rotation: -20, opacity: 0.9, duration: duration / 1000, ease: 'power2.out' });
+            } else {
+                animateWithRAF(duration, (e) => {
+                    rocket.style.transform = `translate(${dx * e}px, ${dy * e}px) rotate(-20deg)`;
+                    rocket.style.opacity = String(0.8 + 0.2 * e);
+                });
+            }
+            for (let i = 0; i < 6; i++) {
+                const flame = document.createElement('span');
+                flame.textContent = '🔥';
+                flame.style.cssText = `position:absolute; left:${origin.x - 12}px; top:${origin.y + 12}px; font-size:${16 + Math.random() * 8}px;`;
+                layer.appendChild(flame);
+                const dx2 = - (40 + Math.random() * 40);
+                const dy2 = (20 + Math.random() * 40);
+                const dur = 800 + Math.random() * 300;
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(flame, { x: 0, y: 0, opacity: 0.9 }, { x: dx2, y: dy2, opacity: 0, duration: dur / 1000, ease: 'power1.out' });
+                } else {
+                    animateWithRAF(dur, (e) => {
+                        flame.style.transform = `translate(${dx2 * e}px, ${dy2 * e}px)`;
+                        flame.style.opacity = String(0.9 - 0.9 * e);
+                    });
+                }
+            }
+            setTimeout(() => layer.remove(), 1700);
+        }
+
         function createWrongEffect() {
             // Create a red flash effect
             const flash = document.createElement('div');
@@ -6257,11 +6804,12 @@
         }
 
         function checkAnswer(letter) {
-            if (waitingForPhonics || isAnswering) return;
+            if (waitingForPhonics || isAnswering || isProcessing) return;
             // Disable all buttons immediately to prevent rapid double clicks
             document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'none');
             clearTimer();
             isAnswering = true;
+            isProcessing = true;
 
             const clickedButton = document.querySelector(`.option-btn[data-letter="${letter}"]`);
 
@@ -6283,26 +6831,22 @@
                 // Check streak achievements
                 checkAchievement('streak', correctStreak);
 
-                // Award points based on speed
-                let points = 20;
-                if (responseTime < 2) {
-                    points = 50;
-                    speedAnswers++;
-                    checkAchievement('speed', speedAnswers);
-                } else if (responseTime < 3) {
-                    points = 40;
-                } else if (responseTime < 5) {
-                    points = 30;
+                // Dynamic scoring: base and time bonus with per-round cap
+                const base = 10 + (difficultyLevel * 5);
+                const bonus = Math.max(0, 30 - responseTime * 3);
+                let points = Math.floor(base + bonus);
+                const gainedThisRound = Math.max(0, (currentPlayer ? currentPlayer.score : score) - scoreAtRoundStart);
+                if (gainedThisRound + points > 50) {
+                    points = Math.max(0, 50 - gainedThisRound);
                 }
-
                 score += points;
 
                 // Check score achievements
                 checkAchievement('score', score);
                 checkAchievement('correct', correctAnswers);
 
-                // Update letter performance
-                updateLetterPerformance(currentLetter, true, responseTime);
+                // Update letter performance with per-letter score
+                updateLetterPerformance(currentLetter, true, responseTime, points);
 
                 showFeedback(`Excellent! +${points} 🎉`, 'success');
 
@@ -6317,12 +6861,25 @@
 
                 speakPhrase('Excellent! That\'s correct!');
 
+                // Occasionally show brief word examples once the child is doing well
+                let showedExamples = false;
+                if (roundCorrect > 10 && Math.random() < 0.3) {
+                    const key = currentLetter.toLowerCase();
+                    const examples = letterWords[key];
+                    if (examples && examples.length) {
+                        showedExamples = true;
+                        showWordExamples(currentLetter, examples);
+                    }
+                }
+
                 // Start phonics phase (track timeout so it can be cancelled)
+                const baseDelay = phonicsEnabled ? 1500 : 1200;
+                const extraDelay = (!phonicsEnabled && showedExamples) ? 300 : 0; // keep overlay quick and non-blocking
                 if (phonicsEnabled) {
                     if (phonicsPhaseTimeout) { clearTimeout(phonicsPhaseTimeout); phonicsPhaseTimeout = null; }
-                    phonicsPhaseTimeout = setTimeout(() => startPhonicsPhase(), 1500);
+                    phonicsPhaseTimeout = setTimeout(() => { isProcessing = false; startPhonicsPhase(); }, baseDelay + extraDelay);
                 } else {
-                    setTimeout(() => startIdentifyGame(), 1200);
+                    setTimeout(() => { isProcessing = false; startIdentifyGame(); }, baseDelay + extraDelay);
                 }
 
                 // Re-enable buttons only if not transitioning into phonics
@@ -6337,14 +6894,14 @@
                 roundWrong++;
                 wrongAnswers++;
                 totalQuestions++;
-                score = Math.max(0, score - 15);
+                score = Math.max(0, score - 10);
                 trackLetterError(currentLetter);
 
                 // Reset correct answer streak
                 correctStreak = 0;
 
-                // Update letter performance
-                updateLetterPerformance(currentLetter, false, 0);
+                // Update letter performance with penalty
+                updateLetterPerformance(currentLetter, false, 0, -10);
 
                 showFeedback('Try again! 💪', 'error');
                 createWrongEffect();
@@ -6365,6 +6922,7 @@
                 setTimeout(() => {
                     clickedButton.classList.remove('wrong');
                     isAnswering = false;
+                    isProcessing = false;
                     // Restart timer fresh for another attempt
                     startTimer();
                     // Re-enable buttons for retry
@@ -6384,6 +6942,8 @@
                 return;
             }
             waitingForPhonics = true;
+            phonicsRepeatCount = 0;
+            if (phonicsEchoCleanup) { try { phonicsEchoCleanup(true); } catch (e) { } phonicsEchoCleanup = null; }
             clearTimer();
             cancelSpeech();
 
@@ -6420,9 +6980,126 @@
                     timerElement.innerHTML = '🗣️';  // Speaker icon for pronunciation phase
                     if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
                     speakPhonetics(currentLetter, () => {
-                        waitingForPhonics = false;
-                        gameArea.removeEventListener('click', skipPhonicsHandler);
-                        setTimeout(() => startIdentifyGame(), 2000);
+                        // Interactive echo step: mic-based when available, fallback repeat button otherwise
+                        const phaseEl = gameArea.querySelector('.phonics-phase');
+                        const canUseMic = !!voiceRecordingEnabled
+                            && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+                            && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+
+                        // Keep phonics active during echo so skip still works
+                        waitingForPhonics = true;
+
+                        const finishEcho = (delayMs) => {
+                            waitingForPhonics = false;
+                            try { gameArea.removeEventListener('click', skipPhonicsHandler); } catch (e) { }
+                            setTimeout(() => startIdentifyGame(), delayMs);
+                            phonicsEchoCleanup = null;
+                        };
+
+                        function setupRepeatButton() {
+                            const instructionEl = phaseEl ? phaseEl.querySelector('.phonics-instruction') : null;
+                            if (instructionEl) instructionEl.textContent = 'Repeat after me!';
+                            let repeatBtn = phaseEl ? phaseEl.querySelector('.phonics-repeat') : null;
+                            if (!repeatBtn && phaseEl) {
+                                repeatBtn = document.createElement('button');
+                                repeatBtn.className = 'phonics-repeat';
+                                repeatBtn.textContent = 'Repeat after me 🔁';
+                                repeatBtn.setAttribute('aria-label', 'Repeat after me');
+                                repeatBtn.onclick = () => {
+                                    cancelSpeech();
+                                    speakPhonetics(currentLetter);
+                                    if (phonicsRepeatCount < 2) {
+                                        phonicsRepeatCount++;
+                                        score += 3;
+                                        updateScoreDisplay();
+                                        checkAchievement('score', score);
+                                        showFeedback('Great repeating! +3', 'success');
+                                    }
+                                };
+                                phaseEl.appendChild(repeatBtn);
+                            }
+
+                            phonicsEchoCleanup = () => {
+                                if (repeatBtn && repeatBtn.parentNode) {
+                                    repeatBtn.parentNode.removeChild(repeatBtn);
+                                }
+                            };
+
+                            setTimeout(() => {
+                                if (phonicsEchoCleanup) { try { phonicsEchoCleanup(); } catch (e) { } }
+                                finishEcho(0);
+                            }, 3500);
+                        }
+
+                        if (canUseMic) {
+                            const instructionEl = phaseEl ? phaseEl.querySelector('.phonics-instruction') : null;
+                            if (instructionEl) instructionEl.textContent = 'Your turn! Say it!';
+                            let stopped = false;
+
+                            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                                const audioCtx = new AudioCtx();
+                                const source = audioCtx.createMediaStreamSource(stream);
+                                const analyser = audioCtx.createAnalyser();
+                                analyser.fftSize = 2048;
+                                source.connect(analyser);
+                                const data = new Uint8Array(analyser.fftSize);
+
+                                let speakingSince = null;
+                                const startAt = performance.now();
+                                const listenMs = 2200;
+
+                                function stopAll() {
+                                    if (stopped) return;
+                                    stopped = true;
+                                    try { stream.getTracks().forEach(t => t.stop()); } catch (e) { }
+                                    try { audioCtx.close(); } catch (e) { }
+                                }
+
+                                function tick(now) {
+                                    if (stopped) return;
+                                    analyser.getByteTimeDomainData(data);
+                                    let sum = 0;
+                                    for (let i = 0; i < data.length; i++) {
+                                        const v = (data[i] - 128) / 128;
+                                        sum += v * v;
+                                    }
+                                    const rms = Math.sqrt(sum / data.length);
+                                    const threshold = 0.08;
+
+                                    if (rms > threshold) {
+                                        if (speakingSince === null) speakingSince = now;
+                                        if (now - speakingSince > 250) {
+                                            stopAll();
+                                            score += 5;
+                                            updateScoreDisplay();
+                                            checkAchievement('score', score);
+                                            showFeedback('Nice echo! +5', 'success');
+                                            finishEcho(800);
+                                            return;
+                                        }
+                                    } else {
+                                        speakingSince = null;
+                                    }
+
+                                    if (now - startAt < listenMs) {
+                                        requestAnimationFrame(tick);
+                                    } else {
+                                        stopAll();
+                                        finishEcho(800);
+                                    }
+                                }
+
+                                phonicsEchoCleanup = () => { stopAll(); };
+                                requestAnimationFrame(tick);
+                            }).catch(() => {
+                                // Fallback to button if mic fails
+                                setupRepeatButton();
+                            });
+                        } else {
+                            // No mic: show repeat button and track engagement
+                            setupRepeatButton();
+                        }
                     });
                 }
             }
@@ -6438,7 +7115,9 @@
             const gameArea = document.getElementById('gameArea');
             if (!waitingForPhonics) return;
             waitingForPhonics = false;
-            if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
+            isProcessing = true;
+            if (phonicsTimer) { window.clearTimeout(phonicsTimer); phonicsTimer = null; }
+            if (phonicsEchoCleanup) { try { phonicsEchoCleanup(true); } catch (e) { } phonicsEchoCleanup = null; }
             if (gameArea) gameArea.onclick = null;
             startIdentifyGame();
         }
@@ -6458,7 +7137,7 @@
         }
 
         function checkRoundCompletion() {
-            if (waitingForPhonics) return;
+            if (waitingForPhonics || isProcessing) return;
             // Check if it's time for a mini-game break
             if (roundCorrect > 0 && roundCorrect % 10 === 0 && Math.random() < 0.5) {
                 showMinigameAnnouncement();
@@ -7146,95 +7825,198 @@
                 return out;
             };
 
-            // Phase 3: matching
-            const isStrokeMatch = (userStroke, checkpoints, tol) => {
-                const matchInDirection = (stroke) => {
-                    let lastIdx = -1;
-                    for (const cp of checkpoints) {
-                        let found = false;
-                        for (let i = lastIdx + 1; i < stroke.length; i++) {
-                            const u = stroke[i];
-                            const dist = Math.hypot(u.x - cp.x, u.y - cp.y);
-                            if (dist <= tol) { lastIdx = i; found = true; break; }
-                        }
-                        if (!found) return false;
-                    }
-                    return true;
-                };
-                // Allow reversed stroke direction as a fallback (kids may draw segments backwards)
-                return matchInDirection(userStroke) || matchInDirection([...userStroke].slice().reverse());
+            // Phase 3: rotation-invariant matching using Hausdorff distance
+            // Helpers are scoped locally to keep changes contained
+            const flattenPoints = (strokes) => strokes.reduce((arr, s) => (arr.push(...s), arr), []);
+            const computePCAAngle = (points) => {
+                if (!points || points.length < 2) return 0;
+                let cx = 0, cy = 0;
+                for (const p of points) { cx += p.x; cy += p.y; }
+                cx /= points.length; cy /= points.length;
+                let sxx = 0, syy = 0, sxy = 0;
+                for (const p of points) {
+                    const dx = p.x - cx, dy = p.y - cy;
+                    sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
+                }
+                sxx /= points.length; syy /= points.length; sxy /= points.length;
+                const trace = sxx + syy;
+                const det = sxx * syy - sxy * sxy;
+                const temp = Math.max(0, (trace * trace) / 4 - det);
+                const root = Math.sqrt(temp);
+                const lambda1 = trace / 2 + root;
+                const lambda2 = trace / 2 - root;
+                // Eigenvector for largest eigenvalue
+                let vx = -sxy, vy = sxx - lambda1;
+                if (Math.abs(vx) < 1e-6 && Math.abs(vy) < 1e-6) { vx = 1; vy = 0; }
+                const angle = Math.atan2(vy, vx);
+                const ratio = lambda2 > 1e-6 ? (lambda1 / lambda2) : 9999;
+                return { angle, ratio, centroid: { x: cx, y: cy } };
             };
+            const rotateAndNormalize = (strokes, angle) => {
+                if (!strokes || strokes.length === 0) return strokes;
+                const pts = flattenPoints(strokes);
+                let cx = 0, cy = 0;
+                for (const p of pts) { cx += p.x; cy += p.y; }
+                cx /= pts.length; cy /= pts.length;
+                const cos = Math.cos(angle), sin = Math.sin(angle);
+                const rotated = strokes.map(s => s.map(p => ({
+                    x: (p.x - cx) * cos - (p.y - cy) * sin + cx,
+                    y: (p.x - cx) * sin + (p.y - cy) * cos + cy
+                })));
+                // Normalize to 0..100
+                let minX2 = Infinity, maxX2 = -Infinity, minY2 = Infinity, maxY2 = -Infinity;
+                rotated.forEach(s => s.forEach(p => { minX2 = Math.min(minX2, p.x); maxX2 = Math.max(maxX2, p.x); minY2 = Math.min(minY2, p.y); maxY2 = Math.max(maxY2, p.y); }));
+                const w2 = Math.max(1e-6, maxX2 - minX2), h2 = Math.max(1e-6, maxY2 - minY2);
+                return rotated.map(s => s.map(p => ({ x: ((p.x - minX2) / w2) * 100, y: ((p.y - minY2) / h2) * 100 })));
+            };
+            const downsampleStroke = (stroke, maxPts) => {
+                if (stroke.length <= maxPts) return stroke;
+                const out = [];
+                for (let i = 0; i < maxPts; i++) {
+                    const idx = Math.round((i / (maxPts - 1)) * (stroke.length - 1));
+                    out.push(stroke[idx]);
+                }
+                return out;
+            };
+            const prepareStrokes = (strokes, maxPts) => strokes.map(s => downsampleStroke(s, maxPts));
+            const hausdorff = (a, b) => {
+                const d = (p, q) => Math.hypot(p.x - q.x, p.y - q.y);
+                const oneSided = (P, Q) => {
+                    let worst = 0;
+                    for (const p of P) {
+                        let best = Infinity;
+                        for (const q of Q) { const dist = d(p, q); if (dist < best) best = dist; }
+                        if (best > worst) worst = best;
+                    }
+                    return worst;
+                };
+                return Math.max(oneSided(a, b), oneSided(b, a));
+            };
+            const distTol = Math.max(10, Math.min(22, Math.round(effectiveTolerance * 0.4)));
+
+            // Template prep (downsample for speed)
+            const templateStrokes = letterData.strokes.map(s => downsampleStroke(s, 48));
+
+            // Build variants: base, rotate-to-horizontal, rotate-to-vertical
+            const pca = computePCAAngle(flattenPoints(normalizedUserStrokes));
+            const baseVariant = normalizedUserStrokes;
+            const horizVariant = rotateAndNormalize(normalizedUserStrokes, -pca.angle);
+            const vertVariant = rotateAndNormalize(normalizedUserStrokes, (Math.PI / 2) - pca.angle);
 
             let matched = 0;
-            const candidates = allowSplitConcat && normalizedUserStrokes.length > 1
-                ? [...normalizedUserStrokes, ...buildComposedStrokes(normalizedUserStrokes, 3)]
-                : [...normalizedUserStrokes];
-            const avail = [...candidates];
-            letterData.strokes.forEach(req => {
-                // For uppercase I, the horizontal bars are optional if a good vertical stroke exists
-                const isUpperI = currentLetter === 'I';
-                for (let i = 0; i < avail.length; i++) {
-                    if (isStrokeMatch(avail[i], req, effectiveTolerance)) {
-                        matched++;
-                        if (!allowStrokeReuse) { avail.splice(i, 1); }
-                        break;
+            let dottedHeuristicOK = false;
+            const requiredStrokes = letterData.strokes.length;
+
+            const strokeBounds = (s) => {
+                let sx = Infinity, sy = Infinity, bx = -Infinity, by = -Infinity;
+                for (const p of s) { if (p.x < sx) sx = p.x; if (p.x > bx) bx = p.x; if (p.y < sy) sy = p.y; if (p.y > by) by = p.y; }
+                const cx2 = (sx + bx) / 2; const cy2 = (sy + by) / 2;
+                const len2 = Math.hypot(s[0].x - s[s.length - 1].x, s[0].y - s[s.length - 1].y);
+                return { minX: sx, minY: sy, maxX: bx, maxY: by, width: bx - sx, height: by - sy, cx: cx2, cy: cy2, endToEnd: len2 };
+            };
+
+            const clusterSmallStrokes = (strokes) => {
+                const small = strokes.map((s, i) => ({ idx: i, b: strokeBounds(s) }))
+                    .filter(({ b }) => b.width <= 16 && b.height <= 16 && b.endToEnd <= 20);
+                const clusters = [];
+                const used = new Set();
+                for (let i = 0; i < small.length; i++) {
+                    if (used.has(i)) continue;
+                    const c = [small[i]];
+                    used.add(i);
+                    for (let j = i + 1; j < small.length; j++) {
+                        if (used.has(j)) continue;
+                        const dx = small[j].b.cx - small[i].b.cx;
+                        const dy = small[j].b.cy - small[i].b.cy;
+                        if (Math.hypot(dx, dy) <= 14) { c.push(small[j]); used.add(j); }
                     }
-                    if (isUpperI) {
-                        // If req is a short horizontal (top/bottom bar), allow skipping it when a tall vertical exists
-                        const reqSpanX = Math.abs(req[req.length - 1].x - req[0].x);
-                        const reqSpanY = Math.abs(req[req.length - 1].y - req[0].y);
-                        const looksHorizontal = reqSpanX >= 30 && reqSpanY <= 5;
+                    clusters.push({ members: c, cx: c.reduce((a, m) => a + m.b.cx, 0) / c.length, cy: c.reduce((a, m) => a + m.b.cy, 0) / c.length });
+                }
+                return clusters;
+            };
+
+            const tryVariant = (variantStrokes) => {
+                const variantCandidates = allowSplitConcat && variantStrokes.length > 1
+                    ? [...variantStrokes, ...buildComposedStrokes(variantStrokes, 3)]
+                    : [...variantStrokes];
+                const availVar = [...variantCandidates];
+                let matchedCount = 0;
+                for (const req of templateStrokes) {
+                    const reqDs = req; // already downsampled
+                    let bestIdx = -1;
+                    for (let i = 0; i < availVar.length; i++) {
+                        const userDs = downsampleStroke(availVar[i], 64);
+                        const d = hausdorff(userDs, reqDs);
+                        if (d <= distTol) { bestIdx = i; break; }
+                    }
+                    if (bestIdx !== -1) {
+                        matchedCount++;
+                        if (!allowStrokeReuse) { availVar.splice(bestIdx, 1); }
+                    } else if (currentLetter === 'I') {
+                        // Optional horizontal bars for uppercase I when a tall vertical exists
+                        let rxMin = Infinity, rxMax = -Infinity, ryMin = Infinity, ryMax = -Infinity;
+                        for (const p of reqDs) { if (p.x < rxMin) rxMin = p.x; if (p.x > rxMax) rxMax = p.x; if (p.y < ryMin) ryMin = p.y; if (p.y > ryMax) ryMax = p.y; }
+                        const rdx = rxMax - rxMin, rdy = ryMax - ryMin;
+                        const looksHorizontal = rdx >= 30 && rdy <= 8;
                         if (looksHorizontal) {
-                            const hasTallVertical = candidates.some(st => {
-                                const dy = Math.abs(st[st.length - 1].y - st[0].y);
-                                const dx = Math.abs(st[st.length - 1].x - st[0].x);
-                                return dy >= 70 && dx <= 15; // tall, mostly vertical
+                            const hasTallVertical = variantCandidates.some(st => {
+                                let sx = Infinity, sy = Infinity, bx = -Infinity, by = -Infinity;
+                                for (const q of st) { if (q.x < sx) sx = q.x; if (q.x > bx) bx = q.x; if (q.y < sy) sy = q.y; if (q.y > by) by = q.y; }
+                                const dw = bx - sx, dh = by - sy;
+                                return dh >= 70 && dw <= 15;
                             });
                             if (hasTallVertical) {
-                                matched++;
-                                break;
+                                matchedCount++;
                             }
                         }
                     }
                 }
-            });
-
-            // Special-case heuristic for dotted letters ('i' and 'j'): accept a small dot above a tall stroke
-            let dottedHeuristicOK = false;
-            if ((currentLetter === 'i' || currentLetter === 'j') && normalizedUserStrokes.length >= 2) {
-                const strokeBounds = (s) => {
-                    let sx = Infinity, sy = Infinity, bx = -Infinity, by = -Infinity;
-                    for (const p of s) { if (p.x < sx) sx = p.x; if (p.x > bx) bx = p.x; if (p.y < sy) sy = p.y; if (p.y > by) by = p.y; }
-                    const cx = (sx + bx) / 2; const cy = (sy + by) / 2;
-                    const len = Math.hypot(s[0].x - s[s.length - 1].x, s[0].y - s[s.length - 1].y);
-                    return { minX: sx, minY: sy, maxX: bx, maxY: by, width: bx - sx, height: by - sy, cx, cy, endToEnd: len };
-                };
-                const boundsList = normalizedUserStrokes.map(strokeBounds);
-                // Main long stroke: tall and relatively narrow
-                const mainIdx = boundsList.reduce((best, b, i) => (b.height > (boundsList[best]?.height || 0) ? i : best), 0);
-                const main = boundsList[mainIdx];
-                const dotCandidates = boundsList.map((b, i) => ({ b, i })).filter(({ i }) => i !== mainIdx);
-                // Dot: small area/length
-                const smallDot = dotCandidates.find(({ b }) => b.width <= 16 && b.height <= 16 && b.endToEnd <= 20);
-                if (main && main.height >= 40 && smallDot) {
-                    const dx = Math.abs(smallDot.b.cx - main.cx);
-                    const above = smallDot.b.cy <= (main.minY + 15); // near or above the top of the main stroke
-                    if (dx <= 20 && above) dottedHeuristicOK = true;
+                // Dotted letters cluster heuristic on this variant
+                let dotOK = false;
+                if ((currentLetter === 'i' || currentLetter === 'j') && variantStrokes.length >= 2) {
+                    const boundsList = variantStrokes.map(strokeBounds);
+                    const mainIdx2 = boundsList.reduce((best, b, i) => (b.height > (boundsList[best]?.height || 0) ? i : best), 0);
+                    const main2 = boundsList[mainIdx2];
+                    const clusters = clusterSmallStrokes(variantStrokes);
+                    if (main2 && main2.height >= 40) {
+                        dotOK = clusters.some(c => Math.abs(c.cx - main2.cx) <= 20 && c.cy <= (main2.minY + 15));
+                    }
                 }
+                return { matchedCount, dotOK };
+            };
+
+            const variants = [baseVariant, horizVariant, vertVariant];
+            for (const variant of variants) {
+                const { matchedCount, dotOK } = tryVariant(variant);
+                if (matchedCount === requiredStrokes || dotOK) {
+                    matched = requiredStrokes;
+                    dottedHeuristicOK = dotOK;
+                    break;
+                }
+                // Keep best-so-far if needed (not used in final decision presently)
             }
 
             // Phase 4: feedback and progression
             if (matched === letterData.strokes.length || dottedHeuristicOK) {
-                // Apply base points, with a small penalty if a hint was shown
-                const base = 25;
-                const penalty = hintWasShown ? 10 : 0; // fewer points if hint displayed
-                score += Math.max(0, base - penalty);
+                // Apply dynamic scoring for tracing, include hint penalty
+                const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
+                const base = 10 + (difficultyLevel * 5);
+                const bonus = Math.max(0, 30 - responseTime * 3);
+                const hintPenalty = hintWasShown ? 10 : 0;
+                let points = Math.max(0, Math.floor(base + bonus) - hintPenalty);
+                const gainedThisRound = Math.max(0, (currentPlayer ? currentPlayer.score : score) - scoreAtRoundStart);
+                if (gainedThisRound + points > 50) {
+                    points = Math.max(0, 50 - gainedThisRound);
+                }
+                score += points;
                 roundCorrect++;
                 correctAnswers++;
                 totalQuestions++;
                 updateScoreDisplay();
 
-                const pointsGained = Math.max(0, base - penalty);
+                const pointsGained = points;
+                // Update letter performance with per-letter score and measured time
+                updateLetterPerformance(currentLetter, true, responseTime, pointsGained);
                 showFeedback(`That's a perfect "${currentLetter}"! +${pointsGained} ✨`, 'success');
                 // After the praise finishes (or immediately if speech is off), advance to the next letter
                 cancelSpeech();
@@ -7330,6 +8112,96 @@
             setTimeout(() => {
                 feedback.style.display = 'none';
             }, 2000);
+        }
+
+        // Brief, non-disruptive overlay to show 2–3 example words for a letter
+        function showWordExamples(letter, words) {
+            if (!letter || !words || words.length === 0) return;
+            // Avoid stacking if one is already visible
+            if (document.getElementById('wordExamplesOverlay')) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = 'wordExamplesOverlay';
+            overlay.style.cssText = [
+                'position:fixed',
+                'inset:0',
+                'display:flex',
+                'align-items:center',
+                'justify-content:center',
+                'pointer-events:none',
+                'z-index:9998'
+            ].join(';');
+
+            const card = document.createElement('div');
+            card.setAttribute('role', 'dialog');
+            card.setAttribute('aria-live', 'polite');
+            card.style.cssText = [
+                'max-width:84vw',
+                'width:720px',
+                'box-sizing:border-box',
+                'padding:16px 20px',
+                'border-radius:16px',
+                'background:rgba(255,255,255,0.96)',
+                'box-shadow:0 10px 30px rgba(0,0,0,0.15)',
+                'border:2px solid rgba(0,0,0,0.06)',
+                'text-align:center',
+                'pointer-events:auto'
+            ].join(';');
+
+            const title = document.createElement('div');
+            title.textContent = `${letter.toUpperCase()} is for…`;
+            title.style.cssText = [
+                'font-size:28px',
+                'font-weight:800',
+                'margin-bottom:10px'
+            ].join(';');
+
+            const list = document.createElement('div');
+            list.style.cssText = [
+                'display:flex',
+                'gap:14px',
+                'justify-content:center',
+                'flex-wrap:wrap'
+            ].join(';');
+
+            const examples = words.slice(0, 3);
+            examples.forEach(w => {
+                const chip = document.createElement('div');
+                chip.textContent = w;
+                chip.style.cssText = [
+                    'font-size:24px',
+                    'font-weight:700',
+                    'padding:10px 14px',
+                    'border-radius:999px',
+                    'background:#f3f4f6',
+                    'border:2px solid #e5e7eb',
+                    'min-width:90px'
+                ].join(';');
+                list.appendChild(chip);
+            });
+
+            card.appendChild(title);
+            card.appendChild(list);
+            overlay.appendChild(card);
+            document.body.appendChild(overlay);
+
+            // Gentle entrance animation
+            if (typeof gsap !== 'undefined') {
+                gsap.fromTo(card, { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.25, ease: 'power2.out' });
+            }
+
+            // Speak examples for non-readers
+            const say = ` ${letter.toUpperCase()} is for ${examples.join(', ')}.`;
+            try { speakPhrase(say); } catch (e) { }
+
+            // Auto-dismiss quickly to avoid disrupting flow
+            setTimeout(() => {
+                if (typeof gsap !== 'undefined') {
+                    gsap.to(card, { scale: 0.96, opacity: 0, duration: 0.18, ease: 'power2.in', onComplete: () => overlay.remove() });
+                } else {
+                    overlay.remove();
+                }
+            }, 1400);
         }
 
         // Idle hint logic for tracing mode
@@ -7772,6 +8644,52 @@
             document.getElementById('lettersMastered').textContent = `${lettersMastered.size}/26`;
             document.getElementById('bestStreak').textContent = bestStreak;
             document.getElementById('totalPlayTime').textContent = `${totalTime} min`;
+
+            // Draw mastery pie
+            drawMasteryPie();
+        }
+
+        function drawMasteryPie() {
+            const canvas = document.getElementById('masteryPie');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const total = 26;
+            const mastered = Math.max(0, Math.min(total, lettersMastered.size || 0));
+            const progress = mastered / total;
+
+            // Clear
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const r = Math.min(cx, cy) - 10;
+
+            // Background ring
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 18;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Progress arc
+            if (progress > 0) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress, false);
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 18;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+
+            // Center text
+            ctx.fillStyle = '#111827';
+            ctx.font = 'bold 20px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${mastered}/26`, cx, cy);
         }
 
         // Multiplayer Functions
@@ -7976,6 +8894,16 @@
             roundCorrect = player.roundCorrect || 0;
             roundWrong = player.roundWrong || 0;
             letterPerformance = player.letterPerformance || {};
+            // Backfill SRS fields for per-player state
+            const nowTs = Date.now();
+            Object.keys(letterPerformance).forEach(k => {
+                const perf = letterPerformance[k] || {};
+                if (typeof perf.easeFactor !== 'number') perf.easeFactor = 2.5;
+                if (typeof perf.interval !== 'number') perf.interval = 0;
+                if (typeof perf.nextReview !== 'number') perf.nextReview = nowTs;
+                if (!Array.isArray(perf.times)) perf.times = perf.times ? [perf.times] : [];
+                letterPerformance[k] = perf;
+            });
             unlockedAchievements = player.unlockedAchievements || new Set();
             achievementProgress = player.achievementProgress || {};
             lettersMastered = player.lettersMastered || new Set();
@@ -8370,6 +9298,16 @@
                     wrongAnswers = gameData.wrongAnswers || 0;
                     currentRound = gameData.currentRound || 1;
                     letterPerformance = gameData.letterPerformance || {};
+                    // Backfill SRS fields for existing saves
+                    const nowTs = Date.now();
+                    Object.keys(letterPerformance).forEach(k => {
+                        const perf = letterPerformance[k] || {};
+                        if (typeof perf.easeFactor !== 'number') perf.easeFactor = 2.5;
+                        if (typeof perf.interval !== 'number') perf.interval = 0;
+                        if (typeof perf.nextReview !== 'number') perf.nextReview = nowTs;
+                        if (!Array.isArray(perf.times)) perf.times = perf.times ? [perf.times] : [];
+                        letterPerformance[k] = perf;
+                    });
                     lettersMastered = new Set(gameData.lettersMastered || []);
                     unlockedAchievements = new Set(gameData.unlockedAchievements || []);
                     achievementProgress = gameData.achievementProgress || {};
