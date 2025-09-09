@@ -9887,7 +9887,7 @@
             const pathLength = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += dist(pts[i - 1], pts[i]); return d; };
             const smoothStroke = (s) => { if (s.length < 3) return s.slice(); const out = [s[0]]; for (let i = 1; i < s.length - 1; i++) out.push({ x: (s[i - 1].x + s[i].x + s[i + 1].x) / 3, y: (s[i - 1].y + s[i].y + s[i + 1].y) / 3 }); out.push(s[s.length - 1]); return out; };
             const normalizeStrokesToBox = (strokes) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = 100 / Math.max(w, h), ox = bb.minX, oy = bb.minY; return strokes.map(s => s.map(p => ({ x: (p.x - ox) * scale, y: (p.y - oy) * scale }))); };
-            const N_RESAMPLE = 96, ROT_MAX_DEG = 20, ROT_STEP_DEG = 4, CLOUD_NORM = 18;
+            const N_RESAMPLE = 84, ROT_MAX_DEG = 20, ROT_STEP_DEG = 4, CLOUD_NORM = 22;
             const resampleStroke = (pts, n) => { if (pts.length === 0) return []; const I = pathLength(pts) / (n - 1); let D = 0, out = [{ ...pts[0] }]; for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], L = dist(a, b); if (!L) continue; while (D + L >= I) { const t = (I - D) / L; const q = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) }; out.push(q); pts.splice(i, 0, q); D = 0; break; } D += L; } if (out.length < n) out.push({ ...pts[pts.length - 1] }); return out.length === n ? out : (out.length > n ? out.slice(0, n) : out); };
             const centroid = (pts) => { let cx = 0, cy = 0; for (const p of pts) { cx += p.x; cy += p.y; } return { x: cx / pts.length, y: cy / pts.length }; };
             const rotatePoints = (pts, rad) => { const c = centroid(pts), cs = Math.cos(rad), sn = Math.sin(rad); return pts.map(p => ({ x: (p.x - c.x) * cs - (p.y - c.y) * sn + c.x, y: (p.x - c.x) * sn + (p.y - c.y) * cs + c.y })); };
@@ -10012,7 +10012,7 @@
             const crossbarOK = hasMidCrossbar(userNorm);
 
             // Blend decision
-            const BASE_ACCEPT = 0.50;
+            const BASE_ACCEPT = 0.42;
             const LETTER_EASING = new Map([
                 ...['S','s','G','g','e','B','R','W','w','M','m','K','k'].map(L => [L, -0.03]),
                 ...['l','I','t','T','v','V'].map(L => [L, +0.03])
@@ -10021,17 +10021,17 @@
             let acceptThresh = BASE_ACCEPT + easing;
             let finalScore = classicalScore;
             if (deepOk) {
-                finalScore = 0.58 * classicalScore + 0.42 * deepScore;
-                if (deepMargin >= 0.10) acceptThresh -= 0.03;
-                if (deepScore >= 0.82) acceptThresh = Math.min(acceptThresh, 0.50);
+                finalScore = 0.55 * classicalScore + 0.45 * deepScore;
+                if (deepMargin >= 0.08) acceptThresh -= 0.03;
+                if (deepScore >= 0.78) acceptThresh = Math.min(acceptThresh, 0.48);
             }
-            if (classicalMargin >= 0.10) acceptThresh -= 0.02;
-            if (needDot && !dotOK) acceptThresh += 0.03;
-            if (needCrossbar && !crossbarOK) acceptThresh += 0.02;
-            acceptThresh = clamp(acceptThresh, 0.44, 0.60);
+            if (classicalMargin >= 0.08) acceptThresh -= 0.02;
+            if (needDot && !dotOK) acceptThresh += 0.02;
+            if (needCrossbar && !crossbarOK) acceptThresh += 0.01;
+            acceptThresh = clamp(acceptThresh, 0.38, 0.56);
 
-            const bothBad = (classicalScore < 0.45) && (!deepOk || deepScore < 0.50);
-            const passed = (!bothBad) && (finalScore >= acceptThresh || (finalScore >= 0.46 && (classicalMargin >= 0.06 || deepMargin >= 0.06)));
+            const bothBad = (classicalScore < 0.40) && (!deepOk || deepScore < 0.46);
+            const passed = (!bothBad) && (finalScore >= acceptThresh || (finalScore >= 0.42 && (classicalMargin >= 0.04 || deepMargin >= 0.04)));
 
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
             if (passed) {
