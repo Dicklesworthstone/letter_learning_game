@@ -489,7 +489,6 @@
             position: relative;
             overflow: hidden;
         }
-
         .mode-btn:before {
             content: '';
             position: absolute;
@@ -985,14 +984,12 @@
             border: none;
             box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
         }
-
         .option-btn.wrong {
             animation: wrongWobbleRich 0.6s;
             background: var(--error);
             color: white;
             border-color: var(--error);
         }
-
         @keyframes correctBounce {
             0% {
                 transform: scale(1);
@@ -1483,7 +1480,6 @@
         .settings-content::-webkit-scrollbar {
             width: 10px;
         }
-
         .settings-content::-webkit-scrollbar-track {
             background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(17, 24, 39, 0.04) 100%);
             border-radius: 0 0 var(--radius-xl) var(--radius-xl);
@@ -1494,7 +1490,6 @@
             border-radius: 9999px;
             border: 2px solid rgba(255, 255, 255, 0.8);
         }
-
         .settings-content:hover::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, var(--primary), var(--primary-dark));
         }
@@ -1980,7 +1975,6 @@
             background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(17, 24, 39, 0.04) 100%);
             border-radius: 0 0 24px 24px;
         }
-
         .achievement-content::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, var(--gray-300), var(--gray-400));
             border-radius: 9999px;
@@ -1996,7 +1990,6 @@
             scrollbar-width: thin;
             scrollbar-color: var(--secondary) rgba(17, 24, 39, 0.06);
         }
-
         @keyframes achievementSlideIn {
             from {
                 transform: translateY(100px) scale(0.8);
@@ -2470,7 +2463,6 @@
             border-radius: 30px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
-
         @keyframes phonicsSlideIn {
             from {
                 opacity: 0;
@@ -2489,7 +2481,6 @@
             margin-bottom: clamp(8px, 2.2vh, 20px);
             font-weight: bold;
         }
-
         .phonics-timer {
             font-size: clamp(42px, 12.5vh, 72px);
             font-weight: bold;
@@ -2967,7 +2958,6 @@
             /* equal widths */
             text-align: center;
         }
-
         .formation-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
@@ -2991,7 +2981,6 @@
             z-index: 6000;
             animation: dashboardSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
         @keyframes dashboardSlide {
             from {
                 transform: translateX(100%);
@@ -3463,7 +3452,6 @@
         .memory-card.flipped {
             transform: rotateY(180deg);
         }
-
         .memory-card-front,
         .memory-card-back {
             position: absolute;
@@ -3492,7 +3480,6 @@
             animation: matchCelebration 0.6s;
             pointer-events: none;
         }
-
         @keyframes matchCelebration {
             0% {
                 transform: scale(1) rotateY(180deg);
@@ -3957,7 +3944,6 @@
             justify-content: center;
             z-index: 7000;
         }
-
         .streak-modal-content {
             background: linear-gradient(135deg, #ffffff, #fef3c7);
             padding: 40px;
@@ -3982,7 +3968,6 @@
             margin-bottom: 20px;
             animation: milestoneGlow 2s infinite;
         }
-
         @keyframes milestoneGlow {
 
             0%,
@@ -4377,7 +4362,6 @@
                 margin-top: clamp(6px, 1.8vmin, 10px);
             }
         }
-
         /* Desktop layout improvements: only on wide pointer/hover devices (keeps iPhone/mobile unchanged) */
         @media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
 
@@ -4468,7 +4452,6 @@
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <div class="header">
@@ -4819,7 +4802,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Parent Dashboard -->
         <div class="parent-dashboard" id="parentDashboard">
             <div class="dashboard-header">
@@ -4921,7 +4903,6 @@
             </div>
         </div>
     </div>
-
     <script>
         // Achievement Definitions
         const ACHIEVEMENTS = [
@@ -5296,7 +5277,6 @@
 
         // Parent Dashboard State
         let dashboardTimer = null;
-
         // Visual Learning Themes
         let currentTheme = 'classic';
         const letterAssociations = {
@@ -5406,7 +5386,6 @@
         // Letter collections
         const lowerLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
         const upperLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-
         // Phonetic sounds spelled out for primitive TTS systems (natural pacing + anchor word)
         const phoneticSounds = {
             'a': 'ah, ah, ah, as in apple',
@@ -5776,7 +5755,6 @@
             };
             speechSynthesis.speak(lead);
         }
-
         function speakPhonetics(letter, callback) {
             if (!soundEnabled) { if (callback) callback(); return; }
             const lower = letter.toLowerCase();
@@ -5880,7 +5858,6 @@
                 setTimeout(() => { if (el && el.parentNode) el.parentNode.removeChild(el); }, 2200);
             }
         }
-
         function updateScoreDisplay() {
             const displayScore = currentPlayer ? currentPlayer.score : score;
             const displayCorrect = currentPlayer ? currentPlayer.roundCorrect : roundCorrect;
@@ -6257,7 +6234,6 @@
             };
             return themes[letter] || { base: '#f472b6', accent: '#fbcfe8', emojis: ['✨', '🎉'] };
         }
-
         // Big hero burst around the selected letter location
         function createHeroLetterBurst(letter, element, theme) {
             const origin = getOriginFromElement(element);
@@ -6339,7 +6315,6 @@
 
             setTimeout(() => layer.remove(), 1600);
         }
-
         // Individual animations
         function createBalloonFloat(element) {
             const origin = getOriginFromElement(element);
@@ -6717,7 +6692,6 @@
             }
             setTimeout(() => layer.remove(), 1600);
         }
-
         function createAirplaneTakeoff(element) {
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
@@ -6829,7 +6803,6 @@
             }
             setTimeout(() => layer.remove(), 1400);
         }
-
         function createFireworksBurst(element) {
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
@@ -7184,7 +7157,6 @@
             }
             setTimeout(() => layer.remove(), 1600);
         }
-
         function createWaveSplash(element) {
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
@@ -7317,7 +7289,6 @@
                 }
             }, 300);
         }
-
         function setMode(mode, buttonEl) {
             if (currentMode === mode) return;
             currentMode = mode;
@@ -7655,7 +7626,6 @@
             updateScoreDisplay();
             checkRoundCompletion();
         }
-
         function startPhonicsPhase() {
             if (!phonicsEnabled) {
                 // Skip phonics entirely when disabled
@@ -8135,7 +8105,6 @@
                 }
             }, 1000);
         }
-
         function showRoundCompletion() {
             clearAllTimers();
             cancelSpeech();
@@ -8547,7 +8516,6 @@
                 feedback.style.display = 'none';
             }, 2000);
         }
-
         // Brief, non-disruptive overlay to show 2–3 example words for a letter
         function showWordExamples(letter, words) {
             if (!letter || !words || words.length === 0) return;
@@ -8637,7 +8605,6 @@
                 }
             }, 1400);
         }
-
         // Idle hint logic for tracing mode
         function startIdleHintTimer() {
             clearIdleHintTimers();
@@ -9008,7 +8975,6 @@
             if (previouslyFocusedElement) previouslyFocusedElement.focus();
             document.body.classList.remove('modal-open');
         }
-
         function createBadgeElement(achievement) {
             const isUnlocked = unlockedAchievements.has(achievement.id);
             const progress = achievementProgress[achievement.id] || 0;
@@ -9086,7 +9052,6 @@
             // Draw mastery pie
             drawMasteryPie();
         }
-
         function drawMasteryPie() {
             const canvas = document.getElementById('masteryPie');
             if (!canvas) return;
@@ -9495,7 +9460,6 @@
             updateDashboard();
             showFeedback('Player statistics have been reset.', 'info');
         }
-
         function updatePlayerStats() {
             const grid = document.getElementById('playerStatsGrid');
             grid.innerHTML = '';
@@ -9546,7 +9510,6 @@
                 grid.appendChild(card);
             });
         }
-
         function updateLetterHeatmap() {
             const heatmap = document.getElementById('letterHeatmap');
             heatmap.innerHTML = '';
@@ -9983,7 +9946,6 @@
                 saveGameData();
             }
         }
-
         function updateStreakDisplay() {
             const display = document.getElementById('streakDisplay');
             const number = document.getElementById('streakNumber');
@@ -10007,7 +9969,6 @@
                 display.style.display = 'none';
             }
         }
-
         function showStreakMilestone(days) {
             const modal = document.getElementById('streakModal');
             const icon = document.getElementById('milestoneIcon');
@@ -10252,7 +10213,7 @@
             const pathLength = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += dist(pts[i - 1], pts[i]); return d; };
             const smoothStroke = (s) => { if (s.length < 3) return s.slice(); const out = [s[0]]; for (let i = 1; i < s.length - 1; i++) out.push({ x: (s[i - 1].x + s[i].x + s[i + 1].x) / 3, y: (s[i - 1].y + s[i].y + s[i + 1].y) / 3 }); out.push(s[s.length - 1]); return out; };
             const normalizeStrokesToBox = (strokes) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = 100 / Math.max(w, h), ox = bb.minX, oy = bb.minY; return strokes.map(s => s.map(p => ({ x: (p.x - ox) * scale, y: (p.y - oy) * scale }))); };
-            const N_RESAMPLE = 80, ROT_MAX_DEG = 30, ROT_STEP_DEG = 4, CLOUD_NORM = 24;
+            const N_RESAMPLE = 64, ROT_MAX_DEG = 35, ROT_STEP_DEG = 4, CLOUD_NORM = 30;
             const resampleStroke = (pts, n) => { if (pts.length === 0) return []; const I = pathLength(pts) / (n - 1); let D = 0, out = [{ ...pts[0] }]; for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], L = dist(a, b); if (!L) continue; while (D + L >= I) { const t = (I - D) / L; const q = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) }; out.push(q); pts.splice(i, 0, q); D = 0; break; } D += L; } if (out.length < n) out.push({ ...pts[pts.length - 1] }); return out.length === n ? out : (out.length > n ? out.slice(0, n) : out); };
             const centroid = (pts) => { let cx = 0, cy = 0; for (const p of pts) { cx += p.x; cy += p.y; } return { x: cx / pts.length, y: cy / pts.length }; };
             const rotatePoints = (pts, rad) => { const c = centroid(pts), cs = Math.cos(rad), sn = Math.sin(rad); return pts.map(p => ({ x: (p.x - c.x) * cs - (p.y - c.y) * sn + c.x, y: (p.x - c.x) * sn + (p.y - c.y) * cs + c.y })); };
@@ -10375,7 +10336,7 @@
             // Blend decision
             const BASE_ACCEPT = 0.46;
             const LETTER_EASING = new Map([
-                ...['S', 's', 'G', 'g', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.06]),
+                ...['S', 's', 'G', 'g', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.07]),
                 ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
@@ -10383,9 +10344,9 @@
             // Per-letter minimum acceptance floors and cloud gates (shape-first)
             const letterFloors = new Map([
                 // Straight/diagonal-heavy letters should rely more on cloud shape
-                ['V', 0.44], ['v', 0.44], ['W', 0.44], ['w', 0.44], ['N', 0.44], ['n', 0.44], ['M', 0.44], ['m', 0.44], ['Z', 0.44], ['z', 0.44],
+                ['V', 0.42], ['v', 0.42], ['W', 0.42], ['w', 0.42], ['N', 0.42], ['n', 0.40], ['M', 0.40], ['m', 0.40], ['Z', 0.42], ['z', 0.42],
                 // Curvy letters get a slightly lower floor
-                ['S', 0.42], ['s', 0.42], ['G', 0.42], ['g', 0.42], ['Q', 0.42], ['q', 0.42], ['e', 0.40]
+                ['S', 0.40], ['s', 0.40], ['G', 0.40], ['g', 0.40], ['Q', 0.40], ['q', 0.40], ['e', 0.38]
             ]);
             const floor = letterFloors.get(currentLetter) || 0.40;
             let finalScore = classicalScore;
@@ -10400,11 +10361,11 @@
             acceptThresh = clamp(acceptThresh, 0.38, 0.56);
 
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
-            const cloudGate = cloudSim >= (floor - 0.05);
-            const bothBad = (classicalScore < (floor - 0.08)) && (!deepOk || deepScore < (floor - 0.10));
+            const cloudGate = cloudSim >= (floor - 0.08);
+            const bothBad = (classicalScore < (floor - 0.12)) && (!deepOk || deepScore < (floor - 0.14));
             const passed = cloudGate && (!bothBad) && (
                 finalScore >= acceptThresh ||
-                (finalScore >= Math.max(0.40, floor) && (classicalMargin >= 0.04 || deepMargin >= 0.04))
+                (finalScore >= Math.max(0.38, floor) && (classicalMargin >= 0.035 || deepMargin >= 0.035))
             );
 
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
