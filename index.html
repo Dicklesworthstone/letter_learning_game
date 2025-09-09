@@ -4232,6 +4232,8 @@
             .game-area.with-sound .sound-btn { width: clamp(64px, 14vmin, 96px); height: clamp(64px, 14vmin, 96px); transform: translate(-50%, -61%); }
             .options { gap: clamp(8px, 2vmin, 14px); padding-top: clamp(28px, 7.5vmin, 52px); max-width: 340px; }
             .instruction { font-size: clamp(14px, 2.2vmin, 18px); margin: 4px 0 6px; }
+            /* Nudge instruction slightly lower when sound button is present to avoid top overlap on iPhone */
+            .game-area.with-sound .instruction { margin-top: clamp(6px, 1.8vmin, 10px); }
         }
 
         /* Desktop layout improvements: only on wide pointer/hover devices (keeps iPhone/mobile unchanged) */
