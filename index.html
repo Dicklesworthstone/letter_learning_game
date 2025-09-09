@@ -9992,7 +9992,7 @@
             // Blend decision
             const BASE_ACCEPT = 0.46;
             const LETTER_EASING = new Map([
-                ...['S','s','G','g','e','B','R','W','w','M','m','K','k'].map(L => [L, -0.06]),
+                ...['S','s','G','g','Z','z','e','B','R','W','w','M','m','K','k'].map(L => [L, -0.06]),
                 ...['l','I','t','T','v','V'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
