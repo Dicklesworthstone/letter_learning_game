@@ -75,6 +75,22 @@
             --space-6: 24px;
             --space-8: 32px;
             --space-10: 40px;
+
+            /* Word Builder Theme Colors */
+            --word-builder-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --word-builder-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --word-builder-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --word-builder-success: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --word-builder-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --word-builder-error: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+
+            /* Word Builder specific variables */
+            --word-slot-size: clamp(60px, 12vw, 80px);
+            --letter-tile-size: clamp(50px, 10vw, 70px);
+            --word-builder-radius: 16px;
+            --word-builder-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --word-builder-shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.18);
+            --word-builder-glow: 0 0 20px rgba(102, 126, 234, 0.4);
         }
 
         * {
@@ -90,6 +106,19 @@
         .reduce-motion * {
             animation: none !important;
             transition: none !important;
+        }
+
+        /* Screen reader only content */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
 
         html,
@@ -774,6 +803,544 @@
         .option-btn,
         .sound-btn {
             -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ===== WORLD-CLASS WORD BUILDER UI ===== */
+
+        /* Word Builder Container */
+        .word-builder-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: clamp(16px, 4vw, 32px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--word-builder-radius);
+            box-shadow: var(--word-builder-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .word-builder-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--word-builder-primary);
+            border-radius: var(--word-builder-radius) var(--word-builder-radius) 0 0;
+        }
+
+        /* Word Builder Header */
+        .word-builder-header {
+            text-align: center;
+            margin-bottom: clamp(24px, 6vw, 40px);
+            position: relative;
+        }
+
+        .level-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: clamp(14px, 2.5vw, 16px);
+            font-weight: 600;
+            color: #475569;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            margin-bottom: 16px;
+        }
+
+        .level-indicator::before {
+            content: '🎯';
+            font-size: 16px;
+        }
+
+        .word-target {
+            font-size: clamp(32px, 8vw, 56px);
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .word-target span {
+            background: var(--word-builder-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        .word-target span::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--word-builder-primary);
+            border-radius: 2px;
+            transform: scaleX(0);
+            animation: wordHighlight 2s ease-in-out infinite;
+        }
+
+        @keyframes wordHighlight {
+            0%, 100% { transform: scaleX(0); }
+            50% { transform: scaleX(1); }
+        }
+
+        .progress-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: clamp(12px, 2vw, 14px);
+            font-weight: 500;
+            color: #64748b;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .progress-indicator::before {
+            content: '📊';
+            font-size: 14px;
+        }
+
+        /* Word Slots - Premium Design */
+        .word-slots {
+            display: flex;
+            justify-content: center;
+            gap: clamp(8px, 2vw, 16px);
+            margin-bottom: clamp(32px, 8vw, 48px);
+            min-height: calc(var(--word-slot-size) + 16px);
+            position: relative;
+        }
+
+        .word-slot {
+            width: var(--word-slot-size);
+            height: var(--word-slot-size);
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(28px, 6vw, 40px);
+            font-weight: 800;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .word-slot::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .word-slot:hover {
+            transform: translateY(-2px) scale(1.05);
+            border-color: #94a3b8;
+            box-shadow: var(--word-builder-shadow);
+        }
+
+        .word-slot:hover::before {
+            opacity: 1;
+        }
+
+        .word-slot.drag-over {
+            border-color: #667eea;
+            border-style: solid;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+            transform: scale(1.1);
+            box-shadow: var(--word-builder-glow);
+            animation: pulseGlow 1.5s ease-in-out infinite;
+        }
+
+        .word-slot.filled {
+            border-style: solid;
+            border-color: #10b981;
+            background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+            color: #059669;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .word-slot.correct {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            border-color: #16a34a;
+            color: #166534;
+            box-shadow: 0 6px 20px rgba(22, 163, 74, 0.3);
+            animation: correctPulse 0.6s ease-out;
+        }
+
+        .word-slot.incorrect {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border-color: #dc2626;
+            color: #991b1b;
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+            animation: incorrectShake 0.6s ease-out;
+        }
+
+        .word-slot.partial {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #d97706;
+            color: #92400e;
+            box-shadow: 0 6px 20px rgba(217, 119, 6, 0.3);
+            animation: partialGlow 0.6s ease-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: var(--word-builder-glow); }
+            50% { box-shadow: 0 0 30px rgba(102, 126, 234, 0.6); }
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes incorrectShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        @keyframes partialGlow {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+
+        /* Letter Bank */
+        .letter-bank {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: clamp(6px, 1.5vw, 12px);
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.8) 100%);
+            border-radius: 16px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Letter Tiles - Premium 3D Design */
+        .letter-tile {
+            width: var(--letter-tile-size);
+            height: var(--letter-tile-size);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(20px, 4vw, 32px);
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            color: #334155;
+            cursor: grab;
+            user-select: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.08),
+                0 1px 3px rgba(0, 0, 0, 0.12),
+                inset 0 -2px 0 rgba(0, 0, 0, 0.04);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .letter-tile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .letter-tile:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow:
+                0 8px 24px rgba(0, 0, 0, 0.15),
+                0 4px 12px rgba(0, 0, 0, 0.1),
+                inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        .letter-tile:hover::before {
+            opacity: 1;
+        }
+
+        .letter-tile:active {
+            transform: translateY(-1px) scale(0.98);
+            transition: all 0.1s ease;
+        }
+
+        .letter-tile.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg) scale(1.1);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .letter-tile.in-slot {
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+        }
+
+        /* Word Builder Controls */
+        .word-builder-controls {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: clamp(32px, 8vw, 48px);
+            flex-wrap: wrap;
+        }
+
+        .word-builder-controls button {
+            padding: clamp(12px, 3vw, 18px) clamp(24px, 6vw, 36px);
+            font-size: clamp(16px, 3.5vw, 20px);
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .word-builder-controls button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .word-builder-controls button:hover::before {
+            left: 100%;
+        }
+
+        .word-builder-controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .word-builder-controls button:active {
+            transform: translateY(0);
+            transition: all 0.1s ease;
+        }
+
+        .word-builder-controls button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .word-builder-controls button:disabled:hover {
+            transform: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Primary Action Button */
+        .word-builder-controls button:first-child {
+            background: var(--word-builder-primary);
+            color: white;
+            min-width: 140px;
+        }
+
+        .word-builder-controls button:first-child:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
+
+        /* Secondary Action Button */
+        .word-builder-controls button.secondary {
+            background: linear-gradient(135deg, #f7fafc 0%, #e2e8f0 100%);
+            color: #475569;
+            border: 2px solid #cbd5e1;
+        }
+
+        .word-builder-controls button.secondary:hover {
+            background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+            border-color: #94a3b8;
+        }
+
+        /* Celebration Animations */
+        .celebration-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        .celebration-particle {
+            position: absolute;
+            font-size: 24px;
+            pointer-events: none;
+            animation: celebrateFloat 3s ease-out forwards;
+        }
+
+        @keyframes celebrateFloat {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .success-burst {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .success-burst::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            animation: successBurst 0.8s ease-out forwards;
+        }
+
+        @keyframes successBurst {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 300px;
+                height: 300px;
+                opacity: 0;
+            }
+        }
+
+        /* Success Wave Animation */
+        .success-wave {
+            position: relative;
+            animation: successWave 1s ease-out;
+        }
+
+        @keyframes successWave {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .word-builder-container {
+                padding: 16px;
+                margin: 0 8px;
+            }
+
+            .word-slots {
+                gap: 8px;
+            }
+
+            .letter-bank {
+                padding: 12px;
+                gap: 6px;
+            }
+
+            .word-builder-controls {
+                gap: 12px;
+            }
+
+            .word-builder-controls button {
+                padding: 12px 20px;
+                font-size: 16px;
+                min-width: 120px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .word-target {
+                font-size: 36px;
+            }
+
+            .level-indicator {
+                font-size: 14px;
+                padding: 6px 12px;
+            }
+
+            .word-slot {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+
+            .letter-tile {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+        }
+
+        /* Accessibility Enhancements */
+        @media (prefers-reduced-motion: reduce) {
+            .word-slot,
+            .letter-tile,
+            .word-builder-controls button {
+                transition: none;
+                animation: none;
+            }
+
+            .word-slot:hover,
+            .letter-tile:hover {
+                transform: none;
+            }
+        }
+
+        /* Focus States for Keyboard Navigation */
+        .word-slot:focus,
+        .letter-tile:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .word-builder-controls button:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
         }
 
         /* Enhanced Sound Button */
@@ -4474,6 +5041,10 @@
                 aria-label="Tracing practice mode">
                 <span>Tracing Practice</span>
             </button>
+            <button class="mode-btn" onclick="setMode('wordBuilder', this)" aria-pressed="false"
+                aria-label="Word building mode">
+                <span>🧱 Word Builder</span>
+            </button>
         </div>
 
         <div class="score-panel" id="scorePanel">
@@ -4593,6 +5164,16 @@
                                     aria-pressed="true" aria-label="Turn sound on">On</button>
                                 <button class="toggle-btn" id="soundOff" onclick="setSoundMode('off')"
                                     aria-pressed="false" aria-label="Turn sound off">Off</button>
+                            </div>
+                        </div>
+                        <div class="setting-group">
+                            <label class="setting-label">Word Builder <span class="info-tip"
+                                    title="Enable/disable the Word Builder mode for building words from letters.">?</span></label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn active" id="wordBuilderOn" onclick="setWordBuilderMode('on')"
+                                    aria-pressed="true" aria-label="Enable Word Builder mode">On</button>
+                                <button class="toggle-btn" id="wordBuilderOff" onclick="setWordBuilderMode('off')"
+                                    aria-pressed="false" aria-label="Disable Word Builder mode">Off</button>
                             </div>
                         </div>
                     </div>
@@ -5154,6 +5735,7 @@
         let problemLetters = [];
         let waitingForPhonics = false;
         let phonicsEnabled = true; // default on, can be toggled in settings
+        let wordBuilderEnabled = true; // default on, can be toggled in settings
         let phonicsTimer = null;
         let speakPromptTimeout = null;
         let speakLetterTimeout = null;
@@ -5202,22 +5784,49 @@
         let difficultyLevel = 1; // 1-5 scale
         let adaptivePool = [];
 
-        // Shape-similarity tiers for targeted practice after errors
+        // Enhanced Shape-similarity tiers for targeted practice after errors
         const shapeSimilarityGroups = {
-            curvedBowls: ['b', 'd', 'p', 'q'],
-            straightSticks: ['i', 'l', 't'],
-            humps: ['m', 'n', 'r', 'h'],
-            diagonals: ['v', 'w', 'y']
+            // Primary shape groups (no overlap)
+            bowls: ['e'], // Only letters unique to bowl shapes
+            sticks: ['i', 'l'],
+            humps: ['m', 'n', 'u'],
+            diagonals: ['v', 'w', 'y', 'z', 'x'],
+            circles: [], // Handled by specialized groups
+            // Specialized groups for specific confusions (may overlap)
+            mirror_pairs: ['b', 'd', 'p', 'q'], // b/d, p/q confusions
+            ascenders: ['f', 'h', 'k', 't'], // Letters with ascenders
+            descenders: ['g', 'j', 'y'], // Letters with descenders
+            // Cross letters (crossing lines)
+            crosses: ['t', 'f', 'x', 'k'],
+            // Hook letters (ending with curves)
+            hooks: ['j', 'g', 'q'],
+            // Remaining letters
+            others: ['r', 's', 'a']
         };
-        const letterToShapeGroupLower = {};
+
+        // Create multi-group mapping (letters can belong to multiple groups)
+        const letterToShapeGroupsLower = {};
         Object.entries(shapeSimilarityGroups).forEach(([groupKey, letters]) => {
-            letters.forEach(l => { letterToShapeGroupLower[l] = groupKey; });
+            letters.forEach(letter => {
+                if (!letterToShapeGroupsLower[letter]) {
+                    letterToShapeGroupsLower[letter] = [];
+                }
+                letterToShapeGroupsLower[letter].push(groupKey);
+            });
+        });
+
+        // For backward compatibility, create single primary group mapping
+        const letterToShapeGroupLower = {};
+        Object.keys(letterToShapeGroupsLower).forEach(letter => {
+            // Use the first group as primary for backward compatibility
+            letterToShapeGroupLower[letter] = letterToShapeGroupsLower[letter][0];
         });
         // Persist last computed weights (per concrete letter, including case)
         let latestLetterWeights = {};
         // Temporary bias window following an error to reinforce similar-shape distinctions
         let shapeBiasTargetLower = null;
         let shapeBiasRoundsRemaining = 0;
+        let shapeBiasGroupKey = null; // Selected shape group for enhanced clustering
 
         // Achievement State
         let unlockedAchievements = new Set();
@@ -5328,6 +5937,143 @@
             'z': ['zebra', 'zoo', 'zip']
         };
 
+        // Word Builder Data Structure
+        const WORD_BANK = {
+            // Level 1: Simple 2-letter words (for beginners)
+            level1: [
+                { word: 'at', letters: ['a', 't'], theme: 'basic', emoji: '🎯' },
+                { word: 'in', letters: ['i', 'n'], theme: 'basic', emoji: '📥' },
+                { word: 'on', letters: ['o', 'n'], theme: 'basic', emoji: '🔛' },
+                { word: 'up', letters: ['u', 'p'], theme: 'basic', emoji: '⬆️' },
+                { word: 'it', letters: ['i', 't'], theme: 'basic', emoji: '👆' },
+                { word: 'is', letters: ['i', 's'], theme: 'basic', emoji: '✨' },
+                { word: 'am', letters: ['a', 'm'], theme: 'basic', emoji: '👋' },
+                { word: 'an', letters: ['a', 'n'], theme: 'basic', emoji: '📝' }
+            ],
+
+            // Level 2: CVC words (consonant-vowel-consonant)
+            level2: [
+                // Animals
+                { word: 'cat', letters: ['c', 'a', 't'], theme: 'animals', emoji: '🐱' },
+                { word: 'dog', letters: ['d', 'o', 'g'], theme: 'animals', emoji: '🐶' },
+                { word: 'pig', letters: ['p', 'i', 'g'], theme: 'animals', emoji: '🐷' },
+                { word: 'fox', letters: ['f', 'o', 'x'], theme: 'animals', emoji: '🦊' },
+                { word: 'hen', letters: ['h', 'e', 'n'], theme: 'animals', emoji: '🐔' },
+                { word: 'cow', letters: ['c', 'o', 'w'], theme: 'animals', emoji: '🐄' },
+                { word: 'bat', letters: ['b', 'a', 't'], theme: 'animals', emoji: '🦇' },
+                { word: 'rat', letters: ['r', 'a', 't'], theme: 'animals', emoji: '🐀' },
+
+                // Food
+                { word: 'jam', letters: ['j', 'a', 'm'], theme: 'food', emoji: '🍯' },
+                { word: 'pop', letters: ['p', 'o', 'p'], theme: 'food', emoji: '🍭' },
+                { word: 'bun', letters: ['b', 'u', 'n'], theme: 'food', emoji: '🥨' },
+                { word: 'nut', letters: ['n', 'u', 't'], theme: 'food', emoji: '🥜' },
+                { word: 'hot', letters: ['h', 'o', 't'], theme: 'food', emoji: '☕' },
+                { word: 'egg', letters: ['e', 'g', 'g'], theme: 'food', emoji: '🥚' },
+
+                // Objects
+                { word: 'bag', letters: ['b', 'a', 'g'], theme: 'objects', emoji: '👜' },
+                { word: 'bed', letters: ['b', 'e', 'd'], theme: 'objects', emoji: '🛏️' },
+                { word: 'box', letters: ['b', 'o', 'x'], theme: 'objects', emoji: '📦' },
+                { word: 'cup', letters: ['c', 'u', 'p'], theme: 'objects', emoji: '☕' },
+                { word: 'hat', letters: ['h', 'a', 't'], theme: 'objects', emoji: '🎩' },
+                { word: 'jar', letters: ['j', 'a', 'r'], theme: 'objects', emoji: '🫙' },
+                { word: 'key', letters: ['k', 'e', 'y'], theme: 'objects', emoji: '🗝️' },
+                { word: 'log', letters: ['l', 'o', 'g'], theme: 'objects', emoji: '🪵' },
+                { word: 'map', letters: ['m', 'a', 'p'], theme: 'objects', emoji: '🗺️' },
+                { word: 'net', letters: ['n', 'e', 't'], theme: 'objects', emoji: '🥅' },
+                { word: 'pen', letters: ['p', 'e', 'n'], theme: 'objects', emoji: '✏️' },
+                { word: 'rug', letters: ['r', 'u', 'g'], theme: 'objects', emoji: '🪔' },
+                { word: 'sun', letters: ['s', 'u', 'n'], theme: 'objects', emoji: '☀️' },
+                { word: 'tag', letters: ['t', 'a', 'g'], theme: 'objects', emoji: '🏷️' },
+                { word: 'van', letters: ['v', 'a', 'n'], theme: 'objects', emoji: '🚐' },
+                { word: 'web', letters: ['w', 'e', 'b'], theme: 'objects', emoji: '🕸️' },
+                { word: 'yam', letters: ['y', 'a', 'm'], theme: 'objects', emoji: '🍠' },
+                { word: 'zip', letters: ['z', 'i', 'p'], theme: 'objects', emoji: '🤐' }
+            ],
+
+            // Level 3: CVCC words (consonant-vowel-consonant-consonant)
+            level3: [
+                { word: 'jump', letters: ['j', 'u', 'm', 'p'], theme: 'actions', emoji: '🤾' },
+                { word: 'pond', letters: ['p', 'o', 'n', 'd'], theme: 'nature', emoji: '🏞️' },
+                { word: 'sand', letters: ['s', 'a', 'n', 'd'], theme: 'nature', emoji: '🏖️' },
+                { word: 'wind', letters: ['w', 'i', 'n', 'd'], theme: 'nature', emoji: '💨' },
+                { word: 'gold', letters: ['g', 'o', 'l', 'd'], theme: 'objects', emoji: '🥇' },
+                { word: 'milk', letters: ['m', 'i', 'l', 'k'], theme: 'food', emoji: '🥛' },
+                { word: 'pink', letters: ['p', 'i', 'n', 'k'], theme: 'colors', emoji: '🌸' },
+                { word: 'song', letters: ['s', 'o', 'n', 'g'], theme: 'music', emoji: '🎵' }
+            ],
+
+            // Level 4: CCVC words (consonant-consonant-vowel-consonant)
+            level4: [
+                { word: 'stop', letters: ['s', 't', 'o', 'p'], theme: 'actions', emoji: '🛑' },
+                { word: 'clap', letters: ['c', 'l', 'a', 'p'], theme: 'actions', emoji: '👏' },
+                { word: 'play', letters: ['p', 'l', 'a', 'y'], theme: 'actions', emoji: '🎮' },
+                { word: 'flag', letters: ['f', 'l', 'a', 'g'], theme: 'objects', emoji: '🏁' },
+                { word: 'star', letters: ['s', 't', 'a', 'r'], theme: 'space', emoji: '⭐' },
+                { word: 'frog', letters: ['f', 'r', 'o', 'g'], theme: 'animals', emoji: '🐸' },
+                { word: 'tree', letters: ['t', 'r', 'e', 'e'], theme: 'nature', emoji: '🌳' },
+                { word: 'snow', letters: ['s', 'n', 'o', 'w'], theme: 'nature', emoji: '❄️' }
+            ]
+        };
+
+        // Word Builder State
+        let currentWordLevel = 1;
+        let currentWordIndex = 0;
+        let wordsCompleted = 0;
+
+        // Word Builder Helper Functions
+        function getNextWord() {
+            return getNextWordRecursive(0); // Start with 0 recursion depth
+        }
+
+        function getNextWordRecursive(depth = 0) {
+            // Prevent infinite recursion - maximum 5 levels of recursion should be sufficient
+            // (4 levels to advance through + 1 for reset to level 1)
+            if (depth > 5) {
+                console.error('getNextWord: Maximum recursion depth exceeded');
+                return null;
+            }
+
+            const levelKey = `level${currentWordLevel}`;
+            const levelWords = WORD_BANK[levelKey];
+
+            if (!levelWords || currentWordIndex >= levelWords.length) {
+                // Level complete, advance to next level
+                if (currentWordLevel < 4) {
+                    currentWordLevel++;
+                    currentWordIndex = 0;
+                    return getNextWordRecursive(depth + 1);
+                } else {
+                    // All levels complete, reset to level 1
+                    currentWordLevel = 1;
+                    currentWordIndex = 0;
+                    return getNextWordRecursive(depth + 1);
+                }
+            }
+
+            const wordData = levelWords[currentWordIndex];
+            currentWordIndex++;
+            return wordData;
+        }
+
+        function getWordBankLetters() {
+            // Get all unique letters from current level for the letter bank
+            const levelKey = `level${currentWordLevel}`;
+            const levelWords = WORD_BANK[levelKey];
+            const letters = new Set();
+
+            if (levelWords && Array.isArray(levelWords)) {
+                levelWords.forEach(wordData => {
+                    if (wordData && wordData.letters && Array.isArray(wordData.letters)) {
+                        wordData.letters.forEach(letter => letters.add(letter));
+                    }
+                });
+            }
+
+            return Array.from(letters).sort();
+        }
+
         // Mini-games State
         let currentMinigame = null;
         let minigameScore = 0;
@@ -5370,8 +6116,61 @@
         // Load saved data
         loadGameData();
 
-        // Speech settings
+        // Apply any accumulated performance decay since last play
+        applyPerformanceDecay();
+
+        // Speech settings and queue management
         let speechSupported = 'speechSynthesis' in window;
+        let speechQueue = [];
+        let isSpeaking = false;
+
+        // Speech queue management functions
+        function queueSpeech(utterance, callback) {
+            if (!speechSupported) {
+                if (callback) callback();
+                return;
+            }
+
+            speechQueue.push({ utterance, callback });
+
+            if (!isSpeaking) {
+                processSpeechQueue();
+            }
+        }
+
+        function processSpeechQueue() {
+            if (speechQueue.length === 0 || isSpeaking) return;
+
+            isSpeaking = true;
+            const { utterance, callback } = speechQueue.shift();
+
+            // Only set onend/onerror if no callback provided or if utterance doesn't already have handlers
+            if (callback && !utterance.onend) {
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    callback();
+                    processSpeechQueue();
+                };
+                utterance.onerror = () => {
+                    isSpeaking = false;
+                    processSpeechQueue();
+                };
+            } else if (!utterance.onend) {
+                utterance.onend = utterance.onerror = () => {
+                    isSpeaking = false;
+                    processSpeechQueue();
+                };
+            }
+
+            try {
+                speechSynthesis.speak(utterance);
+            } catch (e) {
+                console.warn('Error speaking utterance:', e);
+                isSpeaking = false;
+                processSpeechQueue();
+            }
+        }
+
         // Letter collections
         const lowerLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
         const upperLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -5480,26 +6279,40 @@
 
             // Use adaptive pool if available
             if (adaptivePool.length > 0) {
-                // Apply post-error shape bias to reinforce distinctions among similar letters
+                // Apply enhanced post-error shape bias to reinforce distinctions among similar letters
                 let selectionPool = adaptivePool;
                 if (shapeBiasRoundsRemaining > 0 && shapeBiasTargetLower) {
-                    const groupKey = letterToShapeGroupLower[shapeBiasTargetLower];
+                    // Use the intelligently selected group key, or fall back to default
+                    const groupKey = shapeBiasGroupKey || letterToShapeGroupLower[shapeBiasTargetLower];
                     if (groupKey) {
                         const peerSetLower = new Set(
                             (shapeSimilarityGroups[groupKey] || []).filter(l => l !== shapeBiasTargetLower)
                         );
-                        // Create a copy and add ~50% more weight to shape peers (excluding the target itself)
+                        // Enhanced: Add significant boost to shape peers for better clustering
                         selectionPool = adaptivePool.slice();
                         letters.forEach(letter => {
                             const lower = letter.toLowerCase();
                             if (peerSetLower.has(lower)) {
                                 const baseWeight = Math.ceil((latestLetterWeights[letter] || 1));
-                                const extra = Math.max(1, Math.floor(baseWeight * 0.5));
+                                // More aggressive boost for better shape reinforcement
+                                const extra = Math.max(2, Math.floor(baseWeight * 0.8));
                                 for (let i = 0; i < extra; i++) selectionPool.push(letter);
                             }
                         });
+
+                        // Add a few instances of the target letter itself for reinforcement
+                        const targetInstances = Math.floor(selectionPool.length * 0.1);
+                        for (let i = 0; i < targetInstances; i++) {
+                            const targetLetter = letters.find(l => l.toLowerCase() === shapeBiasTargetLower);
+                            if (targetLetter) selectionPool.push(targetLetter);
+                        }
                     }
                     shapeBiasRoundsRemaining = Math.max(0, shapeBiasRoundsRemaining - 1);
+
+                    // Clear the group key when bias window expires
+                    if (shapeBiasRoundsRemaining === 0) {
+                        shapeBiasGroupKey = null;
+                    }
                 }
                 const selected = selectionPool[Math.floor(Math.random() * selectionPool.length)];
 
@@ -5519,86 +6332,235 @@
         }
         function updateAdaptivePool(availableLetters) {
             adaptivePool = [];
+            const now = Date.now();
 
-            // Calculate difficulty weights for each letter
+            // Apply performance decay before calculating weights
+            applyPerformanceDecay();
+
+            // Get spaced repetition candidates
+            const srCandidates = getSpacedRepetitionCandidates(availableLetters);
+            const srLetters = new Set(srCandidates.map(c => c.letter.toLowerCase()));
+
+            // Calculate enhanced difficulty weights for each letter
             const letterWeights = {};
 
             availableLetters.forEach(letter => {
                 const key = letter.toLowerCase();
-                const perf = letterPerformance[key] || { correct: 0, total: 0, avgTime: 0 };
+                const perf = letterPerformance[key] || {
+                    correct: 0, total: 0, masteryLevel: 0, easeFactor: 2.5,
+                    hesitationCount: 0, streakCount: 0, avgCorrectTime: null
+                };
 
-                // Calculate success rate (0-1)
+                // Multi-dimensional performance calculation
                 const successRate = perf.total > 0 ? perf.correct / perf.total : 0.5;
+                const masteryWeight = 1 - perf.masteryLevel; // Lower mastery = higher weight
 
-                // Calculate weight based on performance
                 let weight = 1;
 
-                // Letters with low success rate get higher weight
+                // Base weight from success rate (traditional approach)
                 if (successRate < 0.3) weight = 5;
                 else if (successRate < 0.5) weight = 3;
                 else if (successRate < 0.7) weight = 2;
                 else if (successRate > 0.9 && perf.total > 3) weight = 0.5;
 
-                // Increase weight for letters with errors
+                // Enhanced spaced repetition weighting
+                if (srLetters.has(key)) {
+                    // Letters due for review get significantly higher priority
+                    const candidate = srCandidates.find(c => c.letter.toLowerCase() === key);
+                    weight *= (1 + candidate.priority * 0.3); // Boost by up to 50% based on priority
+                }
+
+                // Mastery-based weighting (inverse relationship)
+                weight *= (1 + masteryWeight * 2); // Up to 3x weight for unmastered letters
+
+                // Hesitation pattern weighting
+                if (perf.hesitationCount > perf.total * 0.3 && perf.total > 2) {
+                    weight *= 1.5; // Hesitant letters need more practice
+                }
+
+                // Speed-based weighting (slow responses need attention)
+                if (perf.avgCorrectTime && perf.avgCorrectTime > 5) {
+                    weight *= 1.3; // Slow letters get priority
+                }
+
+                // Recent error patterns
                 if (letterErrors[key]) {
                     weight += letterErrors[key] * 0.5;
                 }
 
-                // Decrease weight for recently used letters
+                // Recent letter penalty (avoid repetition)
                 if (recentLetters.includes(key)) {
                     weight *= 0.3;
                 }
 
-                // Adjust based on current difficulty level
+                // Difficulty level adjustments
                 if (difficultyLevel <= 2) {
-                    // Easy mode: focus on easier letters
-                    if (successRate > 0.7) weight *= 1.5;
+                    // Easy mode: slightly boost easier letters
+                    if (successRate > 0.7) weight *= 1.2;
                 } else if (difficultyLevel >= 4) {
-                    // Hard mode: focus on challenging letters
+                    // Hard mode: boost challenging letters
                     if (successRate < 0.5) weight *= 1.5;
                 }
 
-                letterWeights[letter] = weight;
+                // Shape similarity clustering boost
+                if (shapeBiasRoundsRemaining > 0 && shapeBiasTargetLower) {
+                    const groupKey = letterToShapeGroupLower[shapeBiasTargetLower];
+                    if (groupKey && letterToShapeGroupLower[key] === groupKey && key !== shapeBiasTargetLower) {
+                        weight *= 1.8; // Boost similar shape letters after errors
+                    }
+                }
+
+                letterWeights[letter] = Math.max(0.1, weight); // Minimum weight of 0.1
             });
 
-            // Build weighted pool
+            // Build weighted pool with enhanced distribution
             availableLetters.forEach(letter => {
                 const weight = Math.ceil(letterWeights[letter]);
                 latestLetterWeights[letter] = weight;
+
+                // Add to pool based on weight
                 for (let i = 0; i < weight; i++) {
                     adaptivePool.push(letter);
                 }
+
+                // Special handling for spaced repetition candidates
+                const key = letter.toLowerCase();
+                if (srLetters.has(key)) {
+                    const candidate = srCandidates.find(c => c.letter.toLowerCase() === key);
+                    // Add extra copies for high-priority review letters
+                    const extraCopies = Math.floor(candidate.priority * 0.5);
+                    for (let i = 0; i < extraCopies; i++) {
+                        adaptivePool.push(letter);
+                    }
+                }
             });
 
-            // Ensure minimum pool size
+            // Ensure minimum pool size with intelligent fallback
             if (adaptivePool.length < 10) {
-                adaptivePool = [...availableLetters];
+                // Add missing letters to meet minimum
+                const missingCount = Math.ceil((10 - adaptivePool.length) / availableLetters.length);
+                availableLetters.forEach(letter => {
+                    for (let i = 0; i < missingCount; i++) {
+                        adaptivePool.push(letter);
+                    }
+                });
+            }
+
+            // Shuffle the pool for randomness while maintaining weighted distribution
+            for (let i = adaptivePool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [adaptivePool[i], adaptivePool[j]] = [adaptivePool[j], adaptivePool[i]];
             }
         }
 
         function updateLetterPerformance(letter, correct, responseTime, pointsDelta = 0) {
             const key = letter.toLowerCase();
+            const now = Date.now();
+
             if (!letterPerformance[key]) {
-                letterPerformance[key] = { correct: 0, total: 0, avgTime: 0, times: [], score: 0 };
+                letterPerformance[key] = {
+                    correct: 0,
+                    total: 0,
+                    avgTime: 0,
+                    times: [],
+                    score: 0,
+                    // Enhanced spaced repetition fields
+                    lastPracticed: now,
+                    easeFactor: 2.5, // SuperMemo-2 initial ease factor
+                    interval: 1, // Days until next review
+                    nextReview: now + (24 * 60 * 60 * 1000), // Tomorrow
+                    // Performance decay tracking
+                    masteryLevel: 0, // 0-1 scale
+                    lastMasteryUpdate: now,
+                    // Multi-dimensional tracking
+                    avgCorrectTime: null,
+                    avgIncorrectTime: null,
+                    hesitationCount: 0,
+                    mistakePatterns: {},
+                    streakCount: 0,
+                    bestStreak: 0,
+                    // Performance decay
+                    decayRate: 0.95 // Daily decay multiplier when not practiced
+                };
             }
 
             const perf = letterPerformance[key];
             perf.total++;
+            perf.lastPracticed = now;
+
             if (correct) {
                 perf.correct++;
                 perf.times.push(responseTime);
+                perf.streakCount++;
+
+                // Track best streak
+                if (perf.streakCount > perf.bestStreak) {
+                    perf.bestStreak = perf.streakCount;
+                }
+
+                // Update average correct response time (exponential moving average)
+                if (perf.avgCorrectTime === null) {
+                    perf.avgCorrectTime = responseTime;
+                } else {
+                    // Use exponential moving average with alpha = 0.3 for faster adaptation to recent performance
+                    perf.avgCorrectTime = perf.avgCorrectTime * 0.7 + responseTime * 0.3;
+                }
 
                 // Keep only last 10 times
                 if (perf.times.length > 10) perf.times.shift();
 
-                // Calculate average time
-                perf.avgTime = perf.times.reduce((a, b) => a + b, 0) / perf.times.length;
+                // Calculate average time (prevent division by zero)
+                perf.avgTime = perf.times.length > 0 ? perf.times.reduce((a, b) => a + b, 0) / perf.times.length : 0;
+
+                // Enhanced mastery calculation
+                const successRate = perf.correct / perf.total;
+                const timeBonus = responseTime < 3 ? 0.1 : 0; // Bonus for fast correct answers
+                const streakBonus = Math.min(perf.streakCount * 0.05, 0.2); // Bonus for streaks
+
+                perf.masteryLevel = Math.min(1, successRate + timeBonus + streakBonus);
+                perf.lastMasteryUpdate = now;
 
                 // Check for mastery (>90% success rate with at least 5 attempts)
-                if (perf.total >= 5 && (perf.correct / perf.total) > 0.9) {
+                if (perf.total >= 5 && perf.masteryLevel > 0.9) {
                     lettersMastered.add(key);
                     checkAchievement('mastery', lettersMastered.size);
                 }
+
+                // Spaced repetition: Increase interval on correct answers (SuperMemo-2 algorithm)
+                perf.easeFactor = Math.max(1.3, perf.easeFactor + 0.1);
+                // Use base interval of 1 day, multiplied by cumulative ease factor
+                perf.interval = Math.floor((perf.interval || 1) * perf.easeFactor);
+                // Cap interval at 365 days to prevent excessive delays
+                perf.interval = Math.min(perf.interval, 365);
+                perf.nextReview = now + (perf.interval * 24 * 60 * 60 * 1000);
+
+            } else {
+                // Reset streak on incorrect answer
+                perf.streakCount = 0;
+
+                // Update average incorrect response time (exponential moving average)
+                if (perf.avgIncorrectTime === null) {
+                    perf.avgIncorrectTime = responseTime;
+                } else {
+                    // Use exponential moving average with alpha = 0.3 for faster adaptation
+                    perf.avgIncorrectTime = perf.avgIncorrectTime * 0.7 + responseTime * 0.3;
+                }
+
+                // Track hesitation patterns (slow incorrect responses)
+                // Use adaptive threshold based on user's average response time
+                const hesitationThreshold = Math.max(5, (perf.avgCorrectTime || 3) * 2);
+                if (responseTime > hesitationThreshold) {
+                    perf.hesitationCount++;
+                }
+
+                // Spaced repetition: Reset interval on incorrect answers
+                perf.easeFactor = Math.max(1.3, perf.easeFactor - 0.2);
+                perf.interval = 1;
+                perf.nextReview = now + (24 * 60 * 60 * 1000);
+
+                // Reduce mastery level slightly
+                perf.masteryLevel = Math.max(0, perf.masteryLevel - 0.1);
+                perf.lastMasteryUpdate = now;
             }
 
             // Track per-letter score for personalized challenges
@@ -5636,6 +6598,110 @@
 
             // Update UI
             updateDifficultyIndicator();
+        }
+
+        // Enhanced Adaptive Learning: Performance Decay System
+        function applyPerformanceDecay() {
+            const now = Date.now();
+            const oneDayMs = 24 * 60 * 60 * 1000;
+
+            // Prevent concurrent execution to avoid potential recursion issues
+            if (applyPerformanceDecay.isRunning) {
+                return;
+            }
+            applyPerformanceDecay.isRunning = true;
+
+            try {
+                Object.entries(letterPerformance).forEach(([letter, perf]) => {
+                    // Validate performance data structure
+                    if (!perf || typeof perf !== 'object') return;
+                    if (!perf.lastPracticed || !perf.masteryLevel) return;
+
+                    const daysSinceLastPractice = (now - perf.lastPracticed) / oneDayMs;
+
+                    // Apply continuous exponential decay based on time since last practice
+                    if (daysSinceLastPractice > 0) {
+                        // Calculate continuous decay: decay rate per day (e.g., 0.98 = 2% decay per day)
+                        const dailyDecayRate = 0.98; // 2% decay per day
+                        const decayMultiplier = Math.pow(dailyDecayRate, daysSinceLastPractice);
+
+                        // Apply decay to mastery level
+                        const oldMastery = perf.masteryLevel;
+                        perf.masteryLevel = Math.max(0, perf.masteryLevel * decayMultiplier);
+                        perf.lastMasteryUpdate = now;
+
+                        // If mastery level drops below threshold, remove from mastered set
+                        if (oldMastery > 0.8 && perf.masteryLevel <= 0.8) {
+                            lettersMastered.delete(letter);
+                        }
+
+                        // Reset spaced repetition interval if decay was significant
+                        if (oldMastery - perf.masteryLevel > 0.2) {
+                            perf.interval = Math.max(1, Math.floor(perf.interval * 0.5));
+                            perf.nextReview = now + (perf.interval * oneDayMs);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.warn('Error in applyPerformanceDecay:', error);
+            } finally {
+                // Always reset the running flag
+                applyPerformanceDecay.isRunning = false;
+            }
+        }
+
+        // Enhanced Adaptive Learning: Spaced Repetition Review Scheduler
+        function getSpacedRepetitionCandidates(availableLetters) {
+            const now = Date.now();
+            const candidates = [];
+
+            availableLetters.forEach(letter => {
+                const key = letter.toLowerCase();
+                const perf = letterPerformance[key];
+
+                if (!perf || !perf.nextReview) return;
+
+                // Check if letter is due for review
+                if (now >= perf.nextReview) {
+                    candidates.push({
+                        letter,
+                        priority: calculateReviewPriority(perf, now),
+                        daysOverdue: Math.floor((now - perf.nextReview) / (24 * 60 * 60 * 1000))
+                    });
+                }
+            });
+
+            // Sort by priority (highest first)
+            candidates.sort((a, b) => b.priority - a.priority);
+
+            return candidates;
+        }
+
+        // Calculate review priority based on multiple factors
+        function calculateReviewPriority(perf, currentTime) {
+            let priority = 0;
+
+            // Base priority from spaced repetition algorithm
+            const daysOverdue = Math.floor((currentTime - perf.nextReview) / (24 * 60 * 60 * 1000));
+            priority += Math.min(daysOverdue * 0.5, 5); // Cap at 5 points
+
+            // Lower mastery = higher priority
+            priority += (1 - perf.masteryLevel) * 3;
+
+            // Lower ease factor = higher priority (harder letters), but prevent negative priority
+            priority += Math.max(0, (3 - perf.easeFactor) * 0.5);
+
+            // Recent errors = higher priority
+            if (perf.streakCount === 0 && perf.total > 0) {
+                priority += 2;
+            }
+
+            // Hesitation patterns = slightly higher priority
+            if (perf.hesitationCount > perf.total * 0.3) {
+                priority += 1;
+            }
+
+            return priority;
         }
 
         function updateDifficultyIndicator() {
@@ -5689,11 +6755,7 @@
                 utterance.voice = selectedVoice;
             }
 
-            if (callback) {
-                utterance.onend = callback;
-            }
-
-            speechSynthesis.speak(utterance);
+            queueSpeech(utterance, callback);
         }
 
         function speakPhrase(phrase, callback) {
@@ -5721,11 +6783,7 @@
                 utterance.voice = selectedVoice;
             }
 
-            if (callback) {
-                utterance.onend = callback;
-            }
-
-            speechSynthesis.speak(utterance);
+            queueSpeech(utterance, callback);
         }
 
         function speakTracePrompt(letter) {
@@ -5743,7 +6801,7 @@
                 // brief pause between sentences for clarity
                 setTimeout(() => speakLetter(letter), 120);
             };
-            speechSynthesis.speak(lead);
+            queueSpeech(lead, null); // Don't override our custom onend handler
         }
         function speakPhonetics(letter, callback) {
             if (!soundEnabled) { if (callback) callback(); return; }
@@ -5779,7 +6837,7 @@
                     try { showAnchorEmojiForWord(anchor); } catch (e) { }
                 }
                 u.onend = () => { idx++; setTimeout(speakNext, 60); };
-                speechSynthesis.speak(u);
+                queueSpeech(u, null); // Don't override our custom onend handler
             };
             speakNext();
         }
@@ -5854,15 +6912,25 @@
             const displayWrong = currentPlayer ? currentPlayer.roundWrong : roundWrong;
             const displayRound = currentPlayer ? currentPlayer.currentRound : currentRound;
 
-            document.getElementById('scoreDisplay').textContent = Math.max(0, displayScore);
-            document.getElementById('correctCount').textContent = displayCorrect;
-            document.getElementById('totalCount').textContent = QUESTIONS_PER_ROUND;
-            document.getElementById('wrongCount').textContent = displayWrong;
-            document.getElementById('roundNumber').textContent = displayRound;
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            if (scoreDisplay) scoreDisplay.textContent = Math.max(0, displayScore);
+
+            const correctCount = document.getElementById('correctCount');
+            if (correctCount) correctCount.textContent = displayCorrect;
+
+            const totalCount = document.getElementById('totalCount');
+            if (totalCount) totalCount.textContent = QUESTIONS_PER_ROUND;
+
+            const wrongCount = document.getElementById('wrongCount');
+            if (wrongCount) wrongCount.textContent = displayWrong;
+
+            const roundNumber = document.getElementById('roundNumber');
+            if (roundNumber) roundNumber.textContent = displayRound;
 
             // Update stars with animation
             const starCount = Math.min(5, Math.floor(displayScore / 100));
             const starsDisplay = document.getElementById('starsDisplay');
+            if (starsDisplay) {
             starsDisplay.innerHTML = '';
 
             for (let i = 0; i < 5; i++) {
@@ -5876,12 +6944,14 @@
                     star.textContent = '☆';
                 }
                 starsDisplay.appendChild(star);
+                }
             }
         }
 
         function startTimer() {
             if (!timerEnabled) return;
 
+            try {
             clearTimer();
 
             const duration = currentRound === 1 ? timerDuration : Math.max(5, timerDuration - 2);
@@ -5891,6 +6961,11 @@
             const timerDisplay = document.getElementById('timerDisplay');
             const timerBar = document.getElementById('timerBar');
             const timerBarFill = document.getElementById('timerBarFill');
+
+                if (!timerDisplay || !timerBar || !timerBarFill) {
+                    console.warn('Timer elements not found, skipping timer initialization');
+                    return;
+                }
 
             timerBar.style.display = 'block';
             timerBarFill.style.width = '100%';
@@ -5906,8 +6981,8 @@
                 const elapsed = (Date.now() - startTime) / 1000;
                 timeLeft = Math.max(0, Math.ceil(duration - elapsed));
 
-                const percentage = ((duration - elapsed) / duration) * 100;
-                timerBarFill.style.width = Math.max(0, percentage) + '%';
+                    const percentage = duration > 0 ? ((duration - elapsed) / duration) * 100 : 0;
+                    timerBarFill.style.width = Math.max(0, Math.min(100, percentage)) + '%';
 
                 timerDisplay.innerHTML = `⏱️ <span>${timeLeft}</span>`;
 
@@ -5917,8 +6992,12 @@
                     // Speak countdown once per second (no overlaps)
                     if (lastSpokenCountdown !== timeLeft && soundEnabled) {
                         lastSpokenCountdown = timeLeft;
+                            try {
                         cancelSpeech();
                         speakPhrase(timeLeft.toString());
+                            } catch (speechError) {
+                                console.warn('Error speaking countdown:', speechError);
+                            }
                     }
                 } else if (timeLeft === 0) {
                     timerDisplay.className = 'timer-display critical';
@@ -5929,7 +7008,11 @@
                     clearTimer();
                     timerDisplay.innerHTML = "⏰ Time's up!";
                     timerBarFill.style.width = '0%';
+                        try {
                     speakPhrase("Time's up!");
+                        } catch (speechError) {
+                            console.warn('Error speaking "Time\'s up!":', speechError);
+                        }
                     if (!isProcessing) {
                         isProcessing = true;
                         setTimeout(() => {
@@ -5939,9 +7022,14 @@
                     }
                 }
             }, 100);
+            } catch (timerError) {
+                console.error('Error initializing timer:', timerError);
+                clearTimer(); // Clean up any partial state
+            }
         }
 
         function clearTimer() {
+            try {
             if (currentTimer) {
                 clearInterval(currentTimer);
                 currentTimer = null;
@@ -5950,9 +7038,16 @@
                 clearInterval(timerBarInterval);
                 timerBarInterval = null;
             }
-            document.getElementById('timerDisplay').innerHTML = '';
-            document.getElementById('timerDisplay').className = 'timer-display';
-            document.getElementById('timerBar').style.display = 'none';
+                const timerDisplay = document.getElementById('timerDisplay');
+                if (timerDisplay) {
+                    timerDisplay.innerHTML = '';
+                    timerDisplay.className = 'timer-display';
+                }
+                const timerBar = document.getElementById('timerBar');
+                if (timerBar) timerBar.style.display = 'none';
+            } catch (timerClearError) {
+                console.warn('Error clearing timer:', timerClearError);
+            }
         }
 
         function clearAllTimers() {
@@ -5964,10 +7059,22 @@
             if (rainGameInterval) { window.clearInterval(rainGameInterval); rainGameInterval = null; }
             if (minigameTimer) { window.clearInterval(minigameTimer); minigameTimer = null; }
             if (dashboardTimer) { window.clearTimeout(dashboardTimer); dashboardTimer = null; }
-            if (typeof drawAdvanceTimeout !== 'undefined' && drawAdvanceTimeout) { window.clearTimeout(drawAdvanceTimeout); drawAdvanceTimeout = null; }
+            if (typeof drawAdvanceTimeout !== 'undefined' && drawAdvanceTimeout) {
+                try {
+                    window.clearTimeout(drawAdvanceTimeout);
+                } catch (timerError) {
+                    console.warn('Error clearing draw advance timeout:', timerError);
+                } finally {
+                    drawAdvanceTimeout = null;
+                }
+            }
             // Also clear any idle hint timers used by tracing mode
             if (typeof clearIdleHintTimers === 'function') {
-                try { clearIdleHintTimers(); } catch (e) { }
+                try {
+                    clearIdleHintTimers();
+                } catch (idleHintError) {
+                    console.warn('Error clearing idle hint timers:', idleHintError);
+                }
             }
         }
 
@@ -5978,10 +7085,24 @@
             roundWrong++;
             wrongAnswers++;
             totalQuestions++;
-            score = Math.max(0, score - 10);
+
+            // Ensure timeout penalty doesn't make score invalid
+            const penalty = 10;
+            const newScore = score - penalty;
+            if (newScore >= 0 && isFinite(newScore)) {
+                score = newScore;
+            } else {
+                score = Math.max(0, score); // Ensure score doesn't go below 0
+            }
+
             trackLetterError(currentLetter);
             // Treat timeout as an incorrect attempt for SRS scheduling and per-letter scoring
-            try { updateLetterPerformance(currentLetter, false, 0, -10); } catch (e) { }
+            // Use timer duration as response time for timeouts (represents maximum allowed time)
+            try {
+                updateLetterPerformance(currentLetter, false, timerDuration, -10);
+            } catch (performanceError) {
+                console.warn('Error updating letter performance on timeout:', performanceError);
+            }
             showFeedback('Too slow! ⏰', 'error');
             createWrongEffect();
             setTimeout(() => { isProcessing = false; startIdentifyGame(); }, 2000);
@@ -5990,9 +7111,44 @@
         function trackLetterError(letter) {
             const key = letter.toLowerCase();
             letterErrors[key] = (letterErrors[key] || 0) + 1;
-            // Trigger a brief shape-bias window to reinforce similar-shape distinctions
+
+            // Enhanced shape-bias system with intelligent group selection
             shapeBiasTargetLower = key;
-            shapeBiasRoundsRemaining = 3; // bias for next few selections
+            shapeBiasRoundsRemaining = 5; // Extended bias window
+
+            // Select the most relevant shape group for this error
+            const selectedGroup = selectOptimalShapeGroup(key);
+            if (selectedGroup) {
+                // Override the default group selection with optimal clustering
+                const optimalGroupKey = selectedGroup;
+                // Store the selected group for enhanced bias application
+                shapeBiasGroupKey = optimalGroupKey;
+            }
+        }
+
+        // Enhanced shape group selection based on error analysis
+        function selectOptimalShapeGroup(errorLetter) {
+            // First, check if this is a common confusion pair
+            const commonConfusions = {
+                'b': 'mirror_pairs', // b/d confusion
+                'd': 'mirror_pairs', // b/d confusion
+                'p': 'mirror_pairs', // p/q confusion
+                'q': 'mirror_pairs', // p/q confusion
+                'm': 'humps',   // m/n confusion
+                'n': 'humps',   // m/n confusion
+                'v': 'diagonals', // v/w confusion
+                'w': 'diagonals', // v/w confusion
+                'i': 'sticks',  // i/l confusion
+                'l': 'sticks',  // i/l confusion
+                'u': 'humps'    // u/n confusion
+            };
+
+            if (commonConfusions[errorLetter]) {
+                return commonConfusions[errorLetter];
+            }
+
+            // Fall back to primary group membership
+            return letterToShapeGroupLower[errorLetter];
         }
 
         let lastCelebrationTime = 0;
@@ -7297,8 +8453,10 @@
 
             if (mode === 'identify') {
                 startIdentifyGame(true);
-            } else {
+            } else if (mode === 'draw') {
                 startDrawGame();
+            } else if (mode === 'wordBuilder') {
+                startWordBuilderGame();
             }
         }
 
@@ -7457,6 +8615,11 @@
                 responseTimes.push(responseTime);
                 totalQuestions++;
 
+                // Track speed answers for Speed Demon achievement
+                if (responseTime < 2) {
+                    speedAnswers++;
+                }
+
                 // Update correct answer streak
                 correctStreak++;
                 if (correctStreak > bestStreak) {
@@ -7466,15 +8629,32 @@
                 // Check streak achievements
                 checkAchievement('streak', correctStreak);
 
+                // Check speed achievements
+                checkAchievement('speed', speedAnswers);
+
                 // Dynamic scoring: base and time bonus with per-round cap
-                const base = 10 + (difficultyLevel * 5);
-                const bonus = Math.max(0, 30 - responseTime * 3);
-                let points = Math.floor(base + bonus);
+                const base = Math.max(0, 10 + (difficultyLevel * 5));
+                const bonus = Math.max(0, 30 - Math.max(0, responseTime) * 3);
+                let points = Math.max(0, Math.floor(base + bonus));
+
+                // Safety check for valid numbers
+                if (isNaN(points) || !isFinite(points)) {
+                    console.warn('Invalid points calculation, using default:', { base, bonus, responseTime });
+                    points = 10;
+                }
+
                 const gainedThisRound = Math.max(0, (currentPlayer ? currentPlayer.score : score) - scoreAtRoundStart);
                 if (gainedThisRound + points > 50) {
                     points = Math.max(0, 50 - gainedThisRound);
                 }
-                score += points;
+
+                // Ensure score doesn't go negative or become invalid
+                const newScore = score + points;
+                if (newScore >= 0 && isFinite(newScore)) {
+                    score = newScore;
+                } else {
+                    console.warn('Invalid score calculation, keeping current score:', { currentScore: score, points, newScore });
+                }
 
                 // Check score achievements
                 checkAchievement('score', score);
@@ -7529,14 +8709,24 @@
                                     speakPhonetics(currentLetter, () => {
                                         const proceed = () => startIdentifyGame();
                                         if (assoc) {
-                                            try { speakPhrase(`${currentLetter} is for ${assoc.word}.`, proceed); } catch (e) { proceed(); }
+                                            try {
+                                                speakPhrase(`${currentLetter} is for ${assoc.word}.`, proceed);
+                                            } catch (speechError) {
+                                                console.warn('Speech synthesis failed for phonics association:', speechError);
+                                                proceed();
+                                            }
                                         } else {
                                             proceed();
                                         }
                                     });
                                 }
                             };
-                            try { speakPhrase(`What sound does ${letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter} make?`, () => setTimeout(tick, 1000)); } catch (e) { setTimeout(tick, 1000); }
+                            try {
+                                speakPhrase(`What sound does ${letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter} make?`, () => setTimeout(tick, 1000));
+                            } catch (speechError) {
+                                console.warn('Speech synthesis failed for phonics prompt:', speechError);
+                                setTimeout(tick, 1000);
+                            }
                         }, baseDelay + extraDelay);
                     } else {
                         setTimeout(() => { isProcessing = false; startIdentifyGame(); }, baseDelay + extraDelay);
@@ -7575,7 +8765,14 @@
                 roundWrong++;
                 wrongAnswers++;
                 totalQuestions++;
-                score = Math.max(0, score - 10);
+                // Ensure penalty doesn't make score invalid
+                const penalty = 10;
+                const newScore = score - penalty;
+                if (newScore >= 0 && isFinite(newScore)) {
+                    score = newScore;
+                } else {
+                    score = Math.max(0, score); // Ensure score doesn't go below 0
+                }
                 trackLetterError(currentLetter);
 
                 // Reset correct answer streak
@@ -7623,7 +8820,15 @@
             }
             waitingForPhonics = true;
             phonicsRepeatCount = 0;
-            if (phonicsEchoCleanup) { try { phonicsEchoCleanup(true); } catch (e) { } phonicsEchoCleanup = null; }
+            if (phonicsEchoCleanup) {
+                try {
+                    phonicsEchoCleanup(true);
+                } catch (cleanupError) {
+                    console.warn('Error during phonics echo cleanup:', cleanupError);
+                } finally {
+                    phonicsEchoCleanup = null;
+                }
+            }
             clearTimer();
             cancelSpeech();
 
@@ -7653,6 +8858,10 @@
 
             function updatePhonicsTimer() {
                 timeLeft--;
+                if (timeLeft > 0 && !waitingForPhonics) {
+                    // Safety check: if phonics was cancelled, don't continue
+                    return;
+                }
                 if (timeLeft > 0) {
                     timerElement.textContent = timeLeft;
                     phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
@@ -8356,26 +9565,61 @@
         }
 
         function setupCanvas() {
-            const canvas = document.getElementById('drawCanvas');
-            // Prevent page scroll during drawing on touch devices
-            canvas.style.touchAction = 'none';
-            ctx = canvas.getContext('2d');
-            ctx.lineWidth = 8;
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = '#764ba2';
-            drawingPoints = [];
-            lastDrawTime = 0;
+            try {
+                const canvas = document.getElementById('drawCanvas');
+                if (!canvas) {
+                    console.warn('Canvas element not found during setup');
+                    return;
+                }
 
-            // Touch events
-            canvas.addEventListener('touchstart', startDrawing, { passive: false });
-            canvas.addEventListener('touchmove', draw, { passive: false });
-            canvas.addEventListener('touchend', stopDrawing, { passive: false });
+                // Prevent page scroll during drawing on touch devices
+                canvas.style.touchAction = 'none';
+                ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    console.error('Could not get 2D context from canvas');
+                    return;
+                }
 
-            // Mouse events
-            canvas.addEventListener('mousedown', startDrawing);
-            canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('mouseup', stopDrawing);
-            canvas.addEventListener('mouseout', stopDrawing);
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = '#764ba2';
+                drawingPoints = [];
+                lastDrawTime = 0;
+
+                // Remove any existing event listeners first to prevent duplicates
+                try {
+                    canvas.removeEventListener('touchstart', startDrawing);
+                    canvas.removeEventListener('touchmove', draw);
+                    canvas.removeEventListener('touchend', stopDrawing);
+                    canvas.removeEventListener('mousedown', startDrawing);
+                    canvas.removeEventListener('mousemove', draw);
+                    canvas.removeEventListener('mouseup', stopDrawing);
+                    canvas.removeEventListener('mouseout', stopDrawing);
+                } catch (removeError) {
+                    console.warn('Error removing existing canvas event listeners:', removeError);
+                }
+
+                // Touch events
+                try {
+                    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+                    canvas.addEventListener('touchmove', draw, { passive: false });
+                    canvas.addEventListener('touchend', stopDrawing, { passive: false });
+                } catch (touchError) {
+                    console.warn('Error adding touch event listeners:', touchError);
+                }
+
+                // Mouse events
+                try {
+                    canvas.addEventListener('mousedown', startDrawing);
+                    canvas.addEventListener('mousemove', draw);
+                    canvas.addEventListener('mouseup', stopDrawing);
+                    canvas.addEventListener('mouseout', stopDrawing);
+                } catch (mouseError) {
+                    console.warn('Error adding mouse event listeners:', mouseError);
+                }
+            } catch (canvasSetupError) {
+                console.error('Error setting up canvas:', canvasSetupError);
+            }
         }
 
         function startDrawing(e) {
@@ -8616,6 +9860,365 @@
             }, 2500);
         }
 
+        function startWordBuilderGame() {
+            // Check if Word Builder is enabled
+            if (!wordBuilderEnabled) {
+                const gameArea = document.getElementById('gameArea');
+                gameArea.innerHTML = `
+                    <div class="start-screen" style="text-align:center; padding: 24px;">
+                        <div style="font-size:48px; margin-bottom:16px;">🚫</div>
+                        <h2 style="color:#ef4444; margin-bottom:12px;">Word Builder Disabled</h2>
+                        <p style="margin-bottom:20px;">Word Builder mode is currently turned off.</p>
+                        <p>You can enable it in Settings → Basic Settings → Word Builder.</p>
+                        <button class="start-btn" onclick="openSettings()" style="margin-top:20px;">
+                            Open Settings
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Reset state
+            clearAllTimers();
+            cancelSpeech();
+
+            // Get the next word to build
+            const wordData = getNextWord();
+
+            // Check if getNextWord returned null (shouldn't happen with current implementation)
+            if (!wordData) {
+                const gameArea = document.getElementById('gameArea');
+                gameArea.innerHTML = `
+                    <div class="start-screen" style="text-align:center; padding: 24px;">
+                        <div style="font-size:48px; margin-bottom:16px;">⚠️</div>
+                        <h2 style="color:#f59e0b; margin-bottom:12px;">Word Loading Error</h2>
+                        <p style="margin-bottom:20px;">Unable to load the next word. Please try again.</p>
+                        <button class="start-btn" onclick="startWordBuilderGame()">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Check if we have valid word data
+            if (!wordData || !wordData.word || !wordData.letters || !Array.isArray(wordData.letters)) {
+                const gameArea = document.getElementById('gameArea');
+                gameArea.innerHTML = `
+                    <div class="start-screen" style="text-align:center; padding: 24px;">
+                        <div style="font-size:48px; margin-bottom:16px;">⚠️</div>
+                        <h2 style="color:#f59e0b; margin-bottom:12px;">No Words Available</h2>
+                        <p style="margin-bottom:20px;">Unable to load word data. Please try refreshing the page.</p>
+                        <button class="start-btn" onclick="startWordBuilderGame()">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <div class="word-builder-container">
+                    <div class="word-builder-header">
+                        <div class="level-indicator">
+                            Level ${currentWordLevel} • ${wordData.theme || 'general'} theme
+                        </div>
+                        <div class="word-target">
+                            ${wordData.emoji || '📝'} Build: <span>${wordData.word}</span>
+                        </div>
+                        <div class="progress-indicator">
+                            Words completed: ${wordsCompleted}
+                        </div>
+                    </div>
+
+                    <div class="word-slots" id="wordSlots">
+                        ${wordData.letters.map((letter, index) =>
+                            `<div class="word-slot" data-index="${index}" tabindex="0" role="button" aria-label="Word slot ${index + 1}"></div>`
+                        ).join('')}
+                    </div>
+
+                    <div class="letter-bank" id="letterBank">
+                        ${getWordBankLetters().map(letter =>
+                            `<div class="letter-tile" data-letter="${letter}" draggable="true" tabindex="0" role="button" aria-label="Letter ${letter}"></div>`
+                        ).join('')}
+                    </div>
+
+                    <div class="word-builder-controls">
+                        <button id="checkWordBtn" disabled aria-label="Check the word you built">
+                            Check Word
+                        </button>
+                        <button class="secondary" onclick="startWordBuilderGame()" aria-label="Get next word">
+                            Next Word
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Set up drag and drop functionality
+            setupWordBuilderDragDrop(wordData);
+
+            // Initialize enhanced Word Builder features
+            initializeEnhancedWordBuilder();
+        }
+
+        function setupWordBuilderDragDrop(wordData) {
+            if (!wordData || !wordData.letters || !Array.isArray(wordData.letters)) {
+                console.error('Invalid wordData passed to setupWordBuilderDragDrop');
+                return;
+            }
+
+            const letterTiles = document.querySelectorAll('.letter-tile');
+            const wordSlots = document.querySelectorAll('.word-slot');
+            const letterBank = document.getElementById('letterBank');
+            const checkWordBtn = document.getElementById('checkWordBtn');
+
+            if (!letterBank || !checkWordBtn) {
+                console.error('Required DOM elements not found for drag and drop setup');
+                return;
+            }
+
+            let draggedElement = null;
+            let draggedLetter = '';
+
+            // Set up drag events for letter tiles
+            letterTiles.forEach(tile => {
+                tile.addEventListener('dragstart', (e) => {
+                    draggedElement = tile;
+                    draggedLetter = tile.dataset.letter;
+                    e.dataTransfer.effectAllowed = 'move';
+                    tile.style.opacity = '0.5';
+                });
+
+                tile.addEventListener('dragend', (e) => {
+                    draggedElement = null;
+                    draggedLetter = '';
+                    tile.style.opacity = '1';
+                });
+            });
+
+            // Set up drop zones for word slots
+            wordSlots.forEach(slot => {
+                slot.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    slot.style.backgroundColor = '#e0f2fe';
+                    slot.style.borderColor = '#0ea5e9';
+                });
+
+                slot.addEventListener('dragleave', (e) => {
+                    slot.style.backgroundColor = '#f9fafb';
+                    slot.style.borderColor = '#d1d5db';
+                });
+
+                slot.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    slot.style.backgroundColor = '#f9fafb';
+                    slot.style.borderColor = '#d1d5db';
+
+                    if (draggedElement) {
+                        // Remove existing letter from this slot if any
+                        const existingLetter = slot.textContent.trim();
+                        if (existingLetter) {
+                            returnLetterToBank(existingLetter);
+                        }
+
+                        // Place the letter in this slot
+                        slot.textContent = draggedLetter;
+                        slot.style.backgroundColor = '#dbeafe';
+                        slot.style.borderColor = '#3b82f6';
+                        slot.style.borderStyle = 'solid';
+
+                        // Remove the letter tile from the bank
+                        draggedElement.remove();
+
+                        updateCheckWordButton();
+                    }
+                });
+
+                // Allow clicking on slots to remove letters
+                slot.addEventListener('click', () => {
+                    const letter = slot.textContent.trim();
+                    if (letter) {
+                        returnLetterToBank(letter);
+                        slot.textContent = '';
+                        slot.style.backgroundColor = '#f9fafb';
+                        slot.style.borderColor = '#d1d5db';
+                        slot.style.borderStyle = 'dashed';
+                        updateCheckWordButton();
+                    }
+                });
+            });
+
+            // Allow dropping on the letter bank (for rearranging tiles within the bank)
+            letterBank.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+
+            letterBank.addEventListener('drop', (e) => {
+                e.preventDefault();
+                // For now, just allow dropping on the letter bank
+                // This could be enhanced later to allow rearranging tiles within the bank
+            });
+
+            function returnLetterToBank(letter) {
+                const tile = document.createElement('div');
+                tile.className = 'letter-tile';
+                tile.dataset.letter = letter;
+                tile.draggable = true;
+                tile.style.cssText = 'width: 60px; height: 60px; border: 2px solid #e5e7eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; background: white; cursor: grab; user-select: none; transition: all 0.2s;';
+                tile.textContent = letter;
+
+                // Add drag events to the new tile
+                tile.addEventListener('dragstart', (e) => {
+                    draggedElement = tile;
+                    draggedLetter = tile.dataset.letter;
+                    e.dataTransfer.effectAllowed = 'move';
+                    tile.style.opacity = '0.5';
+                });
+
+                tile.addEventListener('dragend', (e) => {
+                    draggedElement = null;
+                    draggedLetter = '';
+                    tile.style.opacity = '1';
+                });
+
+                letterBank.appendChild(tile);
+            }
+
+            function updateCheckWordButton() {
+                const slots = document.querySelectorAll('.word-slot');
+                const filledSlots = Array.from(slots).filter(slot => slot.textContent.trim() !== '');
+                const allSlotsFilled = filledSlots.length === wordData.letters.length;
+
+                checkWordBtn.disabled = !allSlotsFilled;
+                checkWordBtn.style.opacity = allSlotsFilled ? '1' : '0.5';
+            }
+
+            // Set up check word button
+            checkWordBtn.addEventListener('click', () => {
+                checkWordFormation(wordData);
+            });
+
+            // Initialize button state
+            updateCheckWordButton();
+        }
+
+        function checkWordFormation(wordData) {
+            if (!wordData || !wordData.letters || !Array.isArray(wordData.letters)) {
+                showFeedback('❌ Error checking word. Please try again.', 'error');
+                return;
+            }
+
+            // Disable the check button to prevent multiple clicks
+            const checkWordBtn = document.getElementById('checkWordBtn');
+            if (checkWordBtn) {
+                checkWordBtn.disabled = true;
+                checkWordBtn.style.opacity = '0.5';
+            }
+
+            const slots = document.querySelectorAll('.word-slot');
+            const userLetters = Array.from(slots).map(slot => slot.textContent.trim());
+            const correctLetters = wordData.letters;
+
+            // Check if the word is correct
+            const isCorrect = userLetters.join('') === correctLetters.join('');
+
+            // Provide visual feedback with proper duplicate letter handling
+            const letterStates = new Array(userLetters.length).fill('wrong'); // 'correct', 'present', 'wrong'
+            const usedLetters = new Array(correctLetters.length).fill(false);
+
+            // First pass: mark exact matches (green)
+            slots.forEach((slot, index) => {
+                const letter = userLetters[index];
+                if (letter === correctLetters[index]) {
+                    letterStates[index] = 'correct';
+                    usedLetters[index] = true;
+                }
+            });
+
+            // Second pass: mark letters that exist elsewhere (yellow)
+            slots.forEach((slot, index) => {
+                const letter = userLetters[index];
+                if (letterStates[index] === 'wrong' && letter) {
+                    // Find if this letter exists in an unused position
+                    for (let j = 0; j < correctLetters.length; j++) {
+                        if (!usedLetters[j] && correctLetters[j] === letter) {
+                            letterStates[index] = 'present';
+                            usedLetters[j] = true;
+                            break;
+                        }
+                    }
+                }
+            });
+
+            // Apply visual feedback based on letter states
+            slots.forEach((slot, index) => {
+                const state = letterStates[index];
+                const letter = userLetters[index];
+
+                if (state === 'correct') {
+                    // Correct letter in correct position
+                    slot.style.backgroundColor = '#dcfce7';
+                    slot.style.borderColor = '#16a34a';
+                    slot.style.color = '#15803d';
+                } else if (state === 'present') {
+                    // Correct letter in wrong position
+                    slot.style.backgroundColor = '#fef3c7';
+                    slot.style.borderColor = '#d97706';
+                    slot.style.color = '#92400e';
+                } else if (letter) {
+                    // Wrong letter
+                    slot.style.backgroundColor = '#fee2e2';
+                    slot.style.borderColor = '#dc2626';
+                    slot.style.color = '#991b1b';
+                }
+            });
+
+            // Update score and progress
+            if (isCorrect) {
+                wordsCompleted++;
+                const points = 10 + (currentWordLevel * 5); // Base points + level bonus
+                score += points;
+
+                // Update UI
+                updateScoreDisplay();
+                showFeedback(`🎉 Great job! "${wordData.word}" +${points} points!`, 'success');
+
+                // Audio feedback
+                if (soundEnabled) {
+                    speakPhrase(`Great job! You made ${wordData.word}!`);
+                }
+
+                // Auto-advance after a short delay
+                setTimeout(() => {
+                    startWordBuilderGame();
+                }, 2500);
+
+            } else {
+                // Incorrect word
+                showFeedback(`❌ Not quite right. Try again!`, 'error');
+
+                // Audio feedback
+                if (soundEnabled) {
+                    speakPhrase(`Not quite right. Try again!`);
+                }
+
+                // Re-evaluate the check button state after feedback
+                setTimeout(() => {
+                    const checkWordBtn = document.getElementById('checkWordBtn');
+                    const slots = document.querySelectorAll('.word-slot');
+                    if (checkWordBtn && slots.length > 0) {
+                        const filledSlots = Array.from(slots).filter(slot => slot.textContent.trim() !== '');
+                        const allSlotsFilled = filledSlots.length === wordData.letters.length;
+                        checkWordBtn.disabled = !allSlotsFilled;
+                        checkWordBtn.style.opacity = allSlotsFilled ? '1' : '0.5';
+                    }
+                }, 2000);
+            }
+        }
+
         function clearIdleHintTimers() {
             if (idleHintTimeout) { clearTimeout(idleHintTimeout); idleHintTimeout = null; }
             if (idleHintInterval) { clearInterval(idleHintInterval); idleHintInterval = null; }
@@ -8624,6 +10227,349 @@
         }
 
         function openSettings() {
+        // ===== WORLD-CLASS WORD BUILDER ENHANCED FUNCTIONS =====
+        
+        // GSAP-powered entrance animations for Word Builder elements
+        function animateWordBuilderEntrance() {
+            if (typeof gsap === "undefined") return;
+            
+            const tl = gsap.timeline();
+            
+            // Animate container entrance
+            tl.fromTo(".word-builder-container",
+                { y: 50, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }
+            )
+
+            // Animate header elements with stagger
+            .fromTo(".level-indicator, .word-target, .progress-indicator",
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, stagger: 0.1, ease: "power2.out" },
+                "-=0.3"
+            )
+
+            // Animate word slots with bounce effect
+            .fromTo(".word-slot",
+                { scale: 0, rotation: -180 },
+                { scale: 1, rotation: 0, duration: 0.5, stagger: 0.05, ease: "back.out(1.7)" },
+                "-=0.2"
+            )
+
+            // Animate letter tiles with wave effect
+            .fromTo(".letter-tile",
+                { y: 30, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.3, stagger: 0.02, ease: "power2.out" },
+                "-=0.1"
+            )
+
+            // Animate controls
+            .fromTo(".word-builder-controls button",
+                { scale: 0.8, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.3, stagger: 0.1, ease: "power2.out" },
+                "-=0.2"
+            );
+        }
+        
+        // Enhanced drag and drop micro-interactions
+        function enhanceWordBuilderInteractions() {
+            const letterTiles = document.querySelectorAll(".letter-tile");
+            const wordSlots = document.querySelectorAll(".word-slot");
+            
+            // Enhanced hover effects with GSAP
+            letterTiles.forEach(tile => {
+                tile.addEventListener("mouseenter", () => {
+                    if (typeof gsap !== "undefined") {
+                        gsap.to(tile, { 
+                            scale: 1.05, 
+                            y: -3, 
+                            duration: 0.2, 
+                            ease: "power2.out" 
+                        });
+                    }
+                });
+                
+                tile.addEventListener("mouseleave", () => {
+                    if (typeof gsap !== "undefined") {
+                        gsap.to(tile, { 
+                            scale: 1, 
+                            y: 0, 
+                            duration: 0.2, 
+                            ease: "power2.out" 
+                        });
+                    }
+                });
+            });
+            
+            // Enhanced slot hover effects
+            wordSlots.forEach(slot => {
+                slot.addEventListener("mouseenter", () => {
+                    if (!slot.classList.contains("filled") && typeof gsap !== "undefined") {
+                        gsap.to(slot, { 
+                            scale: 1.05, 
+                            duration: 0.2, 
+                            ease: "power2.out" 
+                        });
+                    }
+                });
+                
+                slot.addEventListener("mouseleave", () => {
+                    if (!slot.classList.contains("filled") && typeof gsap !== "undefined") {
+                        gsap.to(slot, { 
+                            scale: 1, 
+                            duration: 0.2, 
+                            ease: "power2.out" 
+                        });
+                    }
+                });
+            });
+        }
+        
+        // Celebration animation system
+        function createWordBuilderCelebration() {
+            if (typeof gsap === "undefined") return;
+            
+            const celebrationContainer = document.createElement("div");
+            celebrationContainer.className = "celebration-container";
+            document.body.appendChild(celebrationContainer);
+            
+            // Create celebration particles
+            const emojis = ["🎉", "⭐", "✨", "🎊", "🌟", "💫", "🎈", "🎆"];
+            
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement("div");
+                particle.className = "celebration-particle";
+                particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                particle.style.left = Math.random() * 100 + "vw";
+                particle.style.animationDelay = Math.random() * 2 + "s";
+                particle.style.fontSize = (Math.random() * 20 + 20) + "px";
+                celebrationContainer.appendChild(particle);
+            }
+            
+            // Remove celebration after animation
+            setTimeout(() => {
+                if (celebrationContainer.parentNode) {
+                    celebrationContainer.parentNode.removeChild(celebrationContainer);
+                }
+            }, 4000);
+        }
+        
+        // Enhanced word completion feedback
+        function showWordBuilderSuccess(word, points) {
+            if (typeof gsap === "undefined") return;
+            
+            // Create success burst effect
+            const container = document.querySelector(".word-builder-container");
+            if (container) {
+                container.classList.add("success-burst");
+                
+                // Animate word slots with success effect
+                const slots = document.querySelectorAll(".word-slot");
+                slots.forEach((slot, index) => {
+                    setTimeout(() => {
+                        gsap.fromTo(slot, 
+                            { scale: 1 },
+                            { scale: 1.1, duration: 0.3, yoyo: true, repeat: 1, ease: "power2.inOut" }
+                        );
+                    }, index * 100);
+                });
+                
+                // Trigger celebration
+                createWordBuilderCelebration();
+                
+                // Remove burst class after animation
+                setTimeout(() => {
+                    container.classList.remove("success-burst");
+                }, 800);
+            }
+        }
+        
+        // Enhanced error feedback with subtle shake
+        function showWordBuilderError() {
+            if (typeof gsap === "undefined") return;
+            
+            const container = document.querySelector(".word-builder-container");
+            if (container) {
+                gsap.to(container, {
+                    x: -5,
+                    duration: 0.1,
+                    yoyo: true,
+                    repeat: 5,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                        gsap.to(container, { x: 0, duration: 0.1 });
+                    }
+                });
+            }
+        }
+        
+        // Enhanced letter placement animation
+        function animateLetterPlacement(slot, letter) {
+            if (typeof gsap === "undefined") return;
+            
+            // Animate letter appearing in slot
+            gsap.fromTo(slot, 
+                { scale: 0.8, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)" }
+            );
+            
+            // Add subtle glow effect
+            gsap.to(slot, {
+                boxShadow: "0 0 20px rgba(102, 126, 234, 0.3)",
+                duration: 0.3,
+                yoyo: true,
+                repeat: 1
+            });
+        }
+        
+        // Enhanced letter removal animation
+        function animateLetterRemoval(slot) {
+            if (typeof gsap === "undefined") return;
+            
+            gsap.to(slot, {
+                scale: 0.9,
+                opacity: 0.7,
+                duration: 0.2,
+                yoyo: true,
+                repeat: 1,
+                ease: "power2.inOut"
+            });
+        }
+        
+        // Progressive disclosure for Word Builder tutorial
+        function showWordBuilderTutorial() {
+            if (wordsCompleted === 0) {
+                // First time user - show gentle tutorial
+                setTimeout(() => {
+                    if (typeof gsap !== "undefined") {
+                        const tutorialTl = gsap.timeline();
+                        
+                        // Highlight letter bank
+                        tutorialTl.to(".letter-bank", {
+                            boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)",
+                            duration: 0.5,
+                            yoyo: true,
+                            repeat: 3
+                        })
+
+                        // Then highlight word slots
+                        .to(".word-slots", {
+                            boxShadow: "0 0 30px rgba(16, 185, 129, 0.5)",
+                            duration: 0.5,
+                            yoyo: true,
+                            repeat: 3
+                        }, "+=1")
+
+                        // Finally highlight check button
+                        .to("#checkWordBtn", {
+                            boxShadow: "0 0 30px rgba(245, 101, 101, 0.5)",
+                            duration: 0.5,
+                            yoyo: true,
+                            repeat: 3
+                        }, "+=1");
+                    }
+                }, 2000);
+            }
+        }
+        
+        // Accessibility enhancements for Word Builder
+        function enhanceWordBuilderAccessibility() {
+            // Add live region for screen readers
+            const liveRegion = document.createElement("div");
+            liveRegion.setAttribute("aria-live", "polite");
+            liveRegion.setAttribute("aria-atomic", "true");
+            liveRegion.className = "sr-only";
+            liveRegion.id = "word-builder-status";
+            document.body.appendChild(liveRegion);
+            
+            // Keyboard navigation for letter tiles
+            const letterTiles = document.querySelectorAll(".letter-tile");
+            letterTiles.forEach((tile, index) => {
+                tile.setAttribute("tabindex", "0");
+                tile.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        // Trigger drag simulation
+                        tile.click();
+                    }
+                });
+            });
+            
+            // Keyboard navigation for word slots
+            const wordSlots = document.querySelectorAll(".word-slot");
+            wordSlots.forEach((slot, index) => {
+                slot.setAttribute("tabindex", "0");
+                slot.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        // Remove letter from slot
+                        slot.click();
+                    }
+                });
+            });
+        }
+        
+        // Enhanced visual feedback for word validation
+        function enhanceWordValidationFeedback(userLetters, correctLetters, slots) {
+            if (typeof gsap === "undefined") return;
+            
+            // Enhanced color-coded feedback with animations
+            slots.forEach((slot, index) => {
+                const letter = userLetters[index];
+                const isCorrectPosition = letter === correctLetters[index];
+                
+                if (isCorrectPosition) {
+                    // Correct letter in correct position - success animation
+                    gsap.to(slot, {
+                        background: "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)",
+                        borderColor: "#16a34a",
+                        color: "#166534",
+                        scale: 1.1,
+                        duration: 0.3,
+                        ease: "back.out(1.7)",
+                        onComplete: () => {
+                            gsap.to(slot, { scale: 1, duration: 0.2 });
+                        }
+                    });
+                } else if (letter && correctLetters.includes(letter)) {
+                    // Correct letter in wrong position - warning animation
+                    gsap.to(slot, {
+                        background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+                        borderColor: "#d97706",
+                        color: "#92400e",
+                        rotation: 5,
+                        duration: 0.3,
+                        yoyo: true,
+                        repeat: 1,
+                        ease: "power2.inOut"
+                    });
+                } else if (letter) {
+                    // Wrong letter - error animation
+                    gsap.to(slot, {
+                        background: "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
+                        borderColor: "#dc2626",
+                        color: "#991b1b",
+                        x: -3,
+                        duration: 0.1,
+                        yoyo: true,
+                        repeat: 3,
+                        ease: "power2.inOut"
+                    });
+                }
+            });
+        }
+        
+        // Initialize enhanced Word Builder features
+        function initializeEnhancedWordBuilder() {
+            // Add entrance animations
+            setTimeout(() => {
+                animateWordBuilderEntrance();
+                enhanceWordBuilderInteractions();
+                showWordBuilderTutorial();
+                enhanceWordBuilderAccessibility();
+            }, 100);
+        }
+        
+        // ===== END WORLD-CLASS WORD BUILDER ENHANCED FUNCTIONS =====
             const modal = document.getElementById('settingsModal');
             previouslyFocusedElement = document.activeElement;
             modal.style.display = 'flex';
@@ -8636,6 +10582,14 @@
                 }
             } catch (e) { }
             setPhonicsMode(phonicsEnabled ? 'on' : 'off');
+
+            try {
+                const savedWordBuilder = localStorage.getItem('letterLearningWordBuilder');
+                if (savedWordBuilder) {
+                    wordBuilderEnabled = savedWordBuilder === 'on';
+                }
+            } catch (e) { }
+            setWordBuilderMode(wordBuilderEnabled ? 'on' : 'off');
             const voiceToggle = document.getElementById('voiceToggle');
             if (voiceToggle) voiceToggle.checked = !!voiceRecordingEnabled;
             const fm = document.getElementById('focusModeCheck');
@@ -8705,6 +10659,24 @@
             const activeBtn = document.getElementById('sound' + (mode === 'on' ? 'On' : 'Off'));
             activeBtn.classList.add('active');
             activeBtn.setAttribute('aria-pressed', 'true');
+        }
+
+        function setWordBuilderMode(mode) {
+            wordBuilderEnabled = mode === 'on';
+            try { localStorage.setItem('letterLearningWordBuilder', wordBuilderEnabled ? 'on' : 'off'); } catch (e) { }
+            document.querySelectorAll('#wordBuilderOn, #wordBuilderOff').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-pressed', 'false');
+            });
+            const activeBtn = document.getElementById('wordBuilder' + (mode === 'on' ? 'On' : 'Off'));
+            activeBtn.classList.add('active');
+            activeBtn.setAttribute('aria-pressed', 'true');
+
+            // Hide/show Word Builder mode button based on setting
+            const wordBuilderBtn = document.querySelector('.mode-btn[aria-label="Word building mode"]');
+            if (wordBuilderBtn) {
+                wordBuilderBtn.style.display = wordBuilderEnabled ? 'block' : 'none';
+            }
         }
 
         function toggleVoiceRecording(enabled) {
@@ -9730,16 +11702,43 @@
                 reduceMotionEnabled,
                 celebrationType,
                 currentTheme,
-                voiceRecordingEnabled
+                voiceRecordingEnabled,
+                // Enhanced Adaptive Learning Data
+                shapeBiasTargetLower,
+                shapeBiasRoundsRemaining,
+                shapeBiasGroupKey
             };
 
+            try {
             localStorage.setItem('letterLearningGameData', JSON.stringify(gameData));
+            } catch (storageError) {
+                console.warn('Failed to save game data to localStorage:', storageError);
+                // Try to save a minimal version if quota exceeded
+                if (storageError.name === 'QuotaExceededError') {
+                    try {
+                        const minimalData = {
+                            score: gameData.score || 0,
+                            correctAnswers: gameData.correctAnswers || 0,
+                            wrongAnswers: gameData.wrongAnswers || 0,
+                            currentRound: gameData.currentRound || 1,
+                            bestStreak: gameData.bestStreak || 0,
+                            roundsCompleted: gameData.roundsCompleted || 0,
+                            lastPlayed: gameData.lastPlayed
+                        };
+                        localStorage.setItem('letterLearningGameData', JSON.stringify(minimalData));
+                        console.log('Saved minimal game data due to storage quota');
+                    } catch (minimalError) {
+                        console.error('Failed to save even minimal game data:', minimalError);
+                    }
+                }
+            }
         }
 
         function loadGameData() {
-            const saved = localStorage.getItem('letterLearningGameData');
-            if (saved) {
                 try {
+                const saved = localStorage.getItem('letterLearningGameData');
+                if (!saved) return;
+
                     const gameData = JSON.parse(saved);
 
                     // Restore game state
@@ -9756,6 +11755,16 @@
                         if (typeof perf.interval !== 'number') perf.interval = 0;
                         if (typeof perf.nextReview !== 'number') perf.nextReview = nowTs;
                         if (!Array.isArray(perf.times)) perf.times = perf.times ? [perf.times] : [];
+                        // Enhanced adaptive learning fields
+                        if (typeof perf.lastPracticed !== 'number') perf.lastPracticed = nowTs;
+                        if (typeof perf.masteryLevel !== 'number') perf.masteryLevel = Math.min(1, (perf.correct || 0) / Math.max(1, perf.total || 1));
+                        if (typeof perf.lastMasteryUpdate !== 'number') perf.lastMasteryUpdate = nowTs;
+                        if (typeof perf.avgCorrectTime !== 'number') perf.avgCorrectTime = null;
+                        if (typeof perf.avgIncorrectTime !== 'number') perf.avgIncorrectTime = null;
+                        if (typeof perf.hesitationCount !== 'number') perf.hesitationCount = 0;
+                        if (typeof perf.streakCount !== 'number') perf.streakCount = 0;
+                        if (typeof perf.bestStreak !== 'number') perf.bestStreak = 0;
+                        if (typeof perf.decayRate !== 'number') perf.decayRate = 0.95;
                         letterPerformance[k] = perf;
                     });
                     lettersMastered = new Set(gameData.lettersMastered || []);
@@ -9778,6 +11787,14 @@
                     celebrationType = gameData.celebrationType || 'fireworks';
                     currentTheme = gameData.currentTheme || 'classic';
                     voiceRecordingEnabled = !!gameData.voiceRecordingEnabled;
+
+                    // Restore Enhanced Adaptive Learning Data
+                    shapeBiasTargetLower = gameData.shapeBiasTargetLower || null;
+                    shapeBiasRoundsRemaining = gameData.shapeBiasRoundsRemaining || 0;
+                    shapeBiasGroupKey = gameData.shapeBiasGroupKey || null;
+
+                    // Note: Performance decay will be applied separately after load is complete
+                    // to avoid concurrency issues with the decay function
 
                     // Check streak continuity
                     checkStreakContinuity();
@@ -9814,14 +11831,42 @@
                             }, 1000);
                         }
                     }
-                } catch (e) {
-                    console.error('Error loading game data:', e);
-                }
+            } catch (loadError) {
+                console.error('Critical error during game data loading:', loadError);
+                // Reset to defaults if loading completely fails
+                score = 0;
+                correctAnswers = 0;
+                wrongAnswers = 0;
+                currentRound = 1;
+                letterPerformance = {};
+                lettersMastered = new Set();
+                unlockedAchievements = new Set();
+                achievementProgress = {};
+                bestStreak = 0;
+                speedAnswers = 0;
+                totalPlayTime = 0;
+                roundsCompleted = 0;
+                console.log('Reset to default game state due to loading error');
             }
         }
 
-        // Auto-save periodically
-        setInterval(saveGameData, 30000); // Save every 30 seconds
+        // Auto-save periodically with proper cleanup tracking
+        let autoSaveInterval = setInterval(saveGameData, 30000); // Save every 30 seconds
+
+        // Apply performance decay periodically (every 6 hours)
+        let performanceDecayInterval = setInterval(applyPerformanceDecay, 6 * 60 * 60 * 1000);
+
+        // Cleanup intervals on page unload
+        window.addEventListener('beforeunload', () => {
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+                autoSaveInterval = null;
+            }
+            if (performanceDecayInterval) {
+                clearInterval(performanceDecayInterval);
+                performanceDecayInterval = null;
+            }
+        });
 
         // Save on page unload
         window.addEventListener('beforeunload', saveGameData);
@@ -10180,6 +12225,37 @@
             }
         }, { passive: false });
 
+        // Handle drawing validation results and scoring
+        function handleDrawingResult(passed, responseTime, finalScore, acceptThresh, tmpl) {
+            if (passed) {
+                // Track speed answers for Speed Demon achievement
+                if (responseTime < 2) {
+                    speedAnswers++;
+                }
+                checkAchievement('speed', speedAnswers);
+
+                const base = 10 + (difficultyLevel * 5);
+                const bonus = Math.max(0, 30 - responseTime * 3);
+                const hintPenalty = hintWasShown ? 10 : 0;
+                let points = Math.max(0, Math.floor(base + bonus) - hintPenalty);
+                const gainedThisRound = Math.max(0, (currentPlayer ? currentPlayer.score : score) - scoreAtRoundStart);
+                if (gainedThisRound + points > 50) points = Math.max(0, 50 - gainedThisRound);
+                score += points; roundCorrect++; correctAnswers++; totalQuestions++; updateScoreDisplay();
+                updateLetterPerformance(currentLetter, true, responseTime, points);
+                showFeedback(`That's a great "${currentLetter}"! +${points} ✨`, 'success');
+                cancelSpeech(); speakPhrase(`Great ${currentLetter}!`, () => { advanceToNextDrawLetterOnce(); });
+                const container = document.querySelector('.canvas-container');
+                if (container) { container.style.boxShadow = '0 10px 30px rgba(74, 222, 128, 0.5)'; container.style.transform = 'scale(1.03)'; setTimeout(() => { container.style.boxShadow = ''; container.style.transform = ''; }, 1000); }
+                drawAdvanceTimeout = setTimeout(() => { advanceToNextDrawLetterOnce(); }, 2200);
+            } else {
+                const msg = (finalScore >= (acceptThresh - 0.06)) ? (tmpl.feedback.incomplete || 'So close! A little more will do it.') : (tmpl.feedback.wrong || "Let's try again with this letter shape.");
+                showFeedback(msg, 'error'); speakPhrase(msg);
+                const container = document.querySelector('.canvas-container');
+                if (container) { container.classList.add('animate__animated', 'animate__shakeX'); setTimeout(() => container.classList.remove('animate__animated', 'animate__shakeX'), 800); }
+                setTimeout(() => clearCanvas(), 2000);
+            }
+        }
+
         // New tracing recognizer (hybrid classical + optional deep) — overrides old checkDrawing
         function checkDrawingNew() {
             const ALL_LETTERS = Object.keys(LETTER_CHECKPOINTS);
@@ -10263,10 +12339,17 @@
 
             // Quick checks
             const canvas = document.getElementById('drawCanvas');
-            if (!canvas) return;
+            if (!canvas) {
+                console.warn('Canvas element not found for drawing check');
+                return;
+            }
             if (drawingPoints.length < 12) {
                 showFeedback('Keep drawing! Try to complete the letter. ✏️', 'info');
-                speakPhrase('Add a little more to your drawing!');
+                try {
+                    speakPhrase('Add a little more to your drawing!');
+                } catch (speechError) {
+                    console.warn('Speech synthesis failed:', speechError);
+                }
                 return;
             }
 
@@ -10312,17 +12395,34 @@
             if (C.mbnet && C.deepEmb && C.deepEmb.size) {
                 const size = 224, lw = Math.round(size * 0.11);
                 const cimg = renderStrokesToCanvas(userNorm, size, lw);
-                const vec = tf.tidy(() => { const e = C.mbnet.infer(cimg, true); const flat = e.dataSync(); return Float32Array.from(flat); });
-                const v = l2norm(vec);
-                let bestOther = -2; let targetCos = -1;
-                for (const [L, emb] of C.deepEmb.entries()) {
-                    const cs = cosine(v, emb);
-                    if (L === currentLetter) { targetCos = cs; }
-                    else if (cs > bestOther) bestOther = cs;
+                let vec, v = null;
+                try {
+                    vec = tf.tidy(() => {
+                        const e = C.mbnet.infer(cimg, true);
+                        const flat = e.dataSync();
+                        return Float32Array.from(flat);
+                    });
+                    v = l2norm(vec);
+                } catch (tfError) {
+                    console.warn('TensorFlow inference failed, falling back to classical recognition:', tfError);
+                    deepOk = false;
+                    v = null;
                 }
-                deepScore = (targetCos + 1) / 2; // normalize to [0,1]
-                deepMargin = targetCos - (bestOther === -2 ? -1 : bestOther);
-                deepOk = true;
+
+                // Only proceed with deep learning if TensorFlow inference succeeded
+                if (deepOk && v) {
+                    let bestOther = -2; let targetCos = -1;
+                    for (const [L, emb] of C.deepEmb.entries()) {
+                        const cs = cosine(v, emb);
+                        if (L === currentLetter) { targetCos = cs; }
+                        else if (cs > bestOther) bestOther = cs;
+                    }
+                    deepScore = (targetCos + 1) / 2; // normalize to [0,1]
+                    deepMargin = targetCos - (bestOther === -2 ? -1 : bestOther);
+                    deepOk = true;
+                } else {
+                    deepOk = false;
+                }
             }
 
             // Letter-specific soft requirements
@@ -10331,14 +12431,35 @@
             const dotOK = hasDotAboveMain(userNorm);
             const crossbarOK = hasMidCrossbar(userNorm);
 
-            // Blend decision
-            const BASE_ACCEPT = 0.36;
+            // Drawing validation constants
+            const VALIDATION_CONSTANTS = {
+                BASE_ACCEPT: 0.36,
+                CLASSICAL_MARGIN_THRESHOLD: 0.08,
+                DEEP_MARGIN_THRESHOLD: 0.08,
+                DEEP_MARGIN_LOWER: -0.02,
+                DEEP_MARGIN_UPPER: -0.10,
+                DEEP_SCORE_THRESHOLD: 0.78,
+                DEEP_MARGIN_ADJUST: 0.02,
+                VISUAL_TOP_OK: 0.01,
+                FLOOR_ADJUST: 0.04,
+                DOMINANCE_THRESHOLD: 0.08,
+                DEEP_DOMINANCE_THRESHOLD: -0.10,
+                CROSS_IOU_MIN: 0.12,
+                LOOP_IOU_MIN: 0.20,
+                ACCEPT_MIN: 0.32,
+                ACCEPT_MAX: 0.52,
+                DOT_THRESHOLD_I: 0.01,
+                DOT_THRESHOLD_J: 0.02,
+                CROSSBAR_THRESHOLD_E: 0.005,
+                CROSSBAR_THRESHOLD_OTHERS: 0.01
+            };
+
             const LETTER_EASING = new Map([
                 ...['S', 's', 'G', 'g', 'Q', 'q', 'O', 'o', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'E', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.10]),
                 ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
-            let acceptThresh = BASE_ACCEPT + easing;
+            let acceptThresh = VALIDATION_CONSTANTS.BASE_ACCEPT + easing;
             // Per-letter minimum acceptance floors and cloud gates (shape-first)
             const letterFloors = new Map([
                 // Straight/diagonal-heavy letters should rely more on cloud shape
@@ -10350,23 +12471,23 @@
             let finalScore = classicalScore;
             if (deepOk) {
                 finalScore = 0.55 * classicalScore + 0.45 * deepScore;
-                if (deepMargin >= 0.08) acceptThresh -= 0.02;
-                if (deepScore >= 0.78) acceptThresh = Math.min(acceptThresh, 0.46);
+                if (deepMargin >= VALIDATION_CONSTANTS.DEEP_MARGIN_THRESHOLD) acceptThresh -= VALIDATION_CONSTANTS.DEEP_MARGIN_ADJUST;
+                if (deepScore >= VALIDATION_CONSTANTS.DEEP_SCORE_THRESHOLD) acceptThresh = Math.min(acceptThresh, 0.46);
             }
-            if (classicalMargin >= 0.08) acceptThresh -= 0.02;
-            if (needDot && !dotOK) acceptThresh += (currentLetter === 'i' ? 0.01 : 0.02);
-            if (needCrossbar && !crossbarOK) acceptThresh += (currentLetter === 'E' ? 0.005 : 0.01);
-            acceptThresh = clamp(acceptThresh, 0.32, 0.52);
+            if (classicalMargin >= VALIDATION_CONSTANTS.CLASSICAL_MARGIN_THRESHOLD) acceptThresh -= VALIDATION_CONSTANTS.DEEP_MARGIN_ADJUST;
+            if (needDot && !dotOK) acceptThresh += (currentLetter === 'i' ? VALIDATION_CONSTANTS.DOT_THRESHOLD_I : VALIDATION_CONSTANTS.DOT_THRESHOLD_J);
+            if (needCrossbar && !crossbarOK) acceptThresh += (currentLetter === 'E' ? VALIDATION_CONSTANTS.CROSSBAR_THRESHOLD_E : VALIDATION_CONSTANTS.CROSSBAR_THRESHOLD_OTHERS);
+            acceptThresh = clamp(acceptThresh, VALIDATION_CONSTANTS.ACCEPT_MIN, VALIDATION_CONSTANTS.ACCEPT_MAX);
 
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
             // Middle-ground easy gate: accept on any of these low bars, else blended threshold
             // Middle-ground: accept if target is near top among letters (very low absolute bars), else blended threshold
-            const classicalTopOk = (classicalScore + 0.01) >= bestOtherClassical && classicalScore >= Math.max(0.28, floor - 0.04);
-            const deepTopOk = deepOk && deepMargin >= -0.02 && deepScore >= 0.55;
+            const classicalTopOk = (classicalScore + VALIDATION_CONSTANTS.VISUAL_TOP_OK) >= bestOtherClassical && classicalScore >= Math.max(0.28, floor - VALIDATION_CONSTANTS.FLOOR_ADJUST);
+            const deepTopOk = deepOk && deepMargin >= VALIDATION_CONSTANTS.DEEP_MARGIN_LOWER && deepScore >= 0.55;
             let passed = classicalTopOk || deepTopOk || (finalScore >= acceptThresh);
             // Generic guard: if another letter dominates the target by a clear margin, reject
-            const wrongDominatesClassical = (bestOtherClassical - classicalScore) > 0.08;
-            const wrongDominatesDeep = deepOk && (deepMargin < -0.10);
+            const wrongDominatesClassical = (bestOtherClassical - classicalScore) > VALIDATION_CONSTANTS.DOMINANCE_THRESHOLD;
+            const wrongDominatesDeep = deepOk && (deepMargin < VALIDATION_CONSTANTS.DEEP_DOMINANCE_THRESHOLD);
             if (passed && (wrongDominatesClassical || wrongDominatesDeep)) passed = false;
             // Hard guard: if the drawing looks like a clear X/cross and currentLetter is not X/x, reject
             if (passed && looksLikeCross(userNorm) && !(currentLetter === 'X' || currentLetter === 'x')) passed = false;
@@ -10375,38 +12496,30 @@
                 const loopish = new Set(['o','O','Q','q','g','G','a','A','d','D','p','P','b','B']);
                 if (loopish.has(currentLetter)) {
                     // Lower IoU bar for pure loops to reduce false rejections
-                    const minIoU = (currentLetter === 'o' || currentLetter === 'O') ? 0.12 : 0.20;
+                    const minIoU = (currentLetter === 'o' || currentLetter === 'O') ? VALIDATION_CONSTANTS.CROSS_IOU_MIN : VALIDATION_CONSTANTS.LOOP_IOU_MIN;
                     if (visual < minIoU) passed = false;
                 }
             }
 
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
-            if (passed) {
-                const base = 10 + (difficultyLevel * 5);
-                const bonus = Math.max(0, 30 - responseTime * 3);
-                const hintPenalty = hintWasShown ? 10 : 0;
-                let points = Math.max(0, Math.floor(base + bonus) - hintPenalty);
-                const gainedThisRound = Math.max(0, (currentPlayer ? currentPlayer.score : score) - scoreAtRoundStart);
-                if (gainedThisRound + points > 50) points = Math.max(0, 50 - gainedThisRound);
-                score += points; roundCorrect++; correctAnswers++; totalQuestions++; updateScoreDisplay();
-                updateLetterPerformance(currentLetter, true, responseTime, points);
-                showFeedback(`That's a great "${currentLetter}"! +${points} ✨`, 'success');
-                cancelSpeech(); speakPhrase(`Great ${currentLetter}!`, () => { advanceToNextDrawLetterOnce(); });
-                const container = document.querySelector('.canvas-container');
-                if (container) { container.style.boxShadow = '0 10px 30px rgba(74, 222, 128, 0.5)'; container.style.transform = 'scale(1.03)'; setTimeout(() => { container.style.boxShadow = ''; container.style.transform = ''; }, 1000); }
-                drawAdvanceTimeout = setTimeout(() => { advanceToNextDrawLetterOnce(); }, 2200);
-            } else {
-                const msg = (finalScore >= (acceptThresh - 0.06)) ? (tmpl.feedback.incomplete || 'So close! A little more will do it.') : (tmpl.feedback.wrong || "Let's try again with this letter shape.");
-                showFeedback(msg, 'error'); speakPhrase(msg);
-                const container = document.querySelector('.canvas-container');
-                if (container) { container.classList.add('animate__animated', 'animate__shakeX'); setTimeout(() => container.classList.remove('animate__animated', 'animate__shakeX'), 800); }
-                setTimeout(() => clearCanvas(), 2000);
-            }
+            handleDrawingResult(passed, responseTime, finalScore, acceptThresh, tmpl);
         }
 
         // Override: ensure the new recognizer is used
-        function checkDrawing() { return checkDrawingNew(); }
+        // Add throttling to prevent excessive computation
+        let lastDrawingCheck = 0;
+        const DRAWING_CHECK_THROTTLE = 100; // ms
+
+        function checkDrawing() {
+            const now = Date.now();
+            if (now - lastDrawingCheck < DRAWING_CHECK_THROTTLE) {
+                return; // Throttle to prevent excessive computation
+            }
+            lastDrawingCheck = now;
+            return checkDrawingNew();
+        }
     </script>
 </body>
 
 </html>
+
