@@ -5375,34 +5375,35 @@
         // Letter collections
         const lowerLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
         const upperLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        // Phonetic sounds spelled out for primitive TTS systems (natural pacing + anchor word)
+        // Improved phonetic sounds for primitive TTS systems (natural pacing + anchor word)
+        // Vowels now use short syllables with target sound for accurate TTS output
         const phoneticSounds = {
-            'a': 'ah, ah, ah, as in apple',
+            'a': 'ap, ap, ap, as in apple',
             'b': 'buh, buh, buh, as in ball',
             'c': 'kuh, kuh, kuh, as in cat',
             'd': 'duh, duh, duh, as in dog',
-            'e': 'ehh, ehh, ehh, as in egg',
+            'e': 'ep, ep, ep, as in egg',
             'f': 'fuh, fuh, fuh, as in fish',
             'g': 'guh, guh, guh, as in goat',
             'h': 'huh, huh, huh, as in hat',
-            'i': 'ehh, ehh, ehh, as in igloo',
+            'i': 'ip, ip, ip, as in igloo',
             'j': 'juh, juh, juh, as in jump',
-            'k': 'kah, kah, kah, as in kite',
+            'k': 'kuh, kuh, kuh, as in kite',
             'l': 'luh, luh, luh, as in lion',
-            'm': 'em, em, em, as in moon',
+            'm': 'muh, muh, muh, as in moon',
             'n': 'nuh, nuh, nuh, as in nose',
-            'o': 'ah, ah, ah, as in octopus',
+            'o': 'op, op, op, as in octopus',
             'p': 'puh, puh, puh, as in pig',
             'q': 'kwee, kwee, kwee, as in queen',
             'r': 'ruh, ruh, ruh, as in rabbit',
-            's': 'sah, sah, sah, as in snake',
+            's': 'suh, suh, suh, as in snake',
             't': 'tuh, tuh, tuh, as in turtle',
-            'u': 'uhh, uhh, uhh, as in umbrella',
+            'u': 'up, up, up, as in umbrella',
             'v': 'vuh, vuh, vuh, as in violin',
-            'w': 'wah, wah, wah, as in whale',
+            'w': 'wuh, wuh, wuh, as in whale',
             'x': 'eks, eks, eks, as in fox',
-            'y': 'yeh, yeh, yeh, as in yellow',
-            'z': 'zeh, zeh, zeh, as in zebra'
+            'y': 'yuh, yuh, yuh, as in yellow',
+            'z': 'zuh, zuh, zuh, as in zebra'
         };
 
         // Emoji choices for phonics anchor words (only where a clear emoji exists)
@@ -5434,15 +5435,16 @@
             'zebra': '🦓'
         };
 
-        // Letter names spelled to coerce clear pronunciation on basic TTS engines
+        // Improved letter names for clear pronunciation on basic TTS engines
+        // Spellings tuned for accurate vowels and consonants across platforms
         const letterNamePronunciations = {
-            'a': 'eh',
+            'a': 'ay',
             'b': 'bee',
             'c': 'see',
             'd': 'dee',
-            'e': 'eeh',
+            'e': 'ee',
             'f': 'eff',
-            'g': 'gee',
+            'g': 'jee',
             'h': 'aitch',
             'i': 'eye',
             'j': 'jay',
@@ -5453,7 +5455,7 @@
             'o': 'oh',
             'p': 'pee',
             'q': 'cue',
-            'r': 'are',
+            'r': 'ar',
             's': 'ess',
             't': 'tee',
             'u': 'yoo',
@@ -5463,7 +5465,7 @@
             'y': 'why',
             'z': 'zee'
         };
-
+        
         function getLetterCollection() {
             if (currentCase === 'lower') return lowerLetters;
             if (currentCase === 'upper') return upperLetters;
