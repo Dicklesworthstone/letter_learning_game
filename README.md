@@ -23,8 +23,10 @@ This README reflects the current code precisely. If something is listed here, it
   - Presents a target word with empty slots and a small bank of letter tiles.
   - Speaker button plays the target word (via SpeechSynthesis API).
   - Build the word by tapping/clicking letter tiles to fill slots left‑to‑right.
-  - Word list includes short CVC words; letter case follows the Letters setting (lowercase/uppercase/mixed).
+  - Adaptive difficulty with easy/medium/hard word pools: 3‑letter CVC → 4‑letter → 4–5‑letter words; shows a difficulty badge and adjusts up/down based on consecutive correct/incorrect attempts. Letter case follows the Letters setting (lowercase/uppercase/mixed).
+  - Letter bank includes decoy letters and matches the word’s case; bank size is at least 5 or `word length + 3`.
   - Scoring: +20 for a correct word; −5 for an incorrect attempt; advances to the next word automatically.
+  - Controls: Hear Word, New Word.
 - Tracing Practice
   - Responsive canvas sized to fit the screen (typically 260–560px square).
   - Optional letter formation overlay (Show/Hide How to Write).
@@ -107,6 +109,7 @@ Badge counter appears on the trophy button and is visible once you earn at least
   - Letters: lowercase/uppercase/mixed
   - Phonics: On/Off
   - Sound: On/Off
+  - Word Builder: On/Off
 - Visual Theme: Classic / Animals / Colors
 - Advanced
   - Voice Recording: On/Off (for phonics echo + practice tools)

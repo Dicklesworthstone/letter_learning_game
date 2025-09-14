@@ -11878,7 +11878,7 @@
             const pathLength = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += dist(pts[i - 1], pts[i]); return d; };
             const smoothStroke = (s) => { if (s.length < 3) return s.slice(); const out = [s[0]]; for (let i = 1; i < s.length - 1; i++) out.push({ x: (s[i - 1].x + s[i].x + s[i + 1].x) / 3, y: (s[i - 1].y + s[i].y + s[i + 1].y) / 3 }); out.push(s[s.length - 1]); return out; };
             const normalizeStrokesToBox = (strokes) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = 100 / Math.max(w, h), ox = bb.minX, oy = bb.minY; return strokes.map(s => s.map(p => ({ x: (p.x - ox) * scale, y: (p.y - oy) * scale }))); };
-            const N_RESAMPLE = 48, ROT_MAX_DEG = 60, ROT_STEP_DEG = 4, CLOUD_NORM = 34;
+            const N_RESAMPLE = 48, ROT_MAX_DEG = 60, ROT_STEP_DEG = 4, CLOUD_NORM = 40;
             const resampleStroke = (pts, n) => { if (pts.length === 0) return []; const I = pathLength(pts) / (n - 1); let D = 0, out = [{ ...pts[0] }]; for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], L = dist(a, b); if (!L) continue; while (D + L >= I) { const t = (I - D) / L; const q = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) }; out.push(q); pts.splice(i, 0, q); D = 0; break; } D += L; } if (out.length < n) out.push({ ...pts[pts.length - 1] }); return out.length === n ? out : (out.length > n ? out.slice(0, n) : out); };
             const centroid = (pts) => { let cx = 0, cy = 0; for (const p of pts) { cx += p.x; cy += p.y; } return { x: cx / pts.length, y: cy / pts.length }; };
             const rotatePoints = (pts, rad) => { const c = centroid(pts), cs = Math.cos(rad), sn = Math.sin(rad); return pts.map(p => ({ x: (p.x - c.x) * cs - (p.y - c.y) * sn + c.x, y: (p.x - c.x) * sn + (p.y - c.y) * cs + c.y })); };
@@ -11970,7 +11970,7 @@
             const userCloud = resampleStroke(joinStrokes(userNorm), N_RESAMPLE);
             const meCloudD = greedyCloudMatch(userCloud, tmpl.cloud);
             const cloudSim = 1 - clamp(meCloudD / CLOUD_NORM, 0, 1);
-            const visual = iou(userNorm, tmpl.strokesNorm, 54, 22);
+            const visual = iou(userNorm, tmpl.strokesNorm, 54, 26);
             const classicalScore = 0.75 * cloudSim + 0.25 * visual;
 
             // Best-other classical margin
@@ -12011,7 +12011,7 @@
             const crossbarOK = hasMidCrossbar(userNorm);
 
             // Blend decision
-            const BASE_ACCEPT = 0.34;
+            const BASE_ACCEPT = 0.30;
             const LETTER_EASING = new Map([
                 ...['S', 's', 'G', 'g', 'Q', 'q', 'O', 'o', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'E', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k', 'a', 'b'].map(L => [L, -0.10]),
                 ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
@@ -12021,32 +12021,32 @@
             // Per-letter minimum acceptance floors and cloud gates (shape-first)
             const letterFloors = new Map([
                 // Straight/diagonal-heavy letters should rely more on cloud shape
-                ['V', 0.40], ['v', 0.40], ['W', 0.32], ['w', 0.32], ['N', 0.40], ['n', 0.38], ['M', 0.38], ['m', 0.38], ['Z', 0.40], ['z', 0.40],
+                ['V', 0.36], ['v', 0.36], ['W', 0.28], ['w', 0.28], ['N', 0.36], ['n', 0.34], ['M', 0.34], ['m', 0.34], ['Z', 0.36], ['z', 0.36],
                 // Curvy letters get a slightly lower floor
-                ['S', 0.34], ['s', 0.34], ['G', 0.34], ['g', 0.34], ['Q', 0.34], ['q', 0.34], ['E', 0.34], ['e', 0.34], ['a', 0.32], ['b', 0.32]
+                ['S', 0.30], ['s', 0.30], ['G', 0.30], ['g', 0.30], ['Q', 0.30], ['q', 0.30], ['E', 0.30], ['e', 0.30], ['a', 0.28], ['b', 0.28]
             ]);
-            const floor = letterFloors.get(currentLetter) || 0.32;
+            const floor = letterFloors.get(currentLetter) || 0.28;
             let finalScore = classicalScore;
             if (deepOk) {
-                finalScore = 0.55 * classicalScore + 0.45 * deepScore;
-                if (deepMargin >= 0.08) acceptThresh -= 0.02;
-                if (deepScore >= 0.78) acceptThresh = Math.min(acceptThresh, 0.46);
+                finalScore = 0.50 * classicalScore + 0.50 * deepScore;
+                if (deepMargin >= 0.05) acceptThresh -= 0.04;
+                if (deepScore >= 0.70) acceptThresh = Math.min(acceptThresh, 0.42);
             }
-            if (classicalMargin >= 0.08) acceptThresh -= 0.02;
+            if (classicalMargin >= 0.05) acceptThresh -= 0.03;
             if (needDot && !dotOK) acceptThresh += (currentLetter === 'i' ? 0.01 : 0.02);
             if (needCrossbar && !crossbarOK) acceptThresh += (currentLetter === 'E' ? 0.005 : 0.01);
-            acceptThresh = clamp(acceptThresh, 0.28, 0.52);
+            acceptThresh = clamp(acceptThresh, 0.24, 0.48);
 
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
             // Middle-ground easy gate: accept on any of these low bars, else blended threshold
             // Middle-ground: accept if target is near top among letters (very low absolute bars), else blended threshold
-            const nearTopEpsilon = 0.02;
-            const classicalTopOk = (classicalScore + nearTopEpsilon) >= bestOtherClassical && classicalScore >= Math.max(0.26, floor - 0.06);
+            const nearTopEpsilon = 0.04;
+            const classicalTopOk = (classicalScore + nearTopEpsilon) >= bestOtherClassical && classicalScore >= Math.max(0.22, floor - 0.10);
             const deepTopOk = deepOk && deepMargin >= -0.02 && deepScore >= 0.55;
             let passed = classicalTopOk || deepTopOk || (finalScore >= acceptThresh);
             // Generic guard: if another letter dominates the target by a clear margin, reject
-            const wrongDomClassicalMargin = 0.10;
-            const wrongDomDeepMargin = -0.12;
+            const wrongDomClassicalMargin = 0.16;
+            const wrongDomDeepMargin = -0.18;
             const wrongDominatesClassical = (bestOtherClassical - classicalScore) > wrongDomClassicalMargin;
             const wrongDominatesDeep = deepOk && (deepMargin < wrongDomDeepMargin);
             if (passed && (wrongDominatesClassical || wrongDominatesDeep)) passed = false;
@@ -12058,11 +12058,11 @@
                 if (loopish.has(currentLetter)) {
                     // Letter-specific IoU floors (more permissive for a/b)
                     const minIoUMap = new Map([
-                        ['o', 0.12], ['O', 0.12],
-                        ['a', 0.14], ['A', 0.16],
-                        ['b', 0.14], ['B', 0.16]
+                        ['o', 0.10], ['O', 0.10],
+                        ['a', 0.12], ['A', 0.14],
+                        ['b', 0.12], ['B', 0.14]
                     ]);
-                    const defaultLoopIoU = 0.18;
+                    const defaultLoopIoU = 0.16;
                     const minIoU = minIoUMap.get(currentLetter) ?? defaultLoopIoU;
                     if (visual < minIoU) passed = false;
                 }
@@ -12100,6 +12100,19 @@
         let wbBank = [];
         let wbFilledCount = 0;
 
+        // Track player progress for difficulty adjustment
+        let wbConsecutiveCorrect = 0;
+        let wbConsecutiveWrong = 0;
+        let wbDifficulty = 'easy'; // Start with easy words
+        let wbRecentWords = []; // Track last 5 words to avoid repeats
+        const wbMaxRecent = 5;
+
+        // Configurable difficulty thresholds
+        const wbDifficultySettings = {
+            correctToLevelUp: 4,    // Was 3, now 4 for more practice
+            wrongToLevelDown: 3,    // Was 2, now 3 for more tolerance
+        };
+
         // Track if Word Builder is currently transitioning
         let wbTransitioning = false;
 
@@ -12113,6 +12126,13 @@
             clearAllTimers();
             cancelSpeech();
             waitingForPhonics = false;
+
+            // Manual reset (New Word button) should NOT reset progress
+            // Kids should be able to skip words without penalty
+            if (reset) {
+                // Don't reset any progress - just get a new word
+                // This encourages exploration without punishment
+            }
 
             const gameArea = document.getElementById('gameArea');
             if (!gameArea) {
@@ -12144,7 +12164,13 @@
                 return `<button class="wb-tile" data-letter="${L}" data-bank-idx="${i}" onclick="wbPick('${L}', ${i})" aria-label="Pick letter ${L}" style="--tile-index: ${i}">${L}</button>`;
             }).join('');
 
-            // Create difficulty badge
+            // Create difficulty badge - validate difficulty level first
+            const validDifficulties = ['easy', 'medium', 'hard'];
+            if (!validDifficulties.includes(wbDifficulty)) {
+                console.warn('Invalid difficulty:', wbDifficulty);
+                wbDifficulty = 'easy';
+            }
+
             const difficultyColors = {
                 easy: '#10b981',
                 medium: '#f59e0b',
@@ -12194,6 +12220,16 @@
 
             // Mark as not transitioning immediately since game is ready
             wbTransitioning = false;
+
+            // Show any pending level animation after game is ready
+            if (window.wbPendingLevelAnimation) {
+                setTimeout(() => {
+                    if (window.wbPendingLevelAnimation) {
+                        window.wbPendingLevelAnimation();
+                        window.wbPendingLevelAnimation = null;
+                    }
+                }, 200);
+            }
 
             // Auto speak the target word and show an anchor emoji burst
             const speakLetters = word.split('').join(', ');
@@ -12256,29 +12292,32 @@
                 'shirt', 'dress', 'pants', 'socks', 'shoes', 'crown', 'sword', 'magic'
             ]
         };
-        // Track player progress for difficulty adjustment
-        let wbConsecutiveCorrect = 0;
-        let wbConsecutiveWrong = 0;
-        let wbDifficulty = 'easy'; // Start with easy words
 
         function getWordBuilderTarget() {
             // Auto-adjust difficulty based on performance
-            if (wbConsecutiveCorrect >= 3 && wbDifficulty === 'easy') {
+            const { correctToLevelUp, wrongToLevelDown } = wbDifficultySettings;
+
+            if (wbConsecutiveCorrect >= correctToLevelUp && wbDifficulty === 'easy') {
                 wbDifficulty = 'medium';
                 wbConsecutiveCorrect = 0;
-                showFeedback('Level up! Medium words! 🌟', 'success');
-            } else if (wbConsecutiveCorrect >= 3 && wbDifficulty === 'medium') {
+                wbRecentWords = []; // Clear recent words for new level
+                // Store level change to show after game loads
+                window.wbPendingLevelAnimation = () => showLevelUpAnimation('medium');
+            } else if (wbConsecutiveCorrect >= correctToLevelUp && wbDifficulty === 'medium') {
                 wbDifficulty = 'hard';
                 wbConsecutiveCorrect = 0;
-                showFeedback('Level up! Hard words! 🏆', 'success');
-            } else if (wbConsecutiveWrong >= 2 && wbDifficulty === 'hard') {
+                wbRecentWords = []; // Clear recent words for new level
+                window.wbPendingLevelAnimation = () => showLevelUpAnimation('hard');
+            } else if (wbConsecutiveWrong >= wrongToLevelDown && wbDifficulty === 'hard') {
                 wbDifficulty = 'medium';
                 wbConsecutiveWrong = 0;
-                showFeedback('Let\'s practice medium words! 💪', 'info');
-            } else if (wbConsecutiveWrong >= 2 && wbDifficulty === 'medium') {
+                wbRecentWords = []; // Clear recent words for new level
+                window.wbPendingLevelAnimation = () => showLevelDownAnimation('medium');
+            } else if (wbConsecutiveWrong >= wrongToLevelDown && wbDifficulty === 'medium') {
                 wbDifficulty = 'easy';
                 wbConsecutiveWrong = 0;
-                showFeedback('Let\'s practice easy words! 🌈', 'info');
+                wbRecentWords = []; // Clear recent words for new level
+                window.wbPendingLevelAnimation = () => showLevelDownAnimation('easy');
             }
 
             const candidates = wordBuilderWords[wbDifficulty];
@@ -12290,8 +12329,21 @@
                 return wordBuilderWords.easy[0];
             }
 
-            // Pick a random word and ensure it's valid
-            let pick = candidates[Math.floor(Math.random() * candidates.length)];
+            // Pick a random word, avoiding recent ones
+            let pick;
+            let attempts = 0;
+            const maxAttempts = 10;
+
+            do {
+                pick = candidates[Math.floor(Math.random() * candidates.length)];
+                attempts++;
+            } while (wbRecentWords.includes(pick) && attempts < maxAttempts);
+
+            // Add to recent words list and maintain max size
+            wbRecentWords.push(pick);
+            if (wbRecentWords.length > wbMaxRecent) {
+                wbRecentWords.shift(); // Remove oldest after adding new
+            }
 
             // Validate the word (only letters, reasonable length)
             if (!/^[a-zA-Z]{2,8}$/.test(pick)) {
@@ -12373,9 +12425,11 @@
                 updateScoreDisplay();
                 markWordResult(true);
 
-                // Enhanced celebratory animations - check word exists first
+                // Enhanced celebratory animations - always use lowercase for emoji lookup
                 if (wbTargetWord) {
-                    const wordEmoji = anchorEmojiMap[wbTargetWord.toLowerCase()];
+                    // Always lowercase for emoji lookup regardless of display case
+                    const wordForEmoji = wbTargetWord.toLowerCase();
+                    const wordEmoji = anchorEmojiMap[wordForEmoji];
                     if (wordEmoji) {
                         // Show giant emoji celebration
                         showWordEmojiCelebration(wordEmoji);
@@ -12688,8 +12742,10 @@
         // Add CSS animation for success glow and tile animations
         // Execute immediately since script is at bottom of page
         (function() {
-            // Check if styles already exist to avoid duplicates
-            if (document.getElementById('wb-animations-style')) return;
+            // Only add styles if they don't already exist
+            if (document.getElementById('wb-animations-style')) {
+                return; // Styles already loaded, nothing to do
+            }
 
             const style = document.createElement('style');
             style.id = 'wb-animations-style';
@@ -12721,6 +12777,20 @@
                 50% { transform: scale(1.3) rotate(10deg) translateY(-10px); }
                 100% { transform: scale(0.8) rotate(0deg); opacity: 0.5; }
             }
+
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            @keyframes levelUpBounce {
+                0% { transform: scale(0) rotate(0deg); }
+                50% { transform: scale(1.2) rotate(5deg); }
+                100% { transform: scale(1) rotate(0deg); }
+            }
             `;
             document.head.appendChild(style);
         })();
@@ -12742,6 +12812,105 @@
             const speakLetters = wbTargetWord.split('').join(', ');
             speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`);
         }
+
+        // Visual level change animations
+        function showLevelUpAnimation(newLevel) {
+            // Remove any existing level overlay first
+            const existingOverlay = document.getElementById('wb-level-overlay');
+            if (existingOverlay) {
+                existingOverlay.remove();
+            }
+
+            const levelNames = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+            const levelEmojis = { easy: '🌟', medium: '⭐⭐', hard: '🏆' };
+
+            // Create overlay with ID for tracking
+            const overlay = document.createElement('div');
+            overlay.id = 'wb-level-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease-out;
+                cursor: pointer;
+            `;
+
+            // Click background to dismiss (not the message)
+            overlay.onclick = function(e) {
+                if (e.target === overlay) {
+                    const overlayToRemove = document.getElementById('wb-level-overlay');
+                    if (overlayToRemove) {
+                        overlayToRemove.remove();
+                    }
+                }
+            };
+
+            // ESC key to dismiss
+            const escHandler = function(e) {
+                if (e.key === 'Escape') {
+                    const overlayToRemove = document.getElementById('wb-level-overlay');
+                    if (overlayToRemove) {
+                        overlayToRemove.remove();
+                        document.removeEventListener('keydown', escHandler);
+                    }
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+
+            const message = document.createElement('div');
+            message.style.cssText = `
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 40px 60px;
+                border-radius: 20px;
+                text-align: center;
+                font-size: 32px;
+                font-weight: bold;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                animation: levelUpBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            `;
+            message.innerHTML = `
+                <div style="font-size: 64px; margin-bottom: 10px;">${levelEmojis[newLevel]}</div>
+                <div>LEVEL UP!</div>
+                <div style="font-size: 24px; margin-top: 10px;">${levelNames[newLevel]} Words!</div>
+            `;
+
+            overlay.appendChild(message);
+            document.body.appendChild(overlay);
+
+            // Play sound (speakPhrase handles muting internally)
+            speakPhrase('Level up! ' + levelNames[newLevel] + ' words!');
+
+            // Remove after animation with safety check
+            setTimeout(() => {
+                const overlayToRemove = document.getElementById('wb-level-overlay');
+                if (overlayToRemove) {
+                    overlayToRemove.style.animation = 'fadeOut 0.3s ease-in';
+                    setTimeout(() => {
+                        if (overlayToRemove && overlayToRemove.parentNode) {
+                            overlayToRemove.remove();
+                            // Clean up ESC key listener
+                            document.removeEventListener('keydown', escHandler);
+                        }
+                    }, 300);
+                }
+            }, 2000);
+        }
+
+        function showLevelDownAnimation(newLevel) {
+            const levelNames = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+            const levelEmojis = { easy: '🌈', medium: '💪', hard: '⭐' };
+
+            showFeedback(`Let's practice ${levelNames[newLevel]} words! ${levelEmojis[newLevel]}`, 'info');
+        }
+
     </script>
 </body>
 
