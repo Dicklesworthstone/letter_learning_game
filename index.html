@@ -4448,6 +4448,9 @@
             align-items: center;
             gap: 16px;
             padding: 16px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(243,244,246,0.85));
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.10);
         }
         .wb-title {
             font-size: 24px;
@@ -4466,15 +4469,15 @@
             width: 64px;
             height: 64px;
             border-radius: 12px;
-            border: 2px dashed rgba(0, 0, 0, 0.15);
+            border: 2px dashed rgba(0, 0, 0, 0.18);
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.8);
+            background: linear-gradient(180deg, #ffffff, #f9fafb);
             font-size: 36px;
             font-weight: 700;
             color: #111827;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
         }
         .wb-slot.filled {
             border-style: solid;
@@ -4499,7 +4502,7 @@
             width: 56px;
             height: 56px;
             border-radius: 12px;
-            background: #f3f4f6;
+            background: linear-gradient(180deg, #eef2ff, #e5e7eb);
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -4507,12 +4510,14 @@
             font-weight: 700;
             color: #111827;
             cursor: pointer;
-            transition: transform 0.1s ease, background-color 0.2s ease;
+            transition: transform 0.1s ease, background-color 0.2s ease, box-shadow 0.2s ease;
             user-select: none;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
         }
         .wb-tile:hover {
             transform: translateY(-2px);
             background: #e5e7eb;
+            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.10);
         }
         .wb-controls {
             display: flex;
@@ -10562,7 +10567,37 @@
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
 
-            speakPhrase('Build the word by tapping the letters.');
+            // Auto speak the target word and show an anchor emoji burst
+            const speakLetters = word.split('').join(', ');
+            const after = () => {
+                // anchor emoji near slots area
+                try {
+                    const key = word.toLowerCase();
+                    const emoji = anchorEmojiMap[key];
+                    if (emoji) {
+                        const slots = document.getElementById('wbSlots');
+                        if (slots) {
+                            const rect = slots.getBoundingClientRect();
+                            const x = rect.left + rect.width / 2;
+                            const y = rect.top - 12;
+                            const el = document.createElement('div');
+                            el.textContent = emoji;
+                            el.style.cssText = `position:fixed; left:${x}px; top:${y}px; transform:translate(-50%,-50%) scale(0.7); font-size:56px; z-index:10010; pointer-events:none; opacity:0;`;
+                            document.body.appendChild(el);
+                            if (typeof gsap !== 'undefined') {
+                                gsap.to(el, { opacity: 1, y: -10, duration: 0.35, ease: 'power2.out', onComplete: () => {
+                                    gsap.to(el, { opacity: 0, y: -26, duration: 0.6, ease: 'power1.in', onComplete: () => el.remove() });
+                                }});
+                            } else {
+                                el.style.opacity = '1';
+                                setTimeout(() => { el.style.opacity = '0'; }, 350);
+                                setTimeout(() => el.remove(), 1000);
+                            }
+                        }
+                    }
+                } catch (e) { }
+            };
+            speakPhrase(`Build the word ${word}. Letters: ${speakLetters}.`, after);
         }
 
         function getWordBuilderTarget() {
@@ -10575,7 +10610,10 @@
 
         function buildLetterBank(word) {
             const letters = word.split('');
-            const pool = [...lowerLetters, ...upperLetters];
+            // Keep bank letters in the same case family as target word to avoid confusion
+            const isUpper = word === word.toUpperCase();
+            const isLower = word === word.toLowerCase();
+            const pool = isUpper ? upperLetters : (isLower ? lowerLetters : [...lowerLetters, ...upperLetters]);
             while (letters.length < Math.max(5, word.length + 3)) {
                 const L = pool[Math.floor(Math.random() * pool.length)];
                 if (!letters.includes(L)) letters.push(L);
@@ -10630,6 +10668,8 @@
                 if (cont && typeof gsap !== 'undefined') {
                     gsap.fromTo(cont, { scale: 1.0 }, { scale: 1.03, duration: 0.15, yoyo: true, repeat: 1, ease: 'power1.inOut' });
                 }
+                // Confetti burst using existing celebration emojis
+                try { createConfetti(cont || document.body); } catch (e) { }
                 setTimeout(() => startWordBuilderGame(false), 1200);
             } else {
                 roundWrong++;
