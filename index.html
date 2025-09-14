@@ -5009,6 +5009,16 @@
                                     aria-pressed="false" aria-label="Turn sound off">Off</button>
                             </div>
                         </div>
+                        <div class="setting-group">
+                            <label class="setting-label">Word Builder <span class="info-tip"
+                                    title="Enable/disable the Word Builder mode for building words from letters.">?</span></label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn active" id="wordBuilderOn" onclick="setWordBuilderMode('on')"
+                                    aria-pressed="true" aria-label="Enable Word Builder mode">On</button>
+                                <button class="toggle-btn" id="wordBuilderOff" onclick="setWordBuilderMode('off')"
+                                    aria-pressed="false" aria-label="Disable Word Builder mode">Off</button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="settings-section">
@@ -11998,7 +12008,7 @@
             const crossbarOK = hasMidCrossbar(userNorm);
 
             // Blend decision
-            const BASE_ACCEPT = 0.36;
+            const BASE_ACCEPT = 0.34;
             const LETTER_EASING = new Map([
                 ...['S', 's', 'G', 'g', 'Q', 'q', 'O', 'o', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'E', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k', 'a', 'b'].map(L => [L, -0.10]),
                 ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
@@ -12008,11 +12018,11 @@
             // Per-letter minimum acceptance floors and cloud gates (shape-first)
             const letterFloors = new Map([
                 // Straight/diagonal-heavy letters should rely more on cloud shape
-                ['V', 0.42], ['v', 0.42], ['W', 0.32], ['w', 0.32], ['N', 0.42], ['n', 0.40], ['M', 0.40], ['m', 0.40], ['Z', 0.42], ['z', 0.42],
+                ['V', 0.40], ['v', 0.40], ['W', 0.32], ['w', 0.32], ['N', 0.40], ['n', 0.38], ['M', 0.38], ['m', 0.38], ['Z', 0.40], ['z', 0.40],
                 // Curvy letters get a slightly lower floor
                 ['S', 0.34], ['s', 0.34], ['G', 0.34], ['g', 0.34], ['Q', 0.34], ['q', 0.34], ['E', 0.34], ['e', 0.34], ['a', 0.32], ['b', 0.32]
             ]);
-            const floor = letterFloors.get(currentLetter) || 0.34;
+            const floor = letterFloors.get(currentLetter) || 0.32;
             let finalScore = classicalScore;
             if (deepOk) {
                 finalScore = 0.55 * classicalScore + 0.45 * deepScore;
@@ -12022,20 +12032,18 @@
             if (classicalMargin >= 0.08) acceptThresh -= 0.02;
             if (needDot && !dotOK) acceptThresh += (currentLetter === 'i' ? 0.01 : 0.02);
             if (needCrossbar && !crossbarOK) acceptThresh += (currentLetter === 'E' ? 0.005 : 0.01);
-            const RELAXED_LETTERS = new Set(['w', 'a', 'b']);
-            const minClamp = RELAXED_LETTERS.has(currentLetter) ? 0.28 : 0.32;
-            acceptThresh = clamp(acceptThresh, minClamp, 0.52);
+            acceptThresh = clamp(acceptThresh, 0.28, 0.52);
 
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
             // Middle-ground easy gate: accept on any of these low bars, else blended threshold
             // Middle-ground: accept if target is near top among letters (very low absolute bars), else blended threshold
-            const nearTopEpsilon = (currentLetter === 'w' || currentLetter === 'a' || currentLetter === 'b') ? 0.02 : 0.01;
-            const classicalTopOk = (classicalScore + nearTopEpsilon) >= bestOtherClassical && classicalScore >= Math.max(0.28, floor - 0.04);
+            const nearTopEpsilon = 0.02;
+            const classicalTopOk = (classicalScore + nearTopEpsilon) >= bestOtherClassical && classicalScore >= Math.max(0.26, floor - 0.06);
             const deepTopOk = deepOk && deepMargin >= -0.02 && deepScore >= 0.55;
             let passed = classicalTopOk || deepTopOk || (finalScore >= acceptThresh);
             // Generic guard: if another letter dominates the target by a clear margin, reject
-            const wrongDomClassicalMargin = (currentLetter === 'w' || currentLetter === 'a' || currentLetter === 'b') ? 0.12 : 0.08;
-            const wrongDomDeepMargin = (currentLetter === 'w' || currentLetter === 'a' || currentLetter === 'b') ? -0.14 : -0.10;
+            const wrongDomClassicalMargin = 0.10;
+            const wrongDomDeepMargin = -0.12;
             const wrongDominatesClassical = (bestOtherClassical - classicalScore) > wrongDomClassicalMargin;
             const wrongDominatesDeep = deepOk && (deepMargin < wrongDomDeepMargin);
             if (passed && (wrongDominatesClassical || wrongDominatesDeep)) passed = false;
@@ -12051,7 +12059,7 @@
                         ['a', 0.14], ['A', 0.16],
                         ['b', 0.14], ['B', 0.16]
                     ]);
-                    const defaultLoopIoU = 0.20;
+                    const defaultLoopIoU = 0.18;
                     const minIoU = minIoUMap.get(currentLetter) ?? defaultLoopIoU;
                     if (visual < minIoU) passed = false;
                 }
@@ -12094,8 +12102,10 @@
         let wbTransitioning = false;
 
         function startWordBuilderGame(reset = false) {
-            // Prevent rapid re-calls
+            // Prevent rapid re-calls during transition
             if (wbTransitioning) return;
+
+            // Set flag to prevent interruption during setup
             wbTransitioning = true;
 
             clearAllTimers();
@@ -12103,7 +12113,20 @@
             waitingForPhonics = false;
 
             const gameArea = document.getElementById('gameArea');
+            if (!gameArea) {
+                console.error('Game area not found');
+                wbTransitioning = false;
+                return;
+            }
+
             const word = getWordBuilderTarget();
+            // Safety check in case word is undefined
+            if (!word) {
+                console.error('Failed to get word for Word Builder');
+                wbTransitioning = false;
+                return;
+            }
+
             wbTargetWord = word;
             wbSlots = new Array(word.length).fill(null);
             wbFilledCount = 0;
@@ -12112,7 +12135,12 @@
             wbBank = bankLetters;
 
             const slotsHTML = word.split('').map((_, i) => `<div class="wb-slot" data-idx="${i}"></div>`).join('');
-            const bankHTML = bankLetters.map((L, i) => `<button class="wb-tile" data-letter="${L}" data-bank-idx="${i}" onclick="wbPick('${L}', ${i})" aria-label="Pick letter ${L}" style="--tile-index: ${i}">${L}</button>`).join('');
+            const bankHTML = bankLetters.map((L, i) => {
+                // Letters should only be A-Z/a-z, but sanitize just in case
+                // For data attributes and display, use the letter as-is (it's safe)
+                // For onclick, no escaping needed since letters don't contain quotes
+                return `<button class="wb-tile" data-letter="${L}" data-bank-idx="${i}" onclick="wbPick('${L}', ${i})" aria-label="Pick letter ${L}" style="--tile-index: ${i}">${L}</button>`;
+            }).join('');
 
             gameArea.innerHTML = `
                 <div class="wb-container" role="region" aria-label="Word Builder">
@@ -12135,8 +12163,8 @@
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
 
-            // Allow new game after brief delay
-            setTimeout(() => { wbTransitioning = false; }, 500);
+            // Mark as not transitioning immediately since game is ready
+            wbTransitioning = false;
 
             // Auto speak the target word and show an anchor emoji burst
             const speakLetters = word.split('').join(', ');
@@ -12171,9 +12199,79 @@
             speakPhrase(`Build the word ${word}. Letters: ${speakLetters}.`, after);
         }
 
+        // Word pools organized by difficulty with emoji-friendly words
+        const wordBuilderWords = {
+            easy: [
+                // 3-letter words with clear emojis
+                'cat', 'dog', 'sun', 'hat', 'bed', 'cup', 'car', 'bus', 'egg', 'pie',
+                'bee', 'ant', 'bat', 'cow', 'pig', 'owl', 'fox', 'rat', 'key', 'box',
+                'bag', 'pen', 'eye', 'ear', 'leg', 'arm', 'toe', 'lip', 'ice', 'hot',
+                'sad', 'mad', 'red', 'sky', 'sea', 'zoo', 'toy', 'boy', 'map', 'jam'
+            ],
+            medium: [
+                // 4-letter words that are easy to spell with clear emojis
+                'duck', 'frog', 'bear', 'bird', 'fish', 'crab', 'wolf', 'lion', 'tree',
+                'moon', 'star', 'fire', 'rain', 'snow', 'wind', 'rock', 'leaf', 'rose',
+                'cake', 'milk', 'corn', 'rice', 'soup', 'meat', 'plum', 'pear', 'kiwi',
+                'ball', 'boat', 'bike', 'tent', 'kite', 'drum', 'bell', 'book', 'gift',
+                'home', 'door', 'lamp', 'ring', 'coin', 'flag', 'ship', 'wave', 'baby',
+                'king', 'love', 'hand', 'foot', 'face', 'nose', 'hair', 'bone', 'game'
+            ],
+            hard: [
+                // 4-5 letter words still manageable for kids
+                'apple', 'grape', 'lemon', 'peach', 'mango', 'bread', 'candy', 'donut',
+                'pizza', 'cheese', 'tiger', 'zebra', 'horse', 'sheep', 'mouse', 'snake',
+                'whale', 'shark', 'eagle', 'cloud', 'storm', 'light', 'night', 'earth',
+                'space', 'heart', 'smile', 'happy', 'robot', 'train', 'plane', 'phone',
+                'music', 'dance', 'paint', 'brush', 'chair', 'table', 'spoon', 'plate',
+                'shirt', 'dress', 'pants', 'socks', 'shoes', 'crown', 'sword', 'magic'
+            ]
+        };
+
+        // Track player progress for difficulty adjustment
+        let wbConsecutiveCorrect = 0;
+        let wbConsecutiveWrong = 0;
+        let wbDifficulty = 'easy'; // Start with easy words
+
         function getWordBuilderTarget() {
-            const candidates = ['cat','dog','sun','hat','map','pin','bus','bed','jam','cup'];
-            const pick = candidates[Math.floor(Math.random() * candidates.length)];
+            // Auto-adjust difficulty based on performance
+            if (wbConsecutiveCorrect >= 3 && wbDifficulty === 'easy') {
+                wbDifficulty = 'medium';
+                wbConsecutiveCorrect = 0;
+                showFeedback('Level up! Medium words! 🌟', 'success');
+            } else if (wbConsecutiveCorrect >= 3 && wbDifficulty === 'medium') {
+                wbDifficulty = 'hard';
+                wbConsecutiveCorrect = 0;
+                showFeedback('Level up! Hard words! 🏆', 'success');
+            } else if (wbConsecutiveWrong >= 2 && wbDifficulty === 'hard') {
+                wbDifficulty = 'medium';
+                wbConsecutiveWrong = 0;
+                showFeedback('Let\'s practice medium words! 💪', 'info');
+            } else if (wbConsecutiveWrong >= 2 && wbDifficulty === 'medium') {
+                wbDifficulty = 'easy';
+                wbConsecutiveWrong = 0;
+                showFeedback('Let\'s practice easy words! 🌈', 'info');
+            }
+
+            const candidates = wordBuilderWords[wbDifficulty];
+
+            // Validate word pool exists
+            if (!candidates || candidates.length === 0) {
+                console.error('No words available for difficulty:', wbDifficulty);
+                wbDifficulty = 'easy';
+                return wordBuilderWords.easy[0];
+            }
+
+            // Pick a random word and ensure it's valid
+            let pick = candidates[Math.floor(Math.random() * candidates.length)];
+
+            // Validate the word (only letters, reasonable length)
+            if (!/^[a-zA-Z]{2,8}$/.test(pick)) {
+                console.warn('Invalid word detected:', pick);
+                pick = 'cat'; // Fallback to safe default
+            }
+
+            // Apply case transformation
             if (currentCase === 'upper') return pick.toUpperCase();
             if (currentCase === 'mixed') return Math.random() < 0.5 ? pick : pick.toUpperCase();
             return pick;
@@ -12276,11 +12374,13 @@
                 const cont = document.querySelector('.wb-container');
                 if (cont) {
                     // Rainbow glow effect - clear and restart animation properly
-                    cont.style.animation = '';
-                    void cont.offsetHeight; // Force reflow
+                    if (cont.style.animation) {
+                        cont.style.animation = '';
+                        void cont.offsetHeight; // Force reflow
+                    }
                     cont.style.animation = 'wbSuccessGlow 1s ease-out';
                     setTimeout(() => {
-                        if (cont) cont.style.animation = '';
+                        if (cont && cont.style) cont.style.animation = '';
                     }, 1100);
 
                     if (typeof gsap !== 'undefined') {
@@ -12312,9 +12412,13 @@
                 createEnhancedConfetti();
 
                 // Delay before next word
+                wbTransitioning = true; // Prevent interruption during celebration
                 setTimeout(() => {
                     // Clean up any lingering celebration elements
-                    document.querySelectorAll('.wb-emoji-celebration, .wb-emoji-orbit, .wb-particle').forEach(el => el.remove());
+                    document.querySelectorAll('.wb-emoji-celebration, .wb-emoji-orbit, .wb-particle').forEach(el => {
+                        if (el && el.parentNode) el.remove();
+                    });
+                    wbTransitioning = false; // Allow new game
                     startWordBuilderGame(false);
                 }, 2500);
             } else {
@@ -12340,9 +12444,13 @@
                     cont.classList.add('animate__animated', 'animate__shakeX');
                     setTimeout(() => cont.classList.remove('animate__animated', 'animate__shakeX'), 600);
                 }
+                wbTransitioning = true; // Prevent interruption during transition
                 setTimeout(() => {
                     // Clean up any elements from failed attempt
-                    document.querySelectorAll('.wb-particle').forEach(el => el.remove());
+                    document.querySelectorAll('.wb-particle').forEach(el => {
+                        if (el && el.parentNode) el.remove();
+                    });
+                    wbTransitioning = false; // Allow new game
                     startWordBuilderGame(false);
                 }, 1500);
             }
