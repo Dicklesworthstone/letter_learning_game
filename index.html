@@ -4440,6 +4440,99 @@
                 width: min(980px, 92vw);
             }
         }
+
+        /* Word Builder Styles */
+        .wb-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+        }
+        .wb-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #111827;
+            text-align: center;
+        }
+        .wb-slots {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .wb-slot {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            border: 2px dashed rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.8);
+            font-size: 36px;
+            font-weight: 700;
+            color: #111827;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+        .wb-slot.filled {
+            border-style: solid;
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+        .wb-slot.correct {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+        .wb-slot.wrong {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+        .wb-bank {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 680px;
+        }
+        .wb-tile {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: #f3f4f6;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            user-select: none;
+        }
+        .wb-tile:hover {
+            transform: translateY(-2px);
+            background: #e5e7eb;
+        }
+        .wb-controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .wb-btn {
+            padding: 10px 16px;
+            border-radius: 12px;
+            background: #a78bfa;
+            color: #ffffff;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+        .wb-btn.secondary {
+            background: #111827;
+        }
     </style>
 </head>
 <body>
@@ -4473,6 +4566,10 @@
             <button class="mode-btn" onclick="setMode('draw', this)" aria-pressed="false"
                 aria-label="Tracing practice mode">
                 <span>Tracing Practice</span>
+            </button>
+            <button class="mode-btn" onclick="setMode('wordBuilder', this)" aria-pressed="false"
+                aria-label="Word builder mode">
+                <span>Word Builder</span>
             </button>
         </div>
 
@@ -5438,13 +5535,14 @@
         // Improved letter names for clear pronunciation on basic TTS engines
         // Spellings tuned for accurate vowels and consonants across platforms
         const letterNamePronunciations = {
-            'a': 'ay',
+            'a': '"A"',
             'b': 'bee',
             'c': 'see',
             'd': 'dee',
             'e': 'ee',
             'f': 'eff',
-            'g': 'jee',
+            'g': 'gee',
+            
             'h': 'aitch',
             'i': 'eye',
             'j': 'jay',
@@ -7297,8 +7395,10 @@
 
             if (mode === 'identify') {
                 startIdentifyGame(true);
-            } else {
+            } else if (mode === 'draw') {
                 startDrawGame();
+            } else if (mode === 'wordBuilder') {
+                startWordBuilderGame(true);
             }
         }
 
@@ -10334,7 +10434,7 @@
             // Blend decision
             const BASE_ACCEPT = 0.36;
             const LETTER_EASING = new Map([
-                ...['S', 's', 'G', 'g', 'Q', 'q', 'O', 'o', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'E', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k'].map(L => [L, -0.10]),
+                ...['S', 's', 'G', 'g', 'Q', 'q', 'O', 'o', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'E', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k', 'a', 'b'].map(L => [L, -0.10]),
                 ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
             ]);
             let easing = LETTER_EASING.get(currentLetter) || 0;
@@ -10342,9 +10442,9 @@
             // Per-letter minimum acceptance floors and cloud gates (shape-first)
             const letterFloors = new Map([
                 // Straight/diagonal-heavy letters should rely more on cloud shape
-                ['V', 0.42], ['v', 0.42], ['W', 0.42], ['w', 0.42], ['N', 0.42], ['n', 0.40], ['M', 0.40], ['m', 0.40], ['Z', 0.42], ['z', 0.42],
+                ['V', 0.42], ['v', 0.42], ['W', 0.32], ['w', 0.32], ['N', 0.42], ['n', 0.40], ['M', 0.40], ['m', 0.40], ['Z', 0.42], ['z', 0.42],
                 // Curvy letters get a slightly lower floor
-                ['S', 0.34], ['s', 0.34], ['G', 0.34], ['g', 0.34], ['Q', 0.34], ['q', 0.34], ['E', 0.34], ['e', 0.34]
+                ['S', 0.34], ['s', 0.34], ['G', 0.34], ['g', 0.34], ['Q', 0.34], ['q', 0.34], ['E', 0.34], ['e', 0.34], ['a', 0.32], ['b', 0.32]
             ]);
             const floor = letterFloors.get(currentLetter) || 0.34;
             let finalScore = classicalScore;
@@ -10356,17 +10456,22 @@
             if (classicalMargin >= 0.08) acceptThresh -= 0.02;
             if (needDot && !dotOK) acceptThresh += (currentLetter === 'i' ? 0.01 : 0.02);
             if (needCrossbar && !crossbarOK) acceptThresh += (currentLetter === 'E' ? 0.005 : 0.01);
-            acceptThresh = clamp(acceptThresh, 0.32, 0.52);
+            const RELAXED_LETTERS = new Set(['w', 'a', 'b']);
+            const minClamp = RELAXED_LETTERS.has(currentLetter) ? 0.28 : 0.32;
+            acceptThresh = clamp(acceptThresh, minClamp, 0.52);
 
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
             // Middle-ground easy gate: accept on any of these low bars, else blended threshold
             // Middle-ground: accept if target is near top among letters (very low absolute bars), else blended threshold
-            const classicalTopOk = (classicalScore + 0.01) >= bestOtherClassical && classicalScore >= Math.max(0.28, floor - 0.04);
+            const nearTopEpsilon = (currentLetter === 'w' || currentLetter === 'a' || currentLetter === 'b') ? 0.02 : 0.01;
+            const classicalTopOk = (classicalScore + nearTopEpsilon) >= bestOtherClassical && classicalScore >= Math.max(0.28, floor - 0.04);
             const deepTopOk = deepOk && deepMargin >= -0.02 && deepScore >= 0.55;
             let passed = classicalTopOk || deepTopOk || (finalScore >= acceptThresh);
             // Generic guard: if another letter dominates the target by a clear margin, reject
-            const wrongDominatesClassical = (bestOtherClassical - classicalScore) > 0.08;
-            const wrongDominatesDeep = deepOk && (deepMargin < -0.10);
+            const wrongDomClassicalMargin = (currentLetter === 'w' || currentLetter === 'a' || currentLetter === 'b') ? 0.12 : 0.08;
+            const wrongDomDeepMargin = (currentLetter === 'w' || currentLetter === 'a' || currentLetter === 'b') ? -0.14 : -0.10;
+            const wrongDominatesClassical = (bestOtherClassical - classicalScore) > wrongDomClassicalMargin;
+            const wrongDominatesDeep = deepOk && (deepMargin < wrongDomDeepMargin);
             if (passed && (wrongDominatesClassical || wrongDominatesDeep)) passed = false;
             // Hard guard: if the drawing looks like a clear X/cross and currentLetter is not X/x, reject
             if (passed && looksLikeCross(userNorm) && !(currentLetter === 'X' || currentLetter === 'x')) passed = false;
@@ -10374,8 +10479,14 @@
             if (passed) {
                 const loopish = new Set(['o','O','Q','q','g','G','a','A','d','D','p','P','b','B']);
                 if (loopish.has(currentLetter)) {
-                    // Lower IoU bar for pure loops to reduce false rejections
-                    const minIoU = (currentLetter === 'o' || currentLetter === 'O') ? 0.12 : 0.20;
+                    // Letter-specific IoU floors (more permissive for a/b)
+                    const minIoUMap = new Map([
+                        ['o', 0.12], ['O', 0.12],
+                        ['a', 0.14], ['A', 0.16],
+                        ['b', 0.14], ['B', 0.16]
+                    ]);
+                    const defaultLoopIoU = 0.20;
+                    const minIoU = minIoUMap.get(currentLetter) ?? defaultLoopIoU;
                     if (visual < minIoU) passed = false;
                 }
             }
