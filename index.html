@@ -349,7 +349,6 @@
             position: relative;
             overflow: hidden;
         }
-
         .settings-btn::before {
             content: '';
             position: absolute;
@@ -688,7 +687,6 @@
         .timer-bar-fill.critical {
             background: linear-gradient(90deg, #ef4444, #dc2626);
         }
-
         .game-area {
             flex: 1 1 auto;
             display: flex;
@@ -1037,7 +1035,6 @@
                 transform: translateX(2px) rotate(0.5deg) scale(1.0);
             }
         }
-
         @keyframes wrongWobbleSoft {
 
             0%,
@@ -1383,7 +1380,6 @@
             margin-bottom: clamp(8px, 2vh, 12px);
             font-size: clamp(22px, 3.6vh, 28px);
         }
-
         .start-screen p {
             color: #6b7280;
             margin-bottom: clamp(6px, 1.6vh, 10px);
@@ -1489,7 +1485,6 @@
         .settings-content:hover::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, var(--primary), var(--primary-dark));
         }
-
         /* Firefox */
         .settings-content {
             scrollbar-width: thin;
@@ -1731,7 +1726,6 @@
             font-size: 28px;
             margin-bottom: 6px;
         }
-
         .theme-name {
             font-size: 12px;
             font-weight: 500;
@@ -2079,7 +2073,6 @@
                 transform: scale(1) rotate(360deg);
             }
         }
-
         .badge-name {
             font-size: 12px;
             font-weight: bold;
@@ -2429,7 +2422,6 @@
             letter-spacing: 8px;
             font-weight: bold;
         }
-
         .continue-btn {
             background: linear-gradient(135deg, #4ade80, #22c55e);
             color: white;
@@ -2780,7 +2772,6 @@
                 opacity: 1;
             }
         }
-
         .player-modal-title {
             font-size: 24px;
             font-weight: bold;
@@ -3130,7 +3121,6 @@
             transition: all 0.3s;
             cursor: pointer;
         }
-
         .heatmap-cell:hover {
             transform: scale(1.2);
             z-index: 10;
@@ -3823,7 +3813,6 @@
             background: white;
             border-radius: 10px;
         }
-
         .focus-option-label {
             font-size: 14px;
             color: #4a5568;
@@ -4167,7 +4156,6 @@
                 transform: translateX(-50%) scale(0.5);
             }
         }
-
         .celebration-dinosaurs {
             position: fixed;
             font-size: 70px;
@@ -4464,7 +4452,6 @@
             overflow: visible;
             animation: wbContainerGlow 4s ease-in-out infinite;
         }
-
         @keyframes wbContainerGlow {
             0%, 100% {
                 box-shadow:
@@ -4478,6 +4465,13 @@
                     0 0 150px rgba(59, 130, 246, 0.25),
                     inset 0 0 80px rgba(255, 255, 255, 0.3);
             }
+        }
+
+        .wb-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
 
         .wb-title {
@@ -4505,7 +4499,6 @@
             0% { background-position: 0% 50%; }
             100% { background-position: 200% 50%; }
         }
-
         .wb-slots {
             display: flex;
             gap: 16px;
@@ -5188,7 +5181,6 @@
                 <div class="achievement-notification-text" id="notificationText">You've earned a new badge!</div>
             </div>
         </div>
-
         <!-- Player Setup Modal -->
         <div class="player-modal" id="playerModal">
             <div class="player-modal-content">
@@ -5536,7 +5528,6 @@
             },
             'Z': { strokes: [[{ x: 10, y: 10 }, { x: 90, y: 10 }, { x: 10, y: 90 }, { x: 90, y: 90 }]], tolerance: 30, feedback: { incomplete: "A 'Z' needs a line on top, a slanted line, and a line on the bottom.", wrong: "For 'Z', draw 'zig-zag-zig'!" } }
         };
-
         // Initialize background bubbles
         function createBubbles() {
             for (let i = 0; i < 10; i++) {
@@ -5793,7 +5784,6 @@
 
         // Load saved data
         loadGameData();
-
         // Speech settings
         let speechSupported = 'speechSynthesis' in window;
         // Letter collections
@@ -7284,7 +7274,6 @@
             // Save progress
             saveGameData();
         }
-
         function updateDifficultyLevel() {
             const totalPerf = Object.values(letterPerformance);
             if (totalPerf.length === 0) {
@@ -7551,6 +7540,23 @@
                 }
                 starsDisplay.appendChild(star);
             }
+
+            // Announce score change to assistive tech (no layout impact)
+            try {
+                let live = document.getElementById('scoreLive');
+                if (!live) {
+                    live = document.createElement('div');
+                    live.id = 'scoreLive';
+                    live.setAttribute('aria-live', 'polite');
+                    live.setAttribute('aria-atomic', 'true');
+                    live.style.position = 'absolute';
+                    live.style.left = '-9999px';
+                    live.style.height = '1px';
+                    live.style.overflow = 'hidden';
+                    document.body.appendChild(live);
+                }
+                live.textContent = `Score ${Math.max(0, displayScore)}, round ${displayRound}, correct ${displayCorrect} of ${QUESTIONS_PER_ROUND}.`;
+            } catch (e) { }
         }
 
         function startTimer() {
@@ -7628,7 +7634,6 @@
             document.getElementById('timerDisplay').className = 'timer-display';
             document.getElementById('timerBar').style.display = 'none';
         }
-
         function clearAllTimers() {
             clearTimer();
             if (phonicsTimer) { window.clearTimeout(phonicsTimer); phonicsTimer = null; }
@@ -7732,7 +7737,6 @@
             // Alias to enhanced confetti for now
             createConfetti(element);
         }
-
         // Letter-specific celebrations
         function createLetterCelebration(letter, element) {
             try {
@@ -8211,7 +8215,6 @@
             }
             setTimeout(() => layer.remove(), 1600);
         }
-
         function createStarExplosion(element) {
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
@@ -8319,7 +8322,6 @@
             }, 500);
             setTimeout(() => layer.remove(), 2000);
         }
-
         function createPopcornPop(element) {
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
@@ -8638,7 +8640,6 @@
             }
             setTimeout(() => layer.remove(), 1700);
         }
-
         function createMagicWand(element) {
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
@@ -8709,7 +8710,6 @@
             }
             setTimeout(() => layer.remove(), 1800);
         }
-
         function createQueenCrown(element) {
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
@@ -8969,6 +8969,22 @@
             cancelSpeech();
             waitingForPhonics = false;
 
+            // Reduced-motion-safe transition for game area (no layout shift)
+            try {
+                const ga = document.getElementById('gameArea');
+                if (ga && !reduceMotionEnabled) {
+                    ga.style.willChange = 'opacity, transform';
+                    if (typeof gsap !== 'undefined') {
+                        gsap.fromTo(ga, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out' });
+                    } else {
+                        ga.style.opacity = '0';
+                        ga.style.transform = 'translateY(8px)';
+                        setTimeout(() => { ga.style.opacity = '1'; ga.style.transform = 'translateY(0)'; }, 0);
+                        setTimeout(() => { ga.style.willChange = ''; }, 300);
+                    }
+                }
+            } catch (e) { }
+
             if (mode === 'identify') {
                 startIdentifyGame(true);
             } else if (mode === 'draw') {
@@ -8977,7 +8993,6 @@
                 startWordBuilderGame(true);
             }
         }
-
         function startIdentifyGame(resetRound = false) {
             // In multiplayer mode, require a player to be selected
             if (multiplayerMode && !currentPlayer) {
@@ -9597,7 +9612,6 @@
             const percentage = (x / rect.width) * 100;
             basket.style.left = Math.max(5, Math.min(85, percentage)) + '%';
         }
-
         function startRainGame(targetLetter) {
             rainGameInterval = setInterval(() => {
                 const gameArea = document.getElementById('rainGameArea');
@@ -9914,7 +9928,6 @@
             drawQuestionStartTime = Date.now();
             try { if (typeof mobilenet !== 'undefined' && typeof tf !== 'undefined') { /* warm */ } } catch (e) { }
         }
-
         function resizeDrawLayout() {
             const gameArea = document.getElementById('gameArea');
             if (!gameArea) return;
@@ -10094,7 +10107,6 @@
             isDrawing = false;
             // Don't clear points - allow multiple strokes
         }
-
         function clearCanvas() {
             const canvas = document.getElementById('drawCanvas');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -10258,7 +10270,6 @@
             // Speak examples for non-readers
             const say = ` ${letter.toUpperCase()} is for ${examples.join(', ')}.`;
             try { speakPhrase(say); } catch (e) { }
-
             // Auto-dismiss quickly to avoid disrupting flow
             setTimeout(() => {
                 if (typeof gsap !== 'undefined') {
@@ -10345,42 +10356,41 @@
 
         function setTimerMode(mode) {
             timerEnabled = mode === 'on';
-            document.querySelectorAll('#timerOff, #timerOn').forEach(btn => {
-                btn.classList.remove('active');
-                btn.setAttribute('aria-pressed', 'false');
-            });
+            try { localStorage.setItem('letterLearningTimer', timerEnabled ? 'on' : 'off'); } catch (e) { }
             const activeBtn = document.getElementById('timer' + (mode === 'on' ? 'On' : 'Off'));
-            activeBtn.classList.add('active');
-            activeBtn.setAttribute('aria-pressed', 'true');
-            // If turning timer off mid-question, clear any running timers
-            if (!timerEnabled) {
-                clearAllTimers();
+            const inactiveBtn = document.getElementById('timer' + (mode === 'on' ? 'Off' : 'On'));
+            if (activeBtn && inactiveBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.setAttribute('aria-pressed', 'true');
+                inactiveBtn.classList.remove('active');
+                inactiveBtn.setAttribute('aria-pressed', 'false');
             }
         }
-
         function setCaseMode(mode) {
             currentCase = mode;
-            document.querySelectorAll('#caseLower, #caseUpper, #caseMixed').forEach(btn => {
-                btn.classList.remove('active');
-                btn.setAttribute('aria-pressed', 'false');
-            });
-
-            const btnId = mode === 'lower' ? 'caseLower' :
-                mode === 'upper' ? 'caseUpper' : 'caseMixed';
+            try { localStorage.setItem('letterLearningCase', mode); } catch (e) { }
+            const btnId = mode === 'lower' ? 'caseLower' : mode === 'upper' ? 'caseUpper' : 'caseMixed';
             const activeBtn = document.getElementById(btnId);
-            activeBtn.classList.add('active');
-            activeBtn.setAttribute('aria-pressed', 'true');
+            const all = ['caseLower','caseUpper','caseMixed'];
+            all.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const on = (id === btnId);
+                el.classList.toggle('active', on);
+                el.setAttribute('aria-pressed', String(on));
+            });
         }
-
         function setSoundMode(mode) {
             soundEnabled = mode === 'on';
-            document.querySelectorAll('#soundOn, #soundOff').forEach(btn => {
-                btn.classList.remove('active');
-                btn.setAttribute('aria-pressed', 'false');
-            });
+            try { localStorage.setItem('letterLearningSound', soundEnabled ? 'on' : 'off'); } catch (e) { }
             const activeBtn = document.getElementById('sound' + (mode === 'on' ? 'On' : 'Off'));
-            activeBtn.classList.add('active');
-            activeBtn.setAttribute('aria-pressed', 'true');
+            const inactiveBtn = document.getElementById('sound' + (mode === 'on' ? 'Off' : 'On'));
+            if (activeBtn && inactiveBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.setAttribute('aria-pressed', 'true');
+                inactiveBtn.classList.remove('active');
+                inactiveBtn.setAttribute('aria-pressed', 'false');
+            }
         }
 
         function toggleVoiceRecording(enabled) {
@@ -10592,7 +10602,6 @@
                 setTimeout(() => trophyBtn.classList.remove('new-achievement'), 1000);
             }
         }
-
         function updateBadgeCount() {
             const count = unlockedAchievements.size;
             const el = document.getElementById('badgeCount');
@@ -10601,7 +10610,6 @@
             // Ensure the badge is only visible when there are achievements
             el.style.display = count > 0 ? 'flex' : 'none';
         }
-
         function openAchievements() {
             const modal = document.getElementById('achievementModal');
             const grid = document.getElementById('badgesGrid');
@@ -10935,7 +10943,6 @@
             // Switch to new player
             switchToPlayer(players.length - 1);
         }
-
         function updatePlayerDisplay() {
             const playerList = document.getElementById('playerList');
             playerList.innerHTML = '';
@@ -11086,7 +11093,6 @@
             updateDashboard();
             showFeedback('All statistics have been reset.', 'info');
         }
-
         function resetCurrentPlayerStatistics() {
             if (!multiplayerMode || !currentPlayer) {
                 // Reset single-player state only
@@ -11245,7 +11251,6 @@
                 insightsList.appendChild(item);
             });
         }
-
         function generateInsights() {
             const insights = [];
 
@@ -11566,7 +11571,6 @@
 
             saveGameData();
         }
-
         // Streak System Functions
         function checkStreakContinuity() {
             const today = new Date().toDateString();
@@ -11906,7 +11910,6 @@
             const renderStrokesToCanvas = (strokes, size = 224, lw = 24) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = (size * 0.84) / Math.max(w, h), pad = size * 0.08; const c = document.createElement('canvas'); c.width = size; c.height = size; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, size, size); g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#000'; g.lineWidth = lw; g.fillStyle = '#000'; for (const s of strokes) { if (s.length < 2) { const p = s[0]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; g.beginPath(); g.arc(x, y, lw * 0.45, 0, Math.PI * 2); g.fill(); continue; } g.beginPath(); for (let i = 0; i < s.length; i++) { const p = s[i]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke(); } return c; };
             const l2norm = (arr) => { let s = 0; for (let i = 0; i < arr.length; i++) s += arr[i] * arr[i]; s = Math.sqrt(s) || 1; for (let i = 0; i < arr.length; i++) arr[i] /= s; return arr; };
             const cosine = (a, b) => { let s = 0, n = Math.min(a.length, b.length); for (let i = 0; i < n; i++) s += a[i] * b[i]; return s; };
-
             // Build template cache once (normalized strokes + point-cloud)
             const C = checkDrawingNew; // function object as cache container
             if (!C.tmplCache) {
@@ -12064,7 +12067,6 @@
                     if (visual < minIoU) passed = false;
                 }
             }
-
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
             if (passed) {
                 const base = 10 + (difficultyLevel * 5);
@@ -12142,9 +12144,36 @@
                 return `<button class="wb-tile" data-letter="${L}" data-bank-idx="${i}" onclick="wbPick('${L}', ${i})" aria-label="Pick letter ${L}" style="--tile-index: ${i}">${L}</button>`;
             }).join('');
 
+            // Create difficulty badge
+            const difficultyColors = {
+                easy: '#10b981',
+                medium: '#f59e0b',
+                hard: '#ef4444'
+            };
+            const difficultyEmojis = {
+                easy: '🌟',
+                medium: '⭐⭐',
+                hard: '🏆'
+            };
+
             gameArea.innerHTML = `
                 <div class="wb-container" role="region" aria-label="Word Builder">
-                    <div class="wb-title">Build the word</div>
+                    <div class="wb-header">
+                        <div class="wb-title">Build the word</div>
+                        <div class="wb-difficulty-badge" style="
+                            background: ${difficultyColors[wbDifficulty]};
+                            color: white;
+                            padding: 4px 12px;
+                            border-radius: 20px;
+                            font-size: 14px;
+                            font-weight: bold;
+                            margin-top: 8px;
+                            display: inline-block;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                        ">
+                            ${difficultyEmojis[wbDifficulty]} ${wbDifficulty.toUpperCase()}
+                        </div>
+                    </div>
                     <div class="wb-slots" id="wbSlots">${slotsHTML}</div>
                     <div class="wb-bank" id="wbBank">${bankHTML}</div>
                     <div class="wb-controls">
@@ -12227,7 +12256,6 @@
                 'shirt', 'dress', 'pants', 'socks', 'shoes', 'crown', 'sword', 'magic'
             ]
         };
-
         // Track player progress for difficulty adjustment
         let wbConsecutiveCorrect = 0;
         let wbConsecutiveWrong = 0;
@@ -12340,6 +12368,8 @@
                 score += 20;
                 roundCorrect++;
                 totalQuestions++;
+                wbConsecutiveCorrect++;
+                wbConsecutiveWrong = 0; // Reset wrong streak
                 updateScoreDisplay();
                 markWordResult(true);
 
@@ -12424,6 +12454,8 @@
             } else {
                 roundWrong++;
                 totalQuestions++;
+                wbConsecutiveWrong++;
+                wbConsecutiveCorrect = 0; // Reset correct streak
                 score = Math.max(0, score - 5);
                 updateScoreDisplay();
                 markWordResult(false);
@@ -12455,7 +12487,6 @@
                 }, 1500);
             }
         }
-
         // Show giant emoji celebration for completed words
         function showWordEmojiCelebration(emoji) {
             const container = document.querySelector('.wb-container');
@@ -12549,7 +12580,6 @@
                 }, 600);
             }
         }
-
         // Create enhanced particle effects
         function createWordBuilderParticles() {
             const colors = ['#fbbf24', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#ef4444'];
