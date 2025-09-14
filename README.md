@@ -6,7 +6,7 @@ This README reflects the current code precisely. If something is listed here, it
 
 ## What It Is
 - Single‑file app: everything is implemented in `index.html`.
-- Two core modes: Find Letters (identify) and Tracing Practice (draw).
+- Three core modes: Find Letters (identify), Word Builder (spell), and Tracing Practice (draw).
 - Child‑friendly UI, big touch targets, optional phonics flow, and gentle animations.
 - Data is stored locally in the browser via `localStorage` (no backend).
 
@@ -19,6 +19,12 @@ This README reflects the current code precisely. If something is listed here, it
   - Adaptive selection favors letters that need practice and avoids recent repeats.
   - Optional phonics follow‑up (3‑second countdown, then letter sound and anchor word/emoji). Can be skipped.
   - Scoring: base points plus a time bonus, with a per‑round cap. Wrong answers/timeouts deduct points.
+- Word Builder
+  - Presents a target word with empty slots and a small bank of letter tiles.
+  - Speaker button plays the target word (via SpeechSynthesis API).
+  - Build the word by tapping/clicking letter tiles to fill slots left‑to‑right.
+  - Word list includes short CVC words; letter case follows the Letters setting (lowercase/uppercase/mixed).
+  - Scoring: +20 for a correct word; −5 for an incorrect attempt; advances to the next word automatically.
 - Tracing Practice
   - Responsive canvas sized to fit the screen (typically 260–560px square).
   - Optional letter formation overlay (Show/Hide How to Write).
@@ -57,7 +63,7 @@ This README reflects the current code precisely. If something is listed here, it
 ### Mini‑games (automatic short breaks)
 - Letter Rain: move the basket to catch the target letter; score feedback.
 - Memory Match: flip pairs of matching letters in a 4×4 grid with a timer.
-- Mini‑games are occasionally offered between questions in Find Letters mode.
+- Mini‑games are occasionally offered between questions in Find Letters and Word Builder modes.
 
 ### Achievements
 Defined achievements (unlocked/persisted locally):

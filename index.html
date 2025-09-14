@@ -4441,102 +4441,414 @@
             }
         }
 
-        /* Word Builder Styles */
+        /* Word Builder Styles - Enhanced for Children */
         .wb-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 16px;
-            padding: 16px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(243,244,246,0.85));
-            border-radius: 16px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.10);
+            gap: 24px;
+            padding: 32px;
+            background: linear-gradient(135deg,
+                rgba(147, 51, 234, 0.08) 0%,
+                rgba(59, 130, 246, 0.08) 25%,
+                rgba(34, 197, 94, 0.08) 50%,
+                rgba(251, 146, 60, 0.08) 75%,
+                rgba(239, 68, 68, 0.08) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.12),
+                0 0 120px rgba(147, 51, 234, 0.15),
+                inset 0 0 60px rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: visible;
+            animation: wbContainerGlow 4s ease-in-out infinite;
         }
+
+        @keyframes wbContainerGlow {
+            0%, 100% {
+                box-shadow:
+                    0 20px 40px rgba(0, 0, 0, 0.12),
+                    0 0 120px rgba(147, 51, 234, 0.15),
+                    inset 0 0 60px rgba(255, 255, 255, 0.2);
+            }
+            50% {
+                box-shadow:
+                    0 25px 50px rgba(0, 0, 0, 0.15),
+                    0 0 150px rgba(59, 130, 246, 0.25),
+                    inset 0 0 80px rgba(255, 255, 255, 0.3);
+            }
+        }
+
         .wb-title {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            color: #111827;
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(90deg,
+                #8b5cf6 0%,
+                #3b82f6 25%,
+                #10b981 50%,
+                #f59e0b 75%,
+                #ef4444 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: wbTitleShine 3s linear infinite;
+            text-shadow: 0 0 30px rgba(147, 51, 234, 0.3);
+            position: relative;
         }
+
+        @keyframes wbTitleShine {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
         .wb-slots {
             display: flex;
-            gap: 12px;
+            gap: 16px;
             justify-content: center;
             flex-wrap: wrap;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 20px;
+            box-shadow:
+                inset 0 2px 10px rgba(0, 0, 0, 0.1),
+                0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
+
         .wb-slot {
-            width: 64px;
-            height: 64px;
-            border-radius: 12px;
-            border: 2px dashed rgba(0, 0, 0, 0.18);
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            border: 3px dashed rgba(147, 51, 234, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(180deg, #ffffff, #f9fafb);
-            font-size: 36px;
-            font-weight: 700;
-            color: #111827;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+            background: linear-gradient(145deg, #ffffff, #f3f4f6);
+            font-size: 44px;
+            font-weight: 900;
+            color: #1e293b;
+            box-shadow:
+                0 8px 20px rgba(0, 0, 0, 0.1),
+                inset 0 2px 4px rgba(255, 255, 255, 0.9);
+            transform-style: preserve-3d;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
         }
+
+        .wb-slot::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+
         .wb-slot.filled {
             border-style: solid;
-            border-color: rgba(0, 0, 0, 0.2);
+            border-color: rgba(147, 51, 234, 0.6);
+            background: linear-gradient(145deg,
+                rgba(147, 51, 234, 0.1),
+                rgba(59, 130, 246, 0.1));
+            transform: scale(1.05) rotateY(360deg);
+            animation: slotFillBounce 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
+
+        @keyframes slotFillBounce {
+            0% { transform: scale(0.8) rotateY(0deg); }
+            50% { transform: scale(1.15) rotateY(180deg); }
+            100% { transform: scale(1.05) rotateY(360deg); }
+        }
+
         .wb-slot.correct {
-            background: #d1fae5;
-            border-color: #10b981;
+            background: linear-gradient(145deg, #86efac, #22c55e);
+            border-color: #16a34a;
+            animation: slotCorrect 0.6s ease;
+            box-shadow:
+                0 0 30px rgba(34, 197, 94, 0.6),
+                0 10px 25px rgba(34, 197, 94, 0.4),
+                inset 0 0 20px rgba(255, 255, 255, 0.5);
         }
+
+        @keyframes slotCorrect {
+            0% { transform: scale(1) rotateZ(0deg); }
+            25% { transform: scale(1.3) rotateZ(-5deg); }
+            50% { transform: scale(1.2) rotateZ(5deg); }
+            75% { transform: scale(1.1) rotateZ(-2deg); }
+            100% { transform: scale(1) rotateZ(0deg); }
+        }
+
         .wb-slot.wrong {
-            background: #fee2e2;
-            border-color: #ef4444;
+            background: linear-gradient(145deg, #fca5a5, #ef4444);
+            border-color: #dc2626;
+            animation: slotWrong 0.5s ease;
         }
+
+        @keyframes slotWrong {
+            0%, 100% { transform: translateX(0); }
+            10% { transform: translateX(-10px) rotateZ(-5deg); }
+            20% { transform: translateX(10px) rotateZ(5deg); }
+            30% { transform: translateX(-10px) rotateZ(-5deg); }
+            40% { transform: translateX(10px) rotateZ(5deg); }
+            50% { transform: translateX(-5px) rotateZ(-2deg); }
+            60% { transform: translateX(5px) rotateZ(2deg); }
+            70% { transform: translateX(-2px); }
+            80% { transform: translateX(2px); }
+        }
+
         .wb-bank {
             display: flex;
-            gap: 12px;
+            gap: 16px;
             justify-content: center;
             flex-wrap: wrap;
-            max-width: 680px;
+            max-width: 720px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            box-shadow:
+                inset 0 2px 10px rgba(0, 0, 0, 0.05),
+                0 5px 20px rgba(0, 0, 0, 0.1);
         }
+
         .wb-tile {
-            width: 56px;
-            height: 56px;
-            border-radius: 12px;
-            background: linear-gradient(180deg, #eef2ff, #e5e7eb);
+            width: 72px;
+            height: 72px;
+            border-radius: 16px;
+            background: linear-gradient(145deg,
+                #fbbf24,
+                #f59e0b,
+                #fb923c);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
-            font-weight: 700;
-            color: #111827;
+            font-size: 36px;
+            font-weight: 900;
+            color: #ffffff;
             cursor: pointer;
-            transition: transform 0.1s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             user-select: none;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+            box-shadow:
+                0 10px 25px rgba(245, 158, 11, 0.3),
+                0 4px 10px rgba(0, 0, 0, 0.1),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+            transform-style: preserve-3d;
+            position: relative;
+            overflow: hidden;
+            animation: tilePulse 2s ease-in-out infinite;
+            animation-delay: calc(var(--tile-index, 0) * 0.1s);
         }
+
+        @keyframes tilePulse {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-2px) scale(1.02); }
+        }
+
+        .wb-tile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent);
+            transition: left 0.5s;
+        }
+
         .wb-tile:hover {
-            transform: translateY(-2px);
-            background: #e5e7eb;
-            box-shadow: 0 10px 22px rgba(0, 0, 0, 0.10);
+            transform: translateY(-8px) scale(1.1) rotateZ(-5deg);
+            background: linear-gradient(145deg,
+                #fcd34d,
+                #fbbf24,
+                #f59e0b);
+            box-shadow:
+                0 20px 40px rgba(245, 158, 11, 0.4),
+                0 8px 20px rgba(0, 0, 0, 0.15),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.2);
         }
+
+        .wb-tile:hover::before {
+            left: 100%;
+        }
+
+        .wb-tile:active {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow:
+                0 10px 20px rgba(245, 158, 11, 0.3),
+                0 4px 10px rgba(0, 0, 0, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .wb-tile:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: scale(0.9);
+            filter: grayscale(0.5);
+            animation: none;
+        }
+
         .wb-controls {
             display: flex;
-            gap: 12px;
-            margin-top: 8px;
+            gap: 16px;
+            margin-top: 12px;
         }
+
         .wb-btn {
-            padding: 10px 16px;
-            border-radius: 12px;
-            background: #a78bfa;
+            padding: 14px 28px;
+            border-radius: 16px;
+            background: linear-gradient(145deg, #8b5cf6, #7c3aed);
             color: #ffffff;
             border: none;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            box-shadow:
+                0 8px 20px rgba(139, 92, 246, 0.3),
+                0 4px 10px rgba(0, 0, 0, 0.1),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
         }
+
+        .wb-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        .wb-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow:
+                0 12px 30px rgba(139, 92, 246, 0.4),
+                0 6px 15px rgba(0, 0, 0, 0.15),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .wb-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .wb-btn:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+
         .wb-btn.secondary {
-            background: #111827;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            box-shadow:
+                0 8px 20px rgba(15, 23, 42, 0.3),
+                0 4px 10px rgba(0, 0, 0, 0.1),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .wb-btn.secondary:hover {
+            box-shadow:
+                0 12px 30px rgba(15, 23, 42, 0.4),
+                0 6px 15px rgba(0, 0, 0, 0.15),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Particle Effects Container */
+        .wb-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+        .wb-particle {
+            position: absolute;
+            pointer-events: none;
+            animation: particleFloat 3s ease-out forwards;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translate(0, 0) scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(var(--x), calc(var(--y) * 0.5)) scale(1.5) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(0.5) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Celebration Stars */
+        .wb-star {
+            position: absolute;
+            font-size: 24px;
+            animation: starBurst 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        @keyframes starBurst {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.5) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Success Ripple Effect */
+        .wb-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle,
+                rgba(34, 197, 94, 0.3),
+                transparent);
+            animation: rippleExpand 1s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes rippleExpand {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 300px;
+                height: 300px;
+                opacity: 0;
+            }
         }
     </style>
 </head>
@@ -4572,7 +4884,7 @@
                 aria-label="Tracing practice mode">
                 <span>Tracing Practice</span>
             </button>
-            <button class="mode-btn" onclick="setMode('wordBuilder', this)" aria-pressed="false"
+            <button class="mode-btn" id="wordBuilderBtn" onclick="setMode('wordBuilder', this)" aria-pressed="false"
                 aria-label="Word builder mode">
                 <span>Word Builder</span>
             </button>
@@ -5508,10 +5820,10 @@
             'z': 'zuh, zuh, zuh, as in zebra'
         };
 
-        // Emoji choices for phonics anchor words (only where a clear emoji exists)
+        // Emoji choices for phonics anchor words and Word Builder words
         const anchorEmojiMap = {
             'apple': '🍎',
-            'ball': '🏀',
+            'ball': '⚽',
             'cat': '🐱',
             'dog': '🐶',
             'egg': '🥚',
@@ -5530,6 +5842,1255 @@
             'snake': '🐍',
             'turtle': '🐢',
             'umbrella': '☂️',
+            // Extended emoji map for Word Builder words
+            'sun': '☀️',
+            'star': '⭐',
+            'tree': '🌳',
+            'bird': '🐦',
+            'bee': '🐝',
+            'car': '🚗',
+            'bus': '🚌',
+            'boat': '⛵',
+            'book': '📚',
+            'pen': '✏️',
+            'cup': '☕',
+            'cake': '🎂',
+            'milk': '🥛',
+            'key': '🔑',
+            'box': '📦',
+            'bag': '👜',
+            'map': '🗺️',
+            'bed': '🛏️',
+            'toy': '🧸',
+            'bear': '🐻',
+            'duck': '🦆',
+            'cow': '🐄',
+            'sheep': '🐑',
+            'horse': '🐴',
+            'frog': '🐸',
+            'bug': '🐛',
+            'ant': '🐜',
+            'fly': '🪰',
+            'bat': '🦇',
+            'owl': '🦉',
+            'fox': '🦊',
+            'wolf': '🐺',
+            'rose': '🌹',
+            'leaf': '🍃',
+            'rain': '🌧️',
+            'snow': '❄️',
+            'wind': '💨',
+            'fire': '🔥',
+            'water': '💧',
+            'rock': '🪨',
+            'sand': '🏖️',
+            'hill': '⛰️',
+            'home': '🏠',
+            'door': '🚪',
+            'bell': '🔔',
+            'lamp': '💡',
+            'clock': '🕐',
+            'phone': '📱',
+            'game': '🎮',
+            'drum': '🥁',
+            'flag': '🚩',
+            'gift': '🎁',
+            'love': '❤️',
+            'happy': '😊',
+            'smile': '😊',
+            'baby': '👶',
+            'king': '👑',
+            'hand': '✋',
+            'foot': '🦶',
+            'eye': '👁️',
+            'ear': '👂',
+            'face': '😊',
+            'pizza': '🍕',
+            'banana': '🍌',
+            'grape': '🍇',
+            'orange': '🍊',
+            'cookie': '🍪',
+            'candy': '🍬',
+            'donut': '🍩',
+            'bread': '🍞',
+            'cheese': '🧀',
+            'ship': '🚢',
+            'train': '🚂',
+            'plane': '✈️',
+            'bike': '🚴',
+            'robot': '🤖',
+            'doll': '🪆',
+            'kite': '🪁',
+            'tent': '⛺',
+            'music': '🎵',
+            'dance': '💃',
+            'paint': '🎨',
+            'brush': '🖌️',
+            'pencil': '✏️',
+            'paper': '📄',
+            'chair': '🪑',
+            'table': '🪑',
+            'spoon': '🥄',
+            'fork': '🍴',
+            'plate': '🍽️',
+            'bowl': '🥣',
+            'shirt': '👔',
+            'shoe': '👟',
+            'sock': '🧦',
+            'dress': '👗',
+            'pants': '👖',
+            'cloud': '☁️',
+            'storm': '⛈️',
+            'light': '💡',
+            'night': '🌙',
+            'day': '☀️',
+            'earth': '🌍',
+            'space': '🚀',
+            'heart': '❤️',
+            'flower': '🌸',
+            'grass': '🌿',
+            'seed': '🌱',
+            'corn': '🌽',
+            'wheat': '🌾',
+            'rice': '🍚',
+            'bean': '🫘',
+            'soup': '🍲',
+            'salad': '🥗',
+            'fruit': '🍓',
+            'lemon': '🍋',
+            'peach': '🍑',
+            'pear': '🍐',
+            'plum': '🫐',
+            'melon': '🍉',
+            'berry': '🫐',
+            'cherry': '🍒',
+            'mango': '🥭',
+            'tomato': '🍅',
+            'carrot': '🥕',
+            'onion': '🧅',
+            'potato': '🥔',
+            'garlic': '🧄',
+            'pepper': '🌶️',
+            'broccoli': '🥦',
+            'mushroom': '🍄',
+            'bacon': '🥓',
+            'steak': '🥩',
+            'chicken': '🍗',
+            'shrimp': '🦐',
+            'crab': '🦀',
+            'lobster': '🦞',
+            'squid': '🦑',
+            'whale': '🐋',
+            'shark': '🦈',
+            'dolphin': '🐬',
+            'seal': '🦭',
+            'penguin': '🐧',
+            'tiger': '🐅',
+            'zebra': '🦓',
+            'giraffe': '🦒',
+            'elephant': '🐘',
+            'monkey': '🐵',
+            'gorilla': '🦍',
+            'panda': '🐼',
+            'koala': '🐨',
+            'sloth': '🦥',
+            'mouse': '🐭',
+            'hamster': '🐹',
+            'bunny': '🐰',
+            'skunk': '🦨',
+            'deer': '🦌',
+            'moose': '🫎',
+            'camel': '🐪',
+            'llama': '🦙',
+            'hippo': '🦛',
+            'rhino': '🦏',
+            'unicorn': '🦄',
+            'dragon': '🐉',
+            'dino': '🦕',
+            'eagle': '🦅',
+            'parrot': '🦜',
+            'peacock': '🦚',
+            'turkey': '🦃',
+            'rooster': '🐓',
+            'chick': '🐤',
+            'swan': '🦢',
+            'flamingo': '🦩',
+            'dove': '🕊️',
+            'crow': '🐦‍⬛',
+            'spider': '🕷️',
+            'scorpion': '🦂',
+            'snail': '🐌',
+            'worm': '🪱',
+            'cactus': '🌵',
+            'palm': '🌴',
+            'bamboo': '🎋',
+            'tulip': '🌷',
+            'daisy': '🌼',
+            'lotus': '🪷',
+            'maple': '🍁',
+            'clover': '☘️',
+            'mint': '🌿',
+            'herb': '🌿',
+            'beach': '🏖️',
+            'island': '🏝️',
+            'desert': '🏜️',
+            'forest': '🌲',
+            'jungle': '🌴',
+            'garden': '🌻',
+            'park': '🏞️',
+            'bridge': '🌉',
+            'castle': '🏰',
+            'tower': '🗼',
+            'church': '⛪',
+            'temple': '🛕',
+            'school': '🏫',
+            'bank': '🏦',
+            'hotel': '🏨',
+            'shop': '🏪',
+            'store': '🏬',
+            'office': '🏢',
+            'factory': '🏭',
+            'farm': '🚜',
+            'barn': '🛖',
+            'fence': '🪵',
+            'gate': '🚪',
+            'road': '🛣️',
+            'path': '🛤️',
+            'track': '🛤️',
+            'sign': '🚧',
+            'stop': '🛑',
+            'yield': '⚠️',
+            'light': '🚦',
+            'cross': '❌',
+            'check': '✅',
+            'mark': '✔️',
+            'arrow': '➡️',
+            'up': '⬆️',
+            'down': '⬇️',
+            'left': '⬅️',
+            'right': '➡️',
+            'back': '🔙',
+            'next': '⏭️',
+            'play': '▶️',
+            'pause': '⏸️',
+            'stop': '⏹️',
+            'record': '⏺️',
+            'fast': '⏩',
+            'slow': '🐌',
+            'loud': '🔊',
+            'quiet': '🔇',
+            'mute': '🔇',
+            'sound': '🔉',
+            'video': '📹',
+            'camera': '📷',
+            'photo': '📸',
+            'movie': '🎬',
+            'film': '🎞️',
+            'screen': '📺',
+            'radio': '📻',
+            'speaker': '🔈',
+            'headphones': '🎧',
+            'microphone': '🎤',
+            'guitar': '🎸',
+            'piano': '🎹',
+            'violin': '🎻',
+            'trumpet': '🎺',
+            'flute': '🪈',
+            'harp': '🪕',
+            'accordion': '🪗',
+            'harmonica': '🎵',
+            'saxophone': '🎷',
+            'tuba': '🎺',
+            'clarinet': '🎵',
+            'banjo': '🪕',
+            'tambourine': '🎵',
+            'maracas': '🎵',
+            'cymbals': '🎵',
+            'triangle': '🔺',
+            'square': '⬜',
+            'circle': '⭕',
+            'oval': '🥚',
+            'diamond': '💎',
+            'hexagon': '⬡',
+            'octagon': '🛑',
+            'polygon': '🔷',
+            'spiral': '🌀',
+            'curve': '〰️',
+            'line': '➖',
+            'dot': '•',
+            'dash': '➖',
+            'plus': '➕',
+            'minus': '➖',
+            'times': '✖️',
+            'divide': '➗',
+            'equals': '🟰',
+            'percent': '💯',
+            'dollar': '💵',
+            'cent': '💰',
+            'pound': '💷',
+            'euro': '💶',
+            'yen': '💴',
+            'rupee': '💸',
+            'coin': '🪙',
+            'credit': '💳',
+            'cash': '💵',
+            'money': '💰',
+            'wallet': '👛',
+            'purse': '👛',
+            'receipt': '🧾',
+            'ticket': '🎫',
+            'coupon': '🎟️',
+            'stamp': '📮',
+            'mail': '📧',
+            'letter': '✉️',
+            'package': '📦',
+            'parcel': '📦',
+            'present': '🎁',
+            'ribbon': '🎀',
+            'medal': '🏅',
+            'trophy': '🏆',
+            'award': '🥇',
+            'prize': '🎁',
+            'badge': '🎖️',
+            'shield': '🛡️',
+            'sword': '⚔️',
+            'dagger': '🗡️',
+            'axe': '🪓',
+            'hammer': '🔨',
+            'wrench': '🔧',
+            'screwdriver': '🪛',
+            'drill': '🔩',
+            'saw': '🪚',
+            'nail': '🔩',
+            'screw': '🔩',
+            'bolt': '🔩',
+            'nut': '🔩',
+            'gear': '⚙️',
+            'chain': '⛓️',
+            'lock': '🔒',
+            'unlock': '🔓',
+            'safe': '🔐',
+            'vault': '🏦',
+            'magnet': '🧲',
+            'battery': '🔋',
+            'plug': '🔌',
+            'bulb': '💡',
+            'torch': '🔦',
+            'candle': '🕯️',
+            'match': '🔥',
+            'lighter': '🔥',
+            'smoke': '💨',
+            'ash': '🌫️',
+            'dust': '💨',
+            'dirt': '🟤',
+            'mud': '🟫',
+            'stone': '🪨',
+            'brick': '🧱',
+            'wood': '🪵',
+            'metal': '🔩',
+            'glass': '🥃',
+            'plastic': '♻️',
+            'rubber': '🛞',
+            'fabric': '🧵',
+            'leather': '🥾',
+            'cotton': '☁️',
+            'wool': '🧶',
+            'silk': '🕸️',
+            'thread': '🧵',
+            'needle': '🪡',
+            'button': '🔘',
+            'zipper': '🤐',
+            'pocket': '👖',
+            'collar': '👔',
+            'sleeve': '💪',
+            'cuff': '🤵',
+            'belt': '🥋',
+            'buckle': '🔗',
+            'strap': '🎒',
+            'lace': '👟',
+            'ribbon': '🎀',
+            'bow': '🎀',
+            'knot': '🪢',
+            'rope': '🪢',
+            'string': '🧵',
+            'wire': '🔌',
+            'cable': '🔌',
+            'cord': '🔌',
+            'pipe': '🚰',
+            'tube': '🧪',
+            'hose': '🚿',
+            'faucet': '🚰',
+            'sink': '🚿',
+            'drain': '🕳️',
+            'toilet': '🚽',
+            'shower': '🚿',
+            'bath': '🛁',
+            'tub': '🛁',
+            'soap': '🧼',
+            'shampoo': '🧴',
+            'towel': '🏖️',
+            'brush': '🪥',
+            'comb': '🪮',
+            'razor': '🪒',
+            'scissors': '✂️',
+            'mirror': '🪞',
+            'scale': '⚖️',
+            'ruler': '📏',
+            'tape': '📏',
+            'glue': '🧪',
+            'paint': '🎨',
+            'crayon': '🖍️',
+            'marker': '🖊️',
+            'chalk': '🏫',
+            'eraser': '🧽',
+            'stapler': '📎',
+            'clip': '📎',
+            'pin': '📌',
+            'tack': '📌',
+            'rubber': '🧽',
+            'band': '🎵',
+            'string': '🧵',
+            'yarn': '🧶',
+            'knit': '🧶',
+            'crochet': '🧶',
+            'sew': '🪡',
+            'stitch': '🪡',
+            'patch': '🩹',
+            'bandage': '🩹',
+            'cast': '🦴',
+            'splint': '🦴',
+            'crutch': '🦯',
+            'cane': '🦯',
+            'walker': '🦽',
+            'wheelchair': '♿',
+            'stroller': '👶',
+            'crib': '🛏️',
+            'bassinet': '👶',
+            'cradle': '👶',
+            'highchair': '🪑',
+            'playpen': '👶',
+            'swing': '🎠',
+            'slide': '🛝',
+            'seesaw': '🎢',
+            'sandbox': '🏖️',
+            'blocks': '🧱',
+            'puzzle': '🧩',
+            'cards': '🃏',
+            'dice': '🎲',
+            'chess': '♟️',
+            'checkers': '🏁',
+            'domino': '🁣',
+            'marble': '🔵',
+            'yoyo': '🪀',
+            'top': '🌀',
+            'frisbee': '🥏',
+            'boomerang': '🪃',
+            'dart': '🎯',
+            'target': '🎯',
+            'bullseye': '🎯',
+            'arrow': '🏹',
+            'bow': '🏹',
+            'sling': '🪨',
+            'catapult': '🏹',
+            'cannon': '💣',
+            'bomb': '💣',
+            'mine': '💣',
+            'grenade': '💣',
+            'missile': '🚀',
+            'rocket': '🚀',
+            'jet': '✈️',
+            'helicopter': '🚁',
+            'balloon': '🎈',
+            'blimp': '🎈',
+            'parachute': '🪂',
+            'glider': '🪂',
+            'kite': '🪁',
+            'sail': '⛵',
+            'anchor': '⚓',
+            'buoy': '🛟',
+            'lighthouse': '🗼',
+            'pier': '🌉',
+            'dock': '⚓',
+            'harbor': '⚓',
+            'port': '🚢',
+            'marina': '⛵',
+            'beach': '🏖️',
+            'shore': '🏖️',
+            'coast': '🏖️',
+            'cliff': '🪨',
+            'cave': '🕳️',
+            'tunnel': '🚇',
+            'mine': '⛏️',
+            'quarry': '🪨',
+            'well': '🪣',
+            'spring': '💧',
+            'fountain': '⛲',
+            'pool': '🏊',
+            'pond': '🦆',
+            'lake': '🏞️',
+            'river': '🏞️',
+            'stream': '💧',
+            'creek': '💧',
+            'brook': '💧',
+            'waterfall': '💧',
+            'rapids': '💧',
+            'dam': '🌊',
+            'canal': '🚤',
+            'channel': '📺',
+            'strait': '🌊',
+            'bay': '🏖️',
+            'gulf': '🌊',
+            'sea': '🌊',
+            'ocean': '🌊',
+            'wave': '🌊',
+            'tide': '🌊',
+            'current': '🌊',
+            'whirlpool': '🌀',
+            'tsunami': '🌊',
+            'flood': '🌊',
+            'drought': '☀️',
+            'storm': '⛈️',
+            'hurricane': '🌀',
+            'tornado': '🌪️',
+            'cyclone': '🌀',
+            'typhoon': '🌀',
+            'blizzard': '🌨️',
+            'avalanche': '🏔️',
+            'earthquake': '🌍',
+            'volcano': '🌋',
+            'lava': '🌋',
+            'magma': '🌋',
+            'geyser': '♨️',
+            'crater': '🕳️',
+            'meteor': '☄️',
+            'comet': '☄️',
+            'asteroid': '☄️',
+            'planet': '🪐',
+            'saturn': '🪐',
+            'jupiter': '🪐',
+            'mars': '🪐',
+            'venus': '🪐',
+            'mercury': '🪐',
+            'uranus': '🪐',
+            'neptune': '🪐',
+            'pluto': '🪐',
+            'orbit': '🪐',
+            'galaxy': '🌌',
+            'nebula': '🌌',
+            'universe': '🌌',
+            'cosmos': '🌌',
+            'constellation': '✨',
+            'zodiac': '♈',
+            'eclipse': '🌑',
+            'lunar': '🌙',
+            'solar': '☀️',
+            'sunrise': '🌅',
+            'sunset': '🌇',
+            'dawn': '🌄',
+            'dusk': '🌆',
+            'twilight': '🌆',
+            'midnight': '🌃',
+            'noon': '☀️',
+            'morning': '🌅',
+            'evening': '🌆',
+            'afternoon': '☀️',
+            'weekend': '🎉',
+            'weekday': '💼',
+            'monday': '😔',
+            'friday': '🎉',
+            'sunday': '😴',
+            'january': '❄️',
+            'february': '💝',
+            'march': '🌸',
+            'april': '🌧️',
+            'may': '🌺',
+            'june': '☀️',
+            'july': '🎆',
+            'august': '🌻',
+            'september': '🍂',
+            'october': '🎃',
+            'november': '🦃',
+            'december': '🎄',
+            'spring': '🌸',
+            'summer': '☀️',
+            'autumn': '🍂',
+            'fall': '🍁',
+            'winter': '❄️',
+            'season': '🌍',
+            'weather': '🌤️',
+            'climate': '🌡️',
+            'temperature': '🌡️',
+            'degree': '°',
+            'celsius': '°C',
+            'fahrenheit': '°F',
+            'thermometer': '🌡️',
+            'barometer': '📊',
+            'humidity': '💧',
+            'pressure': '📊',
+            'forecast': '📺',
+            'report': '📄',
+            'news': '📰',
+            'article': '📄',
+            'story': '📖',
+            'tale': '📚',
+            'legend': '🏛️',
+            'myth': '🐉',
+            'fable': '🦊',
+            'fairy': '🧚',
+            'magic': '✨',
+            'spell': '🪄',
+            'wand': '🪄',
+            'wizard': '🧙',
+            'witch': '🧙‍♀️',
+            'sorcerer': '🧙',
+            'mage': '🧙',
+            'enchant': '✨',
+            'charm': '🍀',
+            'curse': '💀',
+            'hex': '🔮',
+            'potion': '🧪',
+            'elixir': '🧪',
+            'brew': '🍺',
+            'cauldron': '🥘',
+            'crystal': '💎',
+            'gem': '💎',
+            'jewel': '💍',
+            'treasure': '💰',
+            'gold': '🥇',
+            'silver': '🥈',
+            'bronze': '🥉',
+            'copper': '🟫',
+            'iron': '⚫',
+            'steel': '🔩',
+            'aluminum': '🥫',
+            'tin': '🥫',
+            'lead': '⚫',
+            'zinc': '⚪',
+            'nickel': '🪙',
+            'chrome': '✨',
+            'titanium': '⚪',
+            'platinum': '💍',
+            'uranium': '☢️',
+            'carbon': '♦️',
+            'oxygen': '💨',
+            'hydrogen': '💧',
+            'nitrogen': '💨',
+            'helium': '🎈',
+            'neon': '💡',
+            'argon': '💨',
+            'sodium': '🧂',
+            'chlorine': '💧',
+            'calcium': '🦴',
+            'potassium': '🍌',
+            'magnesium': '✨',
+            'sulfur': '🟡',
+            'phosphorus': '💡',
+            'silicon': '💻',
+            'element': '⚛️',
+            'atom': '⚛️',
+            'molecule': '⚛️',
+            'compound': '🧪',
+            'mixture': '🧪',
+            'solution': '💧',
+            'solid': '🧊',
+            'liquid': '💧',
+            'gas': '💨',
+            'plasma': '⚡',
+            'matter': '⚛️',
+            'energy': '⚡',
+            'force': '💪',
+            'power': '⚡',
+            'strength': '💪',
+            'speed': '💨',
+            'velocity': '🏃',
+            'acceleration': '🚀',
+            'momentum': '🎾',
+            'friction': '🔥',
+            'gravity': '⬇️',
+            'weight': '⚖️',
+            'mass': '🪨',
+            'density': '📊',
+            'volume': '🔊',
+            'area': '📐',
+            'length': '📏',
+            'width': '↔️',
+            'height': '📏',
+            'depth': '⬇️',
+            'distance': '📏',
+            'radius': '⭕',
+            'diameter': '⭕',
+            'circumference': '⭕',
+            'perimeter': '🔲',
+            'angle': '📐',
+            'degree': '°',
+            'radian': '📐',
+            'pi': 'π',
+            'sine': '〰️',
+            'cosine': '〰️',
+            'tangent': '📐',
+            'algebra': '🔢',
+            'geometry': '📐',
+            'calculus': '📈',
+            'statistics': '📊',
+            'probability': '🎲',
+            'equation': '🟰',
+            'formula': '🧪',
+            'theorem': '📚',
+            'proof': '✅',
+            'hypothesis': '🤔',
+            'theory': '💭',
+            'law': '⚖️',
+            'principle': '📜',
+            'rule': '📏',
+            'axiom': '💎',
+            'postulate': '📝',
+            'lemma': '📄',
+            'corollary': '➡️',
+            'definition': '📖',
+            'concept': '💡',
+            'idea': '💡',
+            'thought': '💭',
+            'dream': '💭',
+            'vision': '👁️',
+            'imagination': '🌈',
+            'creativity': '🎨',
+            'innovation': '💡',
+            'invention': '⚙️',
+            'discovery': '🔍',
+            'research': '🔬',
+            'experiment': '🧪',
+            'test': '📝',
+            'trial': '⚖️',
+            'study': '📚',
+            'analysis': '📊',
+            'synthesis': '🧪',
+            'evaluation': '📊',
+            'assessment': '📝',
+            'measurement': '📏',
+            'observation': '👁️',
+            'data': '📊',
+            'information': '📄',
+            'knowledge': '🧠',
+            'wisdom': '🦉',
+            'intelligence': '🧠',
+            'genius': '💡',
+            'talent': '⭐',
+            'skill': '🎯',
+            'ability': '💪',
+            'capacity': '📦',
+            'potential': '🌱',
+            'opportunity': '🚪',
+            'chance': '🎲',
+            'luck': '🍀',
+            'fortune': '💰',
+            'fate': '🔮',
+            'destiny': '⭐',
+            'future': '🔮',
+            'past': '⏮️',
+            'present': '🎁',
+            'moment': '⏱️',
+            'instant': '⚡',
+            'second': '⏱️',
+            'minute': '⏱️',
+            'hour': '⏰',
+            'day': '📅',
+            'week': '📅',
+            'month': '📅',
+            'year': '📅',
+            'decade': '📅',
+            'century': '📅',
+            'millennium': '📅',
+            'era': '🏛️',
+            'age': '👴',
+            'epoch': '🌍',
+            'period': '⏱️',
+            'cycle': '♻️',
+            'phase': '🌙',
+            'stage': '🎭',
+            'step': '👣',
+            'process': '⚙️',
+            'procedure': '📋',
+            'method': '🔧',
+            'technique': '🎯',
+            'strategy': '♟️',
+            'tactic': '🎯',
+            'plan': '📋',
+            'scheme': '📊',
+            'design': '🎨',
+            'pattern': '🔷',
+            'model': '🏗️',
+            'framework': '🏗️',
+            'structure': '🏢',
+            'system': '⚙️',
+            'network': '🌐',
+            'web': '🕸️',
+            'internet': '🌐',
+            'computer': '💻',
+            'laptop': '💻',
+            'desktop': '🖥️',
+            'tablet': '📱',
+            'smartphone': '📱',
+            'watch': '⌚',
+            'monitor': '🖥️',
+            'keyboard': '⌨️',
+            'mouse': '🖱️',
+            'touchpad': '⬜',
+            'stylus': '✏️',
+            'printer': '🖨️',
+            'scanner': '📠',
+            'copier': '📄',
+            'fax': '📠',
+            'modem': '📡',
+            'router': '📶',
+            'server': '🖥️',
+            'database': '🗄️',
+            'cloud': '☁️',
+            'storage': '💾',
+            'memory': '🧠',
+            'processor': '🧠',
+            'chip': '💻',
+            'circuit': '⚡',
+            'board': '🎯',
+            'card': '💳',
+            'slot': '🎰',
+            'port': '🔌',
+            'jack': '🎃',
+            'socket': '🔌',
+            'adapter': '🔌',
+            'converter': '🔄',
+            'transformer': '🤖',
+            'generator': '⚡',
+            'motor': '⚙️',
+            'engine': '🚗',
+            'turbine': '💨',
+            'pump': '💧',
+            'valve': '🚰',
+            'piston': '⚙️',
+            'cylinder': '🔩',
+            'shaft': '🔩',
+            'bearing': '⚙️',
+            'gasket': '⭕',
+            'seal': '🦭',
+            'washer': '⭕',
+            'spring': '🌸',
+            'coil': '🌀',
+            'wire': '🔌',
+            'cable': '🔌',
+            'connector': '🔌',
+            'terminal': '🖥️',
+            'junction': '🚦',
+            'switch': '🔀',
+            'button': '🔘',
+            'knob': '🎛️',
+            'dial': '☎️',
+            'lever': '🎚️',
+            'handle': '🚪',
+            'grip': '✊',
+            'trigger': '🔫',
+            'pedal': '🚴',
+            'brake': '🛑',
+            'clutch': '👜',
+            'throttle': '🏎️',
+            'steering': '🎮',
+            'wheel': '☸️',
+            'tire': '🛞',
+            'rim': '⭕',
+            'hub': '⚙️',
+            'axle': '🔩',
+            'suspension': '🏎️',
+            'shock': '⚡',
+            'spring': '🌸',
+            'strut': '🔩',
+            'frame': '🖼️',
+            'chassis': '🚗',
+            'body': '👤',
+            'hood': '🚗',
+            'trunk': '🐘',
+            'bumper': '🚗',
+            'fender': '🚗',
+            'grill': '🍖',
+            'headlight': '💡',
+            'taillight': '🔴',
+            'signal': '📶',
+            'wiper': '🚗',
+            'mirror': '🪞',
+            'window': '🪟',
+            'windshield': '🚗',
+            'sunroof': '☀️',
+            'seat': '💺',
+            'dashboard': '📊',
+            'gauge': '⏱️',
+            'speedometer': '🚗',
+            'odometer': '📏',
+            'fuel': '⛽',
+            'oil': '🛢️',
+            'coolant': '💧',
+            'fluid': '💧',
+            'filter': '🔍',
+            'belt': '🥋',
+            'hose': '🚿',
+            'clamp': '🗜️',
+            'bracket': '〈〉',
+            'mount': '🏔️',
+            'support': '🤝',
+            'base': '🏠',
+            'foundation': '🏗️',
+            'pillar': '🏛️',
+            'column': '🏛️',
+            'beam': '🪵',
+            'joist': '🪵',
+            'rafter': '🏠',
+            'truss': '🏗️',
+            'arch': '🌉',
+            'dome': '🏛️',
+            'vault': '🏦',
+            'ceiling': '🏠',
+            'floor': '🏠',
+            'wall': '🧱',
+            'partition': '🚪',
+            'panel': '📊',
+            'tile': '🟦',
+            'shingle': '🏠',
+            'slate': '🪨',
+            'thatch': '🌾',
+            'plaster': '🏗️',
+            'drywall': '🏗️',
+            'insulation': '🏠',
+            'siding': '🏠',
+            'trim': '✂️',
+            'molding': '🏗️',
+            'cornice': '🏛️',
+            'fascia': '🏠',
+            'soffit': '🏠',
+            'gutter': '🏠',
+            'downspout': '💧',
+            'chimney': '🏭',
+            'fireplace': '🔥',
+            'mantle': '🏠',
+            'hearth': '🔥',
+            'stove': '🔥',
+            'oven': '🔥',
+            'range': '🏔️',
+            'cooktop': '🔥',
+            'microwave': '📻',
+            'refrigerator': '❄️',
+            'freezer': '🧊',
+            'dishwasher': '🍽️',
+            'disposal': '🗑️',
+            'compactor': '🗜️',
+            'washer': '🌊',
+            'dryer': '☀️',
+            'iron': '👔',
+            'vacuum': '🌪️',
+            'broom': '🧹',
+            'mop': '🧽',
+            'bucket': '🪣',
+            'sponge': '🧽',
+            'detergent': '🧼',
+            'bleach': '⚪',
+            'cleaner': '🧽',
+            'polish': '✨',
+            'wax': '🕯️',
+            'spray': '💨',
+            'powder': '💨',
+            'granule': '•',
+            'pellet': '•',
+            'tablet': '💊',
+            'capsule': '💊',
+            'pill': '💊',
+            'medicine': '💊',
+            'drug': '💊',
+            'dose': '💊',
+            'prescription': '📋',
+            'pharmacy': '💊',
+            'hospital': '🏥',
+            'clinic': '🏥',
+            'doctor': '👨‍⚕️',
+            'nurse': '👩‍⚕️',
+            'patient': '🤒',
+            'surgery': '🏥',
+            'operation': '⚙️',
+            'procedure': '📋',
+            'treatment': '💊',
+            'therapy': '🏥',
+            'cure': '💊',
+            'heal': '❤️‍🩹',
+            'recover': '💪',
+            'health': '❤️',
+            'wellness': '🌿',
+            'fitness': '💪',
+            'exercise': '🏃',
+            'workout': '💪',
+            'training': '🏋️',
+            'practice': '🎯',
+            'sport': '⚽',
+            'game': '🎮',
+            'match': '🔥',
+            'race': '🏁',
+            'competition': '🏆',
+            'tournament': '🏆',
+            'championship': '🥇',
+            'league': '🏆',
+            'team': '👥',
+            'player': '🎮',
+            'coach': '👨‍🏫',
+            'referee': '🏁',
+            'umpire': '⚾',
+            'judge': '⚖️',
+            'score': '🎯',
+            'point': '👉',
+            'goal': '🥅',
+            'basket': '🏀',
+            'touchdown': '🏈',
+            'homerun': '⚾',
+            'strike': '🎳',
+            'spare': '🎳',
+            'foul': '🏀',
+            'penalty': '🚫',
+            'offense': '⚔️',
+            'defense': '🛡️',
+            'attack': '⚔️',
+            'block': '🛡️',
+            'tackle': '🏈',
+            'pass': '🏈',
+            'kick': '⚽',
+            'throw': '🏈',
+            'catch': '🧤',
+            'hit': '🏏',
+            'swing': '🏌️',
+            'serve': '🎾',
+            'volley': '🏐',
+            'spike': '🏐',
+            'dunk': '🏀',
+            'slam': '💥',
+            'ace': '🃏',
+            'birdie': '🐦',
+            'eagle': '🦅',
+            'par': '⛳',
+            'bogey': '⛳',
+            'hole': '🕳️',
+            'tee': '⛳',
+            'green': '🟢',
+            'fairway': '⛳',
+            'rough': '🌿',
+            'bunker': '⛳',
+            'hazard': '⚠️',
+            'club': '⛳',
+            'driver': '🏌️',
+            'iron': '⛳',
+            'putter': '⛳',
+            'wedge': '🧀',
+            'grip': '✊',
+            'stance': '🦵',
+            'swing': '🏌️',
+            'stroke': '🏊',
+            'lap': '🏊',
+            'lane': '🛣️',
+            'pool': '🏊',
+            'dive': '🤿',
+            'splash': '💦',
+            'float': '🛟',
+            'swim': '🏊',
+            'crawl': '🏊',
+            'backstroke': '🏊',
+            'butterfly': '🦋',
+            'breaststroke': '🏊',
+            'freestyle': '🏊',
+            'relay': '🏃',
+            'sprint': '🏃',
+            'marathon': '🏃',
+            'jog': '🏃',
+            'run': '🏃',
+            'walk': '🚶',
+            'hike': '🥾',
+            'climb': '🧗',
+            'jump': '🦘',
+            'leap': '🐸',
+            'hop': '🐰',
+            'skip': '⏭️',
+            'bounce': '⛹️',
+            'roll': '🎲',
+            'tumble': '🤸',
+            'flip': '🤸',
+            'spin': '🌀',
+            'twirl': '💃',
+            'dance': '💃',
+            'ballet': '🩰',
+            'tap': '👟',
+            'jazz': '🎷',
+            'hip': '🕺',
+            'hop': '🐰',
+            'break': '💔',
+            'salsa': '💃',
+            'tango': '💃',
+            'waltz': '💃',
+            'foxtrot': '🦊',
+            'swing': '🎶',
+            'disco': '🕺',
+            'rave': '🎉',
+            'party': '🎉',
+            'celebration': '🎊',
+            'festival': '🎪',
+            'carnival': '🎠',
+            'parade': '🎊',
+            'march': '🚶',
+            'protest': '✊',
+            'rally': '🏁',
+            'demonstration': '📊',
+            'meeting': '👥',
+            'conference': '🎤',
+            'summit': '🏔️',
+            'forum': '🏛️',
+            'debate': '💬',
+            'discussion': '💬',
+            'conversation': '💬',
+            'dialogue': '💬',
+            'chat': '💬',
+            'talk': '🗣️',
+            'speak': '🗣️',
+            'say': '💬',
+            'tell': '🗣️',
+            'ask': '❓',
+            'answer': '💡',
+            'question': '❓',
+            'reply': '↩️',
+            'respond': '💬',
+            'explain': '📖',
+            'describe': '📝',
+            'define': '📖',
+            'clarify': '🔍',
+            'elaborate': '📝',
+            'summarize': '📋',
+            'conclude': '🔚',
+            'finish': '🏁',
+            'end': '🔚',
+            'complete': '✅',
+            'accomplish': '🏆',
+            'achieve': '🎯',
+            'succeed': '✅',
+            'win': '🏆',
+            'victory': '🎉',
+            'triumph': '🏆',
+            'conquer': '⚔️',
+            'defeat': '❌',
+            'lose': '😢',
+            'fail': '❌',
+            'mistake': '❌',
+            'error': '⚠️',
+            'fault': '❌',
+            'flaw': '⚠️',
+            'defect': '🚫',
+            'problem': '⚠️',
+            'issue': '❗',
+            'trouble': '😟',
+            'difficulty': '😰',
+            'challenge': '🎯',
+            'obstacle': '🚧',
+            'barrier': '🚧',
+            'hurdle': '🏃',
+            'block': '🚫',
+            'limit': '🚫',
+            'boundary': '🚧',
+            'border': '🛂',
+            'edge': '🔪',
+            'corner': '📐',
+            'side': '↔️',
+            'front': '⬆️',
+            'back': '⬇️',
+            'top': '⬆️',
+            'bottom': '⬇️',
+            'middle': '⬜',
+            'center': '🎯',
+            'core': '🍎',
+            'heart': '❤️',
+            'soul': '👻',
+            'spirit': '👻',
+            'mind': '🧠',
+            'brain': '🧠',
+            'head': '👤',
+            'skull': '💀',
+            'face': '😊',
+            'forehead': '👤',
+            'eyebrow': '🤨',
+            'eyelash': '👁️',
+            'eyelid': '👁️',
+            'pupil': '👁️',
+            'iris': '👁️',
+            'retina': '👁️',
+            'cornea': '👁️',
+            'lens': '👓',
+            'glasses': '👓',
+            'contact': '👁️',
+            'sight': '👀',
+            'vision': '👁️',
+            'blind': '🦯',
+            'deaf': '🦻',
+            'mute': '🔇',
+            'voice': '🗣️',
+            'speech': '💬',
+            'language': '🗣️',
+            'word': '💬',
+            'sentence': '📝',
+            'paragraph': '📄',
+            'chapter': '📖',
+            'verse': '📜',
+            'line': '➖',
+            'text': '📝',
+            'write': '✍️',
+            'read': '📖',
+            'spell': '🔤',
+            'grammar': '📚',
+            'punctuation': '.',
+            'comma': ',',
+            'period': '.',
+            'exclamation': '❗',
+            'apostrophe': "'",
+            'quotation': '"',
+            'colon': ':',
+            'semicolon': ';',
+            'hyphen': '-',
+            'parenthesis': '()',
+            'bracket': '[]',
+            'brace': '{}',
+            'slash': '/',
+            'backslash': '\\',
+            'asterisk': '*',
+            'ampersand': '&',
+            'percent': '%',
+            'hash': '#',
+            'dollar': '$',
+            'euro': '€',
+            'pound': '£',
+            'yen': '¥',
+            'cent': '¢',
+            'copyright': '©',
+            'trademark': '™',
+            'registered': '®',
+            'degree': '°',
+            'infinity': '∞',
+            'pi': 'π',
+            'sigma': 'Σ',
+            'delta': 'Δ',
+            'alpha': 'α',
+            'beta': 'β',
+            'gamma': 'γ',
+            'omega': 'Ω',
+            'lambda': 'λ',
+            'theta': 'θ',
+            'phi': 'φ',
+            'psi': 'ψ',
+            'chi': 'χ',
+            'xi': 'ξ',
+            'zeta': 'ζ',
+            'eta': 'η',
+            'iota': 'ι',
+            'kappa': 'κ',
+            'mu': 'μ',
+            'nu': 'ν',
+            'rho': 'ρ',
+            'tau': 'τ',
+            'upsilon': 'υ',
+            'epsilon': 'ε',
             'violin': '🎻',
             'whale': '🐳',
             'fox': '🦊',
@@ -10529,7 +12090,14 @@
         let wbBank = [];
         let wbFilledCount = 0;
 
+        // Track if Word Builder is currently transitioning
+        let wbTransitioning = false;
+
         function startWordBuilderGame(reset = false) {
+            // Prevent rapid re-calls
+            if (wbTransitioning) return;
+            wbTransitioning = true;
+
             clearAllTimers();
             cancelSpeech();
             waitingForPhonics = false;
@@ -10544,7 +12112,7 @@
             wbBank = bankLetters;
 
             const slotsHTML = word.split('').map((_, i) => `<div class="wb-slot" data-idx="${i}"></div>`).join('');
-            const bankHTML = bankLetters.map((L, i) => `<button class="wb-tile" data-letter="${L}" data-bank-idx="${i}" onclick="wbPick('${L}', ${i})" aria-label="Pick letter ${L}">${L}</button>`).join('');
+            const bankHTML = bankLetters.map((L, i) => `<button class="wb-tile" data-letter="${L}" data-bank-idx="${i}" onclick="wbPick('${L}', ${i})" aria-label="Pick letter ${L}" style="--tile-index: ${i}">${L}</button>`).join('');
 
             gameArea.innerHTML = `
                 <div class="wb-container" role="region" aria-label="Word Builder">
@@ -10566,6 +12134,9 @@
 
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
+
+            // Allow new game after brief delay
+            setTimeout(() => { wbTransitioning = false; }, 500);
 
             // Auto speak the target word and show an anchor emoji burst
             const speakLetters = word.split('').join(', ');
@@ -10632,6 +12203,18 @@
             wbSlots[idx] = letter;
             wbFilledCount++;
 
+            // Play a pleasant sound effect (simulated with visual feedback)
+            const btn = document.querySelector(`.wb-tile[data-bank-idx="${bankIdx}"]`);
+            if (btn) {
+                // Clear and restart animation properly
+                btn.style.animation = '';
+                void btn.offsetHeight; // Force reflow
+                btn.style.animation = 'tilePicked 0.3s ease-out';
+                setTimeout(() => {
+                    if (btn) btn.style.animation = '';
+                }, 350);
+            }
+
             const slotsEl = document.getElementById('wbSlots');
             const slot = slotsEl ? slotsEl.querySelector(`.wb-slot[data-idx="${idx}"]`) : null;
             if (slot) {
@@ -10641,7 +12224,6 @@
                     gsap.fromTo(slot, { scale: 0.9 }, { scale: 1.0, duration: 0.18, ease: 'back.out(2)' });
                 }
             }
-            const btn = document.querySelector(`.wb-tile[data-bank-idx="${bankIdx}"]`);
             if (btn) {
                 btn.disabled = true;
                 if (typeof gsap !== 'undefined') {
@@ -10662,31 +12244,348 @@
                 totalQuestions++;
                 updateScoreDisplay();
                 markWordResult(true);
-                showFeedback('Great job! ✓', 'success');
-                speakPhrase('Great job!');
-                const cont = document.querySelector('.wb-container');
-                if (cont && typeof gsap !== 'undefined') {
-                    gsap.fromTo(cont, { scale: 1.0 }, { scale: 1.03, duration: 0.15, yoyo: true, repeat: 1, ease: 'power1.inOut' });
+
+                // Enhanced celebratory animations - check word exists first
+                if (wbTargetWord) {
+                    const wordEmoji = anchorEmojiMap[wbTargetWord.toLowerCase()];
+                    if (wordEmoji) {
+                        // Show giant emoji celebration
+                        showWordEmojiCelebration(wordEmoji);
+                    }
                 }
-                // Confetti burst using existing celebration emojis
-                try { createConfetti(cont || document.body); } catch (e) { }
-                setTimeout(() => startWordBuilderGame(false), 1200);
+
+                // Create particle effects
+                createWordBuilderParticles();
+
+                // Enhanced feedback with random celebration messages
+                const celebrations = [
+                    'Fantastic! 🎉',
+                    'Amazing work! ⭐',
+                    'You did it! 🏆',
+                    'Brilliant! ✨',
+                    'Superstar! 🌟',
+                    'Wonderful! 🎊',
+                    'Excellent! 👏',
+                    'Perfect! 💯'
+                ];
+                const message = celebrations[Math.floor(Math.random() * celebrations.length)];
+                showFeedback(message, 'success');
+                speakPhrase(message.replace(/[^a-zA-Z\s]/g, ''));
+
+                // Container celebration animation
+                const cont = document.querySelector('.wb-container');
+                if (cont) {
+                    // Rainbow glow effect - clear and restart animation properly
+                    cont.style.animation = '';
+                    void cont.offsetHeight; // Force reflow
+                    cont.style.animation = 'wbSuccessGlow 1s ease-out';
+                    setTimeout(() => {
+                        if (cont) cont.style.animation = '';
+                    }, 1100);
+
+                    if (typeof gsap !== 'undefined') {
+                        // Complex success animation sequence
+                        const tl = gsap.timeline();
+                        tl.to(cont, { scale: 1.1, duration: 0.2, ease: 'power2.out' })
+                          .to(cont, { rotation: 5, duration: 0.1 })
+                          .to(cont, { rotation: -5, duration: 0.1 })
+                          .to(cont, { rotation: 0, scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)' });
+
+                        // Animate each correct slot with stagger
+                        gsap.to('.wb-slot.correct', {
+                            scale: 1.2,
+                            rotation: 360,
+                            duration: 0.5,
+                            stagger: 0.1,
+                            ease: 'back.out(2)',
+                            onComplete: function() {
+                                gsap.to('.wb-slot.correct', {
+                                    scale: 1,
+                                    duration: 0.3
+                                });
+                            }
+                        });
+                    }
+                }
+
+                // Create confetti burst
+                createEnhancedConfetti();
+
+                // Delay before next word
+                setTimeout(() => {
+                    // Clean up any lingering celebration elements
+                    document.querySelectorAll('.wb-emoji-celebration, .wb-emoji-orbit, .wb-particle').forEach(el => el.remove());
+                    startWordBuilderGame(false);
+                }, 2500);
             } else {
                 roundWrong++;
                 totalQuestions++;
                 score = Math.max(0, score - 5);
                 updateScoreDisplay();
                 markWordResult(false);
-                showFeedback('Not quite. Try again!', 'error');
-                speakPhrase('Not quite. Try again.');
+
+                // Encouraging feedback for wrong answers
+                const encouragements = [
+                    'Almost there! Try again! 💪',
+                    'Keep going! You can do it! 🌟',
+                    'So close! One more try! 🎯',
+                    'Nice effort! Let\'s try again! 👍'
+                ];
+                const message = encouragements[Math.floor(Math.random() * encouragements.length)];
+                showFeedback(message, 'error');
+                speakPhrase(message.replace(/[^a-zA-Z\s]/g, ''));
+
                 const cont = document.querySelector('.wb-container');
                 if (cont) {
                     cont.classList.add('animate__animated', 'animate__shakeX');
                     setTimeout(() => cont.classList.remove('animate__animated', 'animate__shakeX'), 600);
                 }
-                setTimeout(() => startWordBuilderGame(false), 1000);
+                setTimeout(() => {
+                    // Clean up any elements from failed attempt
+                    document.querySelectorAll('.wb-particle').forEach(el => el.remove());
+                    startWordBuilderGame(false);
+                }, 1500);
             }
         }
+
+        // Show giant emoji celebration for completed words
+        function showWordEmojiCelebration(emoji) {
+            const container = document.querySelector('.wb-container');
+            if (!container) return;
+
+            // Get position before animations affect it
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // Create main emoji
+            const mainEmoji = document.createElement('div');
+            mainEmoji.className = 'wb-emoji-celebration';
+            mainEmoji.textContent = emoji;
+            mainEmoji.style.cssText = `
+                position: fixed;
+                left: ${centerX}px;
+                top: ${centerY}px;
+                font-size: 20px;
+                transform: translate(-50%, -50%) scale(0);
+                z-index: 10001;
+                pointer-events: none;
+            `;
+            document.body.appendChild(mainEmoji);
+
+            // Animate main emoji
+            if (typeof gsap !== 'undefined') {
+                gsap.timeline()
+                    .to(mainEmoji, {
+                        scale: 8,
+                        rotation: 360,
+                        duration: 0.6,
+                        ease: 'back.out(1.5)'
+                    })
+                    .to(mainEmoji, {
+                        scale: 6,
+                        duration: 0.3,
+                        ease: 'power2.inOut'
+                    })
+                    .to(mainEmoji, {
+                        scale: 0,
+                        opacity: 0,
+                        duration: 0.4,
+                        ease: 'power2.in',
+                        onComplete: () => mainEmoji.remove()
+                    });
+
+                // Create orbiting mini emojis
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i * 45) * Math.PI / 180;
+                    const miniEmoji = document.createElement('div');
+                    miniEmoji.className = 'wb-emoji-orbit';
+                    miniEmoji.textContent = emoji;
+                    miniEmoji.style.cssText = `
+                        position: fixed;
+                        left: ${centerX}px;
+                        top: ${centerY}px;
+                        font-size: 30px;
+                        transform: translate(-50%, -50%);
+                        z-index: 10000;
+                        pointer-events: none;
+                    `;
+                    document.body.appendChild(miniEmoji);
+
+                    const radius = 150;
+                    gsap.timeline()
+                        .to(miniEmoji, {
+                            x: Math.cos(angle) * radius,
+                            y: Math.sin(angle) * radius,
+                            scale: 1.5,
+                            duration: 0.5,
+                            ease: 'power2.out'
+                        })
+                        .to(miniEmoji, {
+                            scale: 0,
+                            opacity: 0,
+                            duration: 0.3,
+                            ease: 'power2.in',
+                            onComplete: () => miniEmoji.remove()
+                        }, '-=0.1');
+                }
+            } else {
+                // Fallback animation
+                mainEmoji.style.transition = 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                mainEmoji.style.transform = 'translate(-50%, -50%) scale(6) rotate(360deg)';
+                setTimeout(() => {
+                    mainEmoji.style.transition = 'all 0.4s ease-out';
+                    mainEmoji.style.opacity = '0';
+                    mainEmoji.style.transform = 'translate(-50%, -50%) scale(0)';
+                    setTimeout(() => mainEmoji.remove(), 400);
+                }, 600);
+            }
+        }
+
+        // Create enhanced particle effects
+        function createWordBuilderParticles() {
+            const colors = ['#fbbf24', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#ef4444'];
+            const shapes = ['⭐', '✨', '💫', '🌟', '⚡', '💥', '🎊', '🎉'];
+            const container = document.querySelector('.wb-container');
+            if (!container) return;
+
+            const rect = container.getBoundingClientRect();
+
+            // Limit particles to prevent performance issues
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'wb-particle';
+                particle.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+
+                const startX = rect.left + Math.random() * rect.width;
+                const startY = rect.top + Math.random() * rect.height;
+                const endX = (Math.random() - 0.5) * 400;
+                const endY = -Math.random() * 300 - 100;
+
+                particle.style.cssText = `
+                    position: fixed;
+                    left: ${startX}px;
+                    top: ${startY}px;
+                    font-size: ${20 + Math.random() * 20}px;
+                    z-index: 10000;
+                    pointer-events: none;
+                    --x: ${endX}px;
+                    --y: ${endY}px;
+                `;
+
+                document.body.appendChild(particle);
+
+                // Remove particle after animation with safety check
+                setTimeout(() => {
+                    if (particle && particle.parentNode) {
+                        particle.remove();
+                    }
+                }, 3000);
+            }
+        }
+
+        // Create enhanced confetti
+        function createEnhancedConfetti() {
+            const confettiColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080'];
+            const container = document.querySelector('.wb-container');
+            if (!container) return;
+
+            const rect = container.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // Limit confetti to prevent performance issues
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                const size = 5 + Math.random() * 10;
+
+                confetti.style.cssText = `
+                    position: fixed;
+                    left: ${centerX}px;
+                    top: ${centerY}px;
+                    width: ${size}px;
+                    height: ${size * 0.6}px;
+                    background: ${color};
+                    z-index: 10000;
+                    pointer-events: none;
+                `;
+
+                document.body.appendChild(confetti);
+
+                if (typeof gsap !== 'undefined') {
+                    const angle = Math.random() * Math.PI * 2;
+                    const velocity = 100 + Math.random() * 200;
+                    const rotationSpeed = 360 + Math.random() * 360;
+
+                    gsap.timeline()
+                        .to(confetti, {
+                            x: Math.cos(angle) * velocity,
+                            y: Math.sin(angle) * velocity - 50,
+                            rotation: rotationSpeed,
+                            duration: 0.5,
+                            ease: 'power2.out'
+                        })
+                        .to(confetti, {
+                            y: '+=300',
+                            opacity: 0,
+                            duration: 1,
+                            ease: 'power2.in',
+                            onComplete: () => confetti.remove()
+                        }, '-=0.2');
+                } else {
+                    // Fallback animation
+                    confetti.style.transition = 'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                    confetti.style.transform = `translate(${(Math.random() - 0.5) * 200}px, ${-Math.random() * 200}px) rotate(${Math.random() * 720}deg)`;
+                    confetti.style.opacity = '0';
+                    setTimeout(() => {
+                        if (confetti && confetti.parentNode) {
+                            confetti.remove();
+                        }
+                    }, 1500);
+                }
+            }
+        }
+
+        // Add CSS animation for success glow and tile animations
+        // Execute immediately since script is at bottom of page
+        (function() {
+            // Check if styles already exist to avoid duplicates
+            if (document.getElementById('wb-animations-style')) return;
+
+            const style = document.createElement('style');
+            style.id = 'wb-animations-style';
+            style.textContent = `
+            @keyframes wbSuccessGlow {
+                0% {
+                    box-shadow:
+                        0 20px 40px rgba(0, 0, 0, 0.12),
+                        0 0 120px rgba(147, 51, 234, 0.15),
+                        inset 0 0 60px rgba(255, 255, 255, 0.2);
+                }
+                50% {
+                    box-shadow:
+                        0 25px 50px rgba(0, 0, 0, 0.15),
+                        0 0 200px rgba(34, 197, 94, 0.6),
+                        0 0 300px rgba(34, 197, 94, 0.4),
+                        inset 0 0 100px rgba(255, 255, 255, 0.5);
+                }
+                100% {
+                    box-shadow:
+                        0 20px 40px rgba(0, 0, 0, 0.12),
+                        0 0 120px rgba(147, 51, 234, 0.15),
+                        inset 0 0 60px rgba(255, 255, 255, 0.2);
+                }
+            }
+
+            @keyframes tilePicked {
+                0% { transform: scale(1) rotate(0deg); }
+                50% { transform: scale(1.3) rotate(10deg) translateY(-10px); }
+                100% { transform: scale(0.8) rotate(0deg); opacity: 0.5; }
+            }
+            `;
+            document.head.appendChild(style);
+        })();
 
         function markWordResult(ok) {
             const slotsEl = document.getElementById('wbSlots');
