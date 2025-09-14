@@ -4474,6 +4474,44 @@
             gap: 8px;
         }
 
+        .wb-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .wb-speaker-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #3b82f6, #2563eb);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            box-shadow:
+                0 4px 12px rgba(59, 130, 246, 0.3),
+                0 2px 4px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        .wb-speaker-btn:hover {
+            transform: scale(1.1);
+            background: linear-gradient(145deg, #2563eb, #1d4ed8);
+            box-shadow:
+                0 6px 16px rgba(59, 130, 246, 0.4),
+                0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .wb-speaker-btn:active {
+            transform: scale(0.95);
+        }
+
         .wb-title {
             font-size: 36px;
             font-weight: 900;
@@ -4699,6 +4737,7 @@
             display: flex;
             gap: 16px;
             margin-top: 12px;
+            justify-content: center;
         }
 
         .wb-btn {
@@ -4781,6 +4820,82 @@
             position: absolute;
             pointer-events: none;
             animation: particleFloat 3s ease-out forwards;
+        }
+
+        /* Compact mode for 4+ letter words on mobile */
+        .wb-compact .wb-slots {
+            gap: 12px; /* 25% smaller than 16px */
+        }
+
+        .wb-compact .wb-slot {
+            width: 60px; /* 25% smaller than 80px */
+            height: 60px; /* 25% smaller than 80px */
+            font-size: 33px; /* 25% smaller than 44px */
+            border-radius: 12px; /* Proportionally smaller */
+        }
+
+        .wb-compact .wb-bank {
+            gap: 12px; /* 25% smaller than 16px */
+            max-width: 95%; /* Ensure it fits on mobile */
+        }
+
+        .wb-compact .wb-tile {
+            width: 54px; /* 25% smaller than 72px */
+            height: 54px; /* 25% smaller than 72px */
+            font-size: 27px; /* 25% smaller than 36px */
+            border-radius: 12px; /* Proportionally smaller */
+        }
+
+        .wb-compact .wb-tile:hover {
+            transform: translateY(-3px) scale(1.05); /* Reduced movement */
+        }
+
+        .wb-compact .wb-header {
+            margin-bottom: 16px; /* 20% smaller than 20px */
+        }
+
+        .wb-compact .wb-title {
+            font-size: 28px; /* Slightly smaller for mobile */
+        }
+
+        .wb-compact .wb-speaker-btn {
+            width: 35px;
+            height: 35px;
+            font-size: 18px;
+        }
+
+        .wb-compact .wb-controls {
+            gap: 12px; /* 25% smaller than 16px */
+        }
+
+        .wb-compact .wb-btn {
+            padding: 12px 20px; /* Slightly smaller padding */
+            font-size: 16px; /* Slightly smaller font */
+        }
+
+        /* Additional mobile optimizations for very small screens */
+        @media (max-width: 375px) {
+            .wb-compact .wb-slot {
+                width: 55px;
+                height: 55px;
+                font-size: 30px;
+            }
+
+            .wb-compact .wb-tile {
+                width: 50px;
+                height: 50px;
+                font-size: 25px;
+            }
+
+            .wb-compact .wb-container {
+                padding: 20px;
+            }
+
+            .wb-compact .wb-speaker-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
         }
 
         @keyframes particleFloat {
@@ -12182,10 +12297,18 @@
                 hard: '🏆'
             };
 
+            // Add compact class for 4+ letter words to fit on mobile
+            const compactClass = word.length >= 4 ? 'wb-compact' : '';
+
             gameArea.innerHTML = `
-                <div class="wb-container" role="region" aria-label="Word Builder">
+                <div class="wb-container ${compactClass}" role="region" aria-label="Word Builder">
                     <div class="wb-header">
-                        <div class="wb-title">Build the word</div>
+                        <div class="wb-title-row">
+                            <div class="wb-title">Build the word</div>
+                            <button class="wb-speaker-btn" onclick="wbHearWord()" aria-label="Hear word again" title="Hear word">
+                                🔊
+                            </button>
+                        </div>
                         <div class="wb-difficulty-badge" style="
                             background: ${difficultyColors[wbDifficulty]};
                             color: white;
@@ -12203,7 +12326,6 @@
                     <div class="wb-slots" id="wbSlots">${slotsHTML}</div>
                     <div class="wb-bank" id="wbBank">${bankHTML}</div>
                     <div class="wb-controls">
-                        <button class="wb-btn" onclick="wbHearWord()" aria-label="Hear target word sound">Hear Word</button>
                         <button class="wb-btn secondary" onclick="startWordBuilderGame(true)" aria-label="New word">New Word</button>
                     </div>
                 </div>
