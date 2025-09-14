@@ -10517,6 +10517,154 @@
 
         // Override: ensure the new recognizer is used
         function checkDrawing() { return checkDrawingNew(); }
+
+        // ===== Word Builder Mode (re-added) =====
+        let wbTargetWord = '';
+        let wbSlots = [];
+        let wbBank = [];
+        let wbFilledCount = 0;
+
+        function startWordBuilderGame(reset = false) {
+            clearAllTimers();
+            cancelSpeech();
+            waitingForPhonics = false;
+
+            const gameArea = document.getElementById('gameArea');
+            const word = getWordBuilderTarget();
+            wbTargetWord = word;
+            wbSlots = new Array(word.length).fill(null);
+            wbFilledCount = 0;
+
+            const bankLetters = buildLetterBank(word);
+            wbBank = bankLetters;
+
+            const slotsHTML = word.split('').map((_, i) => `<div class="wb-slot" data-idx="${i}"></div>`).join('');
+            const bankHTML = bankLetters.map((L, i) => `<button class="wb-tile" data-letter="${L}" data-bank-idx="${i}" onclick="wbPick('${L}', ${i})" aria-label="Pick letter ${L}">${L}</button>`).join('');
+
+            gameArea.innerHTML = `
+                <div class="wb-container" role="region" aria-label="Word Builder">
+                    <div class="wb-title">Build the word</div>
+                    <div class="wb-slots" id="wbSlots">${slotsHTML}</div>
+                    <div class="wb-bank" id="wbBank">${bankHTML}</div>
+                    <div class="wb-controls">
+                        <button class="wb-btn" onclick="wbHearWord()" aria-label="Hear target word sound">Hear Word</button>
+                        <button class="wb-btn secondary" onclick="startWordBuilderGame(true)" aria-label="New word">New Word</button>
+                    </div>
+                </div>
+            `;
+
+            // Subtle entry animation for the container
+            const cont = document.querySelector('.wb-container');
+            if (cont && typeof gsap !== 'undefined') {
+                gsap.fromTo(cont, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' });
+            }
+
+            document.getElementById('scorePanel').style.display = 'flex';
+            updateScoreDisplay();
+
+            speakPhrase('Build the word by tapping the letters.');
+        }
+
+        function getWordBuilderTarget() {
+            const candidates = ['cat','dog','sun','hat','map','pin','bus','bed','jam','cup'];
+            const pick = candidates[Math.floor(Math.random() * candidates.length)];
+            if (currentCase === 'upper') return pick.toUpperCase();
+            if (currentCase === 'mixed') return Math.random() < 0.5 ? pick : pick.toUpperCase();
+            return pick;
+        }
+
+        function buildLetterBank(word) {
+            const letters = word.split('');
+            const pool = [...lowerLetters, ...upperLetters];
+            while (letters.length < Math.max(5, word.length + 3)) {
+                const L = pool[Math.floor(Math.random() * pool.length)];
+                if (!letters.includes(L)) letters.push(L);
+            }
+            for (let i = letters.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [letters[i], letters[j]] = [letters[j], letters[i]];
+            }
+            return letters;
+        }
+
+        function wbPick(letter, bankIdx) {
+            if (currentMode !== 'wordBuilder' || isProcessing) return;
+            const idx = wbSlots.findIndex(v => v === null);
+            if (idx === -1) return;
+            wbSlots[idx] = letter;
+            wbFilledCount++;
+
+            const slotsEl = document.getElementById('wbSlots');
+            const slot = slotsEl ? slotsEl.querySelector(`.wb-slot[data-idx="${idx}"]`) : null;
+            if (slot) {
+                slot.textContent = letter;
+                slot.classList.add('filled');
+                if (typeof gsap !== 'undefined') {
+                    gsap.fromTo(slot, { scale: 0.9 }, { scale: 1.0, duration: 0.18, ease: 'back.out(2)' });
+                }
+            }
+            const btn = document.querySelector(`.wb-tile[data-bank-idx="${bankIdx}"]`);
+            if (btn) {
+                btn.disabled = true;
+                if (typeof gsap !== 'undefined') {
+                    gsap.to(btn, { opacity: 0.5, duration: 0.2, ease: 'power1.out' });
+                }
+            }
+
+            if (wbFilledCount === wbSlots.length) {
+                wbCheckWord();
+            }
+        }
+
+        function wbCheckWord() {
+            const attempt = wbSlots.join('');
+            if (attempt === wbTargetWord) {
+                score += 20;
+                roundCorrect++;
+                totalQuestions++;
+                updateScoreDisplay();
+                markWordResult(true);
+                showFeedback('Great job! ✓', 'success');
+                speakPhrase('Great job!');
+                const cont = document.querySelector('.wb-container');
+                if (cont && typeof gsap !== 'undefined') {
+                    gsap.fromTo(cont, { scale: 1.0 }, { scale: 1.03, duration: 0.15, yoyo: true, repeat: 1, ease: 'power1.inOut' });
+                }
+                setTimeout(() => startWordBuilderGame(false), 1200);
+            } else {
+                roundWrong++;
+                totalQuestions++;
+                score = Math.max(0, score - 5);
+                updateScoreDisplay();
+                markWordResult(false);
+                showFeedback('Not quite. Try again!', 'error');
+                speakPhrase('Not quite. Try again.');
+                const cont = document.querySelector('.wb-container');
+                if (cont) {
+                    cont.classList.add('animate__animated', 'animate__shakeX');
+                    setTimeout(() => cont.classList.remove('animate__animated', 'animate__shakeX'), 600);
+                }
+                setTimeout(() => startWordBuilderGame(false), 1000);
+            }
+        }
+
+        function markWordResult(ok) {
+            const slotsEl = document.getElementById('wbSlots');
+            if (!slotsEl) return;
+            const letters = wbTargetWord.split('');
+            for (let i = 0; i < letters.length; i++) {
+                const el = slotsEl.querySelector(`.wb-slot[data-idx="${i}"]`);
+                if (!el) continue;
+                el.classList.toggle('correct', ok && wbSlots[i] === letters[i]);
+                el.classList.toggle('wrong', !ok && wbSlots[i] !== letters[i]);
+            }
+        }
+
+        function wbHearWord() {
+            if (!wbTargetWord) return;
+            const speakLetters = wbTargetWord.split('').join(', ');
+            speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`);
+        }
     </script>
 </body>
 
