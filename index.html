@@ -5831,6 +5831,7 @@
                     qualitySum: 0,
                     classicalSum: 0,
                     deepSum: 0,
+                    deepCount: 0,
                     responseTimeSum: 0,
                     pointsSum: 0,
                     reasons: { nearTop: 0, deepTop: 0, blended: 0, wrongDom: 0, loopIoU: 0, crossGuard: 0, other: 0 }
@@ -5857,7 +5858,7 @@
             }
             if (typeof finalScore === 'number') stats.qualitySum += finalScore;
             if (typeof classicalScore === 'number') stats.classicalSum += classicalScore;
-            if (typeof deepScore === 'number') stats.deepSum += deepScore;
+            if (typeof deepScore === 'number') { stats.deepSum += deepScore; stats.deepCount += 1; }
             if (typeof responseTime === 'number') stats.responseTimeSum += responseTime;
             if (typeof points === 'number') stats.pointsSum += Math.max(0, points);
             persistDrawAnalytics();
@@ -5874,7 +5875,8 @@
                 s.acceptRate = +(s.accepts / a).toFixed(3);
                 s.avgQuality = +(s.qualitySum / a).toFixed(3);
                 s.avgClassical = +(s.classicalSum / a).toFixed(3);
-                s.avgDeep = +(s.deepSum / a).toFixed(3);
+                const dc = s.deepCount || 0;
+                s.avgDeep = dc ? +(s.deepSum / dc).toFixed(3) : 0;
                 s.avgResponseTime = +(s.responseTimeSum / a).toFixed(3);
                 s.avgPoints = +(s.pointsSum / a).toFixed(2);
             });
@@ -9461,7 +9463,7 @@
             speakPromptTimeout = setTimeout(() => {
                 const afterPrompt = () => {
                     speakLetterTimeout = setTimeout(() => {
-                        speakLetter(thisQuestionLetter);
+                        speakLetter(thisQuestionLetter, null, { skipCancel: true });
                     }, 1000);
                 };
                 speakPhrase(`Find the letter ${letterNameSpoken}.`, afterPrompt, { priority: true });
@@ -9712,7 +9714,7 @@
                     wrongTtsHandled = true;
                     try { clearTimeout(ttsGuard); } catch (e) { }
                     doHighlightAndResume();
-                });
+                }, { skipCancel: true });
             }
 
             updateScoreDisplay();
