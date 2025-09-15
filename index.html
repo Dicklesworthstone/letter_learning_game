@@ -603,6 +603,13 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* Keep the wrong-count line compact and single-line */
+        .score-breakdown {
+            font-size: 80%;
+            white-space: nowrap;
+            line-height: 1.1;
+        }
+
         .timer-display {
             font-size: 24px;
             font-weight: bold;
@@ -712,7 +719,8 @@
             justify-content: flex-start;
             padding-top: clamp(8px, 2vh, 16px);
             /* Ensure CTA isn't clipped by rounded container + safe area */
-            padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(64px + constant(safe-area-inset-bottom, 0px));
         }
 
         /* When a prominent sound button is present, reserve top space so nothing overlaps it */
@@ -1400,7 +1408,8 @@
             box-shadow: 0 10px 30px rgba(240, 147, 251, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             /* Add a comfortable breathing room below CTA on iPhone */
-            margin-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+            margin-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+            margin-bottom: calc(24px + constant(safe-area-inset-bottom, 0px));
         }
 
         .start-btn:hover {
@@ -4825,6 +4834,13 @@
         /* Compact mode for 4+ letter words on mobile */
         .wb-compact .wb-slots {
             gap: 12px; /* 25% smaller than 16px */
+            /* Ensure 4 slots fit on one line on iPhone widths */
+            flex-wrap: nowrap;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            padding: 12px 10px;
+            justify-content: center;
         }
 
         .wb-compact .wb-slot {
@@ -4871,6 +4887,19 @@
         .wb-compact .wb-btn {
             padding: 12px 20px; /* Slightly smaller padding */
             font-size: 16px; /* Slightly smaller font */
+        }
+
+        /* Slightly smaller on narrow iPhones to guarantee single-row fit */
+        @media (max-width: 430px) {
+            .wb-compact .wb-slot {
+                width: 58px;
+                height: 58px;
+                font-size: 31px;
+            }
+            .wb-compact .wb-slots {
+                gap: 10px;
+                padding: 12px 8px;
+            }
         }
 
         /* Additional mobile optimizations for very small screens */
@@ -5005,8 +5034,7 @@
             </div>
             <div class="score-right">
                 <div class="score-value">Score: <span id="scoreDisplay">0</span></div>
-                <div><span id="correctCount">0</span>/<span id="totalCount">15</span> | ❌ <span id="wrongCount">0</span>
-                </div>
+                <div class="score-breakdown"><span id="correctCount">0</span>/<span id="totalCount">15</span> | ❌ <span id="wrongCount">0</span></div>
             </div>
             <div class="difficulty-indicator" id="difficultyIndicator">
                 <span class="difficulty-label">Difficulty:</span>
@@ -5687,6 +5715,7 @@
         let phonicsTimer = null;
         let speakPromptTimeout = null;
         let speakLetterTimeout = null;
+        let lastManualSpeakAt = 0; // timestamp for guarding double-speaks after manual trigger
         let isProcessing = false;
         let isDrawing = false;
         let ctx = null;
@@ -5873,6 +5902,8 @@
         let audioChunks = [];
         let recordings = [];
         let isRecording = false;
+        let playbackAudio = null; // single active playback instance
+        let recordingMimeType = 'audio/webm'; // updated from ondataavailable
 
         // Focus Mode State
         let focusModeEnabled = false;
@@ -7517,14 +7548,17 @@
             lead.pitch = 1.05;
             lead.volume = 1;
             if (selectedVoice) lead.voice = selectedVoice;
+            const scheduledAt = Date.now();
             lead.onend = () => {
-                // brief pause between sentences for clarity
+                // brief pause between sentences for clarity; skip if user just manually triggered
+                const now = Date.now();
+                if (now - lastManualSpeakAt < 500) return;
                 setTimeout(() => speakLetter(letter), 120);
             };
             speechSynthesis.speak(lead);
         }
         function speakPhonetics(letter, callback) {
-            if (!soundEnabled) { if (callback) callback(); return; }
+            if (!speechSupported || !soundEnabled) { if (callback) callback(); return; }
             const lower = letter.toLowerCase();
             const phonetic = phoneticSounds[lower];
             if (!phonetic) { if (callback) callback(); return; }
@@ -7556,9 +7590,27 @@
                 if (anchor && idx === parts.length - 1) {
                     try { showAnchorEmojiForWord(anchor); } catch (e) { }
                 }
-                u.onend = () => { idx++; setTimeout(speakNext, 60); };
+                let advanced = false;
+                const advance = () => { if (advanced) return; advanced = true; idx++; setTimeout(speakNext, 60); };
+                u.onend = advance;
+                u.onerror = advance;
                 speechSynthesis.speak(u);
             };
+            // Total-duration fallback in case onend never fires
+            const totalMs = parts.length * 900 + (anchor ? 400 : 0);
+            let done = false;
+            const fallback = setTimeout(() => {
+                if (done) return;
+                done = true;
+                if (callback) callback();
+            }, totalMs);
+            const wrappedCallback = () => {
+                if (done) return;
+                done = true;
+                clearTimeout(fallback);
+                if (callback) callback();
+            };
+            // Start sequence
             speakNext();
         }
 
@@ -7711,9 +7763,11 @@
                     timerBarFill.classList.add('warning');
                     // Speak countdown once per second (no overlaps)
                     if (lastSpokenCountdown !== timeLeft && soundEnabled) {
-                        lastSpokenCountdown = timeLeft;
-                        cancelSpeech();
-                        speakPhrase(timeLeft.toString());
+                        // Only speak if TTS is idle to avoid interrupting important prompts
+                        if (speechSupported && !speechSynthesis.speaking && !speechSynthesis.pending) {
+                            lastSpokenCountdown = timeLeft;
+                            speakPhrase(timeLeft.toString());
+                        }
                     }
                 } else if (timeLeft === 0) {
                     timerDisplay.className = 'timer-display critical';
@@ -7724,7 +7778,10 @@
                     clearTimer();
                     timerDisplay.innerHTML = "⏰ Time's up!";
                     timerBarFill.style.width = '0%';
-                    speakPhrase("Time's up!");
+                    // Announce only if idle to avoid stomping other speech
+                    if (speechSupported && !speechSynthesis.speaking && !speechSynthesis.pending) {
+                        speakPhrase("Time's up!");
+                    }
                     if (!isProcessing) {
                         isProcessing = true;
                         setTimeout(() => {
@@ -9240,9 +9297,15 @@
             if (typeof gsap !== 'undefined') {
                 gsap.fromTo(soundBtn, { scale: 1 }, { scale: 0.95, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.inOut' });
             }
+            // Clear any scheduled auto prompt/letter to avoid duplication
+            if (speakPromptTimeout) { try { clearTimeout(speakPromptTimeout); } catch (e) { } speakPromptTimeout = null; }
+            if (speakLetterTimeout) { try { clearTimeout(speakLetterTimeout); } catch (e) { } speakLetterTimeout = null; }
+            lastManualSpeakAt = Date.now();
             speakLetter(currentLetter, () => {
                 soundBtn.classList.remove('playing');
             });
+            // Failsafe to clear playing state if TTS never ends
+            setTimeout(() => { try { soundBtn.classList.remove('playing'); } catch (e) { } }, 3500);
         }
         function checkAnswer(letter) {
             if (waitingForPhonics || isAnswering || isProcessing) return;
@@ -9602,6 +9665,7 @@
             if (!waitingForPhonics) return;
             waitingForPhonics = false;
             isProcessing = true;
+            cancelSpeech();
             if (phonicsTimer) { window.clearTimeout(phonicsTimer); phonicsTimer = null; }
             if (phonicsEchoCleanup) { try { phonicsEchoCleanup(true); } catch (e) { } phonicsEchoCleanup = null; }
             if (gameArea) gameArea.onclick = null;
@@ -10506,6 +10570,13 @@
                 inactiveBtn.classList.remove('active');
                 inactiveBtn.setAttribute('aria-pressed', 'false');
             }
+            if (!soundEnabled) {
+                cancelSpeech();
+                // stop any playing recorded audio
+                if (playbackAudio && typeof playbackAudio.pause === 'function') {
+                    try { playbackAudio.pause(); } catch (e) { }
+                }
+            }
         }
 
         function toggleVoiceRecording(enabled) {
@@ -10558,11 +10629,15 @@
                     audioChunks = [];
 
                     mediaRecorder.ondataavailable = event => {
-                        audioChunks.push(event.data);
+                        if (event && event.data) {
+                            try { recordingMimeType = event.data.type || mediaRecorder.mimeType || recordingMimeType; } catch (e) { }
+                            audioChunks.push(event.data);
+                        }
                     };
 
                     mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const mime = recordingMimeType || (mediaRecorder && mediaRecorder.mimeType) || 'audio/webm';
+                        const audioBlob = new Blob(audioChunks, { type: mime });
                         const audioUrl = URL.createObjectURL(audioBlob);
 
                         recordings.push({
@@ -10618,20 +10693,32 @@
         function playLastRecording() {
             if (recordings.length > 0) {
                 const lastRecording = recordings[recordings.length - 1];
-                const audio = new Audio(lastRecording.url);
-                audio.play();
+                // stop any current playback
+                if (playbackAudio && typeof playbackAudio.pause === 'function') {
+                    try { playbackAudio.pause(); } catch (e) { }
+                }
+                playbackAudio = new Audio(lastRecording.url);
+                playbackAudio.onended = () => { playbackAudio = null; };
+                playbackAudio.play();
             }
         }
 
         function compareWithCorrect() {
             if (recordings.length > 0) {
+                // Pause TTS while playing recording
+                cancelSpeech();
                 playLastRecording();
-                setTimeout(() => {
-                    speakPhrase('Now listen to the correct pronunciation');
-                    setTimeout(() => {
-                        speakLetter(currentLetter);
-                    }, 1500);
-                }, 1500);
+                const waitThenSpeak = () => {
+                    speakPhrase('Now listen to the correct pronunciation', () => {
+                        setTimeout(() => speakLetter(currentLetter), 800);
+                    });
+                };
+                if (playbackAudio) {
+                    playbackAudio.onended = () => { playbackAudio = null; waitThenSpeak(); };
+                } else {
+                    // Fallback if no audio handle
+                    setTimeout(waitThenSpeak, 1500);
+                }
             }
         }
 
@@ -12383,7 +12470,14 @@
                     }
                 } catch (e) { }
             };
-            speakPhrase(`Build the word ${word}. Letters: ${speakLetters}.`, after);
+            // If a level animation is pending, speak after it clears; otherwise speak immediately
+            const doSpeak = () => speakPhrase(`Build the word ${word}. Letters: ${speakLetters}.`, after);
+            if (window.wbPendingLevelAnimation) {
+                // Defer initial speak slightly to avoid overlap with "Level up" TTS
+                setTimeout(doSpeak, 350);
+            } else {
+                doSpeak();
+            }
         }
 
         // Word pools organized by difficulty with emoji-friendly words
@@ -12932,7 +13026,13 @@
         function wbHearWord() {
             if (!wbTargetWord) return;
             const speakLetters = wbTargetWord.split('').join(', ');
-            speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`);
+            // Avoid interrupting active speech if a prompt is currently playing
+            if (speechSupported && (speechSynthesis.speaking || speechSynthesis.pending)) {
+                // Try again shortly after current speech
+                setTimeout(() => speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`), 400);
+            } else {
+                speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`);
+            }
         }
 
         // Visual level change animations
