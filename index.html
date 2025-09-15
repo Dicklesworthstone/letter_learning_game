@@ -4489,7 +4489,6 @@
             justify-content: center;
             gap: 12px;
         }
-
         .wb-speaker-btn {
             width: 40px;
             height: 40px;
@@ -5789,6 +5788,21 @@
         let multiplayerMode = false;
         let selectedAvatar = '🦁';
 
+        // Confusion tracking between letters (for insights and targeted practice)
+        let confusionMatrix = createEmptyConfusionMatrix();
+
+        function createEmptyConfusionMatrix() {
+            const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+            const matrix = {};
+            letters.forEach(c => {
+                matrix[c] = {};
+                letters.forEach(w => {
+                    matrix[c][w] = 0;
+                });
+            });
+            return matrix;
+        }
+
         // Letter Formation Data
         const letterFormations = {
             'a': [
@@ -5965,7 +5979,6 @@
             'y': 'yuh, yuh, yuh, as in yellow',
             'z': 'zuh, zuh, zuh, as in zebra'
         };
-
         // Emoji choices for phonics anchor words and Word Builder words
         const anchorEmojiMap = {
             'apple': '🍎',
@@ -7243,7 +7256,6 @@
             'yellow': '🟨',
             'zebra': '🦓'
         };
-
         // Improved letter names for clear pronunciation on basic TTS engines
         // Spellings tuned for accurate vowels and consonants across platforms
         const letterNamePronunciations = {
@@ -7285,8 +7297,19 @@
         function getRandomLetter() {
             let letters = getLetterCollection();
 
-            // Adaptive difficulty algorithm
-            updateAdaptivePool(letters);
+            // SRS: prioritize letters whose nextReview is due (or unscheduled)
+            const nowTs = Date.now();
+            const overdueLetters = letters.filter(letter => {
+                const key = letter.toLowerCase();
+                const perf = letterPerformance[key];
+                if (!perf) return true; // new letters are due now
+                if (typeof perf.nextReview !== 'number') return true;
+                return perf.nextReview <= nowTs;
+            });
+            const availableLetters = overdueLetters.length > 0 ? overdueLetters : letters;
+
+            // Adaptive difficulty within the available SRS subset
+            updateAdaptivePool(availableLetters);
 
             // Use adaptive pool if available
             if (adaptivePool.length > 0) {
@@ -7300,7 +7323,7 @@
                         );
                         // Create a copy and add ~50% more weight to shape peers (excluding the target itself)
                         selectionPool = adaptivePool.slice();
-                        letters.forEach(letter => {
+                        availableLetters.forEach(letter => {
                             const lower = letter.toLowerCase();
                             if (peerSetLower.has(lower)) {
                                 const baseWeight = Math.ceil((latestLetterWeights[letter] || 1));
@@ -7320,8 +7343,8 @@
                 return selected;
             }
 
-            // Fallback to random selection
-            const selected = letters[Math.floor(Math.random() * letters.length)];
+            // Fallback to random selection within available letters
+            const selected = availableLetters[Math.floor(Math.random() * availableLetters.length)];
             recentLetters.push(selected.toLowerCase());
             if (recentLetters.length > 3) recentLetters.shift();
 
@@ -7389,7 +7412,7 @@
         function updateLetterPerformance(letter, correct, responseTime, pointsDelta = 0) {
             const key = letter.toLowerCase();
             if (!letterPerformance[key]) {
-                letterPerformance[key] = { correct: 0, total: 0, avgTime: 0, times: [], score: 0 };
+                letterPerformance[key] = { correct: 0, total: 0, avgTime: 0, times: [], score: 0, easeFactor: 2.5, interval: 0, nextReview: Date.now() };
             }
 
             const perf = letterPerformance[key];
@@ -7410,6 +7433,23 @@
                     checkAchievement('mastery', lettersMastered.size);
                 }
             }
+
+            // Spaced Repetition scheduling (interval in minutes)
+            try {
+                const nowTs = Date.now();
+                if (typeof perf.easeFactor !== 'number') perf.easeFactor = 2.5;
+                if (typeof perf.interval !== 'number') perf.interval = 0;
+                if (typeof perf.nextReview !== 'number') perf.nextReview = nowTs;
+
+                if (correct) {
+                    perf.interval = Math.max(1, (perf.interval || 1) * perf.easeFactor);
+                    perf.easeFactor = (perf.easeFactor || 2.5) + 0.1;
+                } else {
+                    perf.interval = 1; // show again soon
+                    perf.easeFactor = Math.max(1.3, (perf.easeFactor || 2.5) - 0.2);
+                }
+                perf.nextReview = nowTs + Math.floor(perf.interval * 60000);
+            } catch (e) { /* no-op */ }
 
             // Track per-letter score for personalized challenges
             perf.score = (perf.score || 0) + (typeof pointsDelta === 'number' ? pointsDelta : 0);
@@ -7548,7 +7588,6 @@
             lead.pitch = 1.05;
             lead.volume = 1;
             if (selectedVoice) lead.voice = selectedVoice;
-            const scheduledAt = Date.now();
             lead.onend = () => {
                 // brief pause between sentences for clarity; skip if user just manually triggered
                 const now = Date.now();
@@ -7579,8 +7618,16 @@
             if (anchor) parts.push(`as in ${anchor}.`);
 
             let idx = 0;
+            let finished = false;
+            let fallback = null;
+            const finish = () => {
+                if (finished) return;
+                finished = true;
+                try { if (fallback) clearTimeout(fallback); } catch (e) { }
+                if (callback) callback();
+            };
             const speakNext = () => {
-                if (idx >= parts.length) { if (callback) callback(); return; }
+                if (idx >= parts.length) { finish(); return; }
                 const u = new SpeechSynthesisUtterance(parts[idx]);
                 u.rate = 0.8;
                 u.pitch = 1.05;
@@ -7593,23 +7640,12 @@
                 let advanced = false;
                 const advance = () => { if (advanced) return; advanced = true; idx++; setTimeout(speakNext, 60); };
                 u.onend = advance;
-                u.onerror = advance;
+                u.onerror = finish;
                 speechSynthesis.speak(u);
             };
             // Total-duration fallback in case onend never fires
             const totalMs = parts.length * 900 + (anchor ? 400 : 0);
-            let done = false;
-            const fallback = setTimeout(() => {
-                if (done) return;
-                done = true;
-                if (callback) callback();
-            }, totalMs);
-            const wrappedCallback = () => {
-                if (done) return;
-                done = true;
-                clearTimeout(fallback);
-                if (callback) callback();
-            };
+            fallback = setTimeout(() => { finish(); }, totalMs);
             // Start sequence
             speakNext();
         }
@@ -7845,7 +7881,6 @@
             shapeBiasTargetLower = key;
             shapeBiasRoundsRemaining = 3; // bias for next few selections
         }
-
         let lastCelebrationTime = 0;
         function createConfetti(element) {
             if (focusModeEnabled || reduceMotionEnabled) {
@@ -9447,6 +9482,20 @@
                 score = Math.max(0, score - 10);
                 trackLetterError(currentLetter);
 
+                // Log confusion for Identify mode only
+                try {
+                    const correctChoice = (currentLetter || '').toLowerCase();
+                    const wrongChoice = (letter || '').toLowerCase();
+                    if (currentMode === 'identify' && correctChoice && wrongChoice && correctChoice !== wrongChoice) {
+                        if (!confusionMatrix || !confusionMatrix[correctChoice]) {
+                            confusionMatrix = createEmptyConfusionMatrix();
+                        }
+                        if (confusionMatrix[correctChoice] && typeof confusionMatrix[correctChoice][wrongChoice] === 'number') {
+                            confusionMatrix[correctChoice][wrongChoice]++;
+                        }
+                    }
+                } catch (e) { }
+
                 // Reset correct answer streak
                 correctStreak = 0;
 
@@ -9455,29 +9504,52 @@
 
                 showFeedback('Try again! 💪', 'error');
                 createWrongEffect();
-                speakPhrase('Not quite. Try again!');
 
-                // Briefly highlight the correct answer to guide learning
-                const correctButton = document.querySelector(`.option-btn[data-letter="${currentLetter}"]`);
-                if (correctButton) {
-                    correctButton.style.transition = 'transform 0.2s, background-color 0.2s';
-                    correctButton.style.backgroundColor = '#a7f3d0';
-                    correctButton.style.transform = 'scale(1.05)';
-                    setTimeout(() => {
-                        correctButton.style.backgroundColor = '';
-                        correctButton.style.transform = '';
-                    }, 1200);
-                }
+                // Build precise feedback using letter names
+                const wrongName = letterNamePronunciations[letter.toLowerCase()] || letter;
+                const rightName = letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter;
+                const feedbackLine = `That's the letter ${wrongName}. We are looking for the letter ${rightName}.`;
 
-                setTimeout(() => {
-                    clickedButton.classList.remove('wrong');
-                    isAnswering = false;
-                    isProcessing = false;
-                    // Restart timer fresh for another attempt
-                    startTimer();
-                    // Re-enable buttons for retry
-                    document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
-                }, 1000);
+                // Speak, then pulse-highlight the correct letter, then re-enable input (with fallback)
+                let wrongTtsHandled = false;
+                const doHighlightAndResume = () => {
+                    const correctButton = document.querySelector(`.option-btn[data-letter="${currentLetter}"]`);
+                    if (correctButton) {
+                        correctButton.style.transition = 'transform 0.2s, background-color 0.2s';
+                        correctButton.style.backgroundColor = '#a7f3d0';
+                        correctButton.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            correctButton.style.backgroundColor = '';
+                            correctButton.style.transform = '';
+                            clickedButton.classList.remove('wrong');
+                            isAnswering = false;
+                            isProcessing = false;
+                            // Restart timer and re-enable buttons for retry
+                            startTimer();
+                            document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
+                        }, 1200);
+                    } else {
+                        // Fallback if the correct button isn't found
+                        clickedButton.classList.remove('wrong');
+                        isAnswering = false;
+                        isProcessing = false;
+                        startTimer();
+                        document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
+                    }
+                };
+
+                const ttsGuard = setTimeout(() => {
+                    if (wrongTtsHandled) return;
+                    wrongTtsHandled = true;
+                    doHighlightAndResume();
+                }, 3000);
+
+                speakPhrase(feedbackLine, () => {
+                    if (wrongTtsHandled) return;
+                    wrongTtsHandled = true;
+                    try { clearTimeout(ttsGuard); } catch (e) { }
+                    doHighlightAndResume();
+                });
             }
 
             updateScoreDisplay();
@@ -9740,7 +9812,6 @@
                 }
             }, 3000);
         }
-
         function startLetterRain() {
             currentMinigame = 'letterRain';
             minigameScore = 0;
@@ -9774,7 +9845,6 @@
             // Start timer
             startMinigameTimer(30, () => endLetterRain());
         }
-
         function moveBasket(e) {
             const gameArea = document.getElementById('rainGameArea');
             const basket = document.getElementById('rainBasket');
@@ -11051,6 +11121,15 @@
                         player.letterPerformance = player.letterPerformance || {};
                         player.unlockedAchievements = new Set(player.unlockedAchievements || []);
                         player.lettersMastered = new Set(player.lettersMastered || []);
+                        // Backfill confusion matrix per player
+                        const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+                        if (!player.confusionMatrix) player.confusionMatrix = createEmptyConfusionMatrix();
+                        letters.forEach(c => {
+                            player.confusionMatrix[c] = player.confusionMatrix[c] || {};
+                            letters.forEach(w => {
+                                if (typeof player.confusionMatrix[c][w] !== 'number') player.confusionMatrix[c][w] = 0;
+                            });
+                        });
                     });
                 } catch (e) {
                     console.error('Error loading players:', e);
@@ -11063,7 +11142,9 @@
             const playersToSave = players.map(player => ({
                 ...player,
                 unlockedAchievements: Array.from(player.unlockedAchievements || []),
-                lettersMastered: Array.from(player.lettersMastered || [])
+                lettersMastered: Array.from(player.lettersMastered || []),
+                // Store confusion matrix as a plain object
+                confusionMatrix: player.confusionMatrix || createEmptyConfusionMatrix()
             }));
             localStorage.setItem('letterLearningPlayers', JSON.stringify(playersToSave));
         }
@@ -11128,7 +11209,8 @@
                 totalPlayTime: 0,
                 roundsCompleted: 0,
                 celebrationType: 'fireworks',
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                confusionMatrix: createEmptyConfusionMatrix()
             };
 
             players.push(newPlayer);
@@ -11220,6 +11302,7 @@
             currentPlayer.speedAnswers = speedAnswers;
             currentPlayer.roundsCompleted = roundsCompleted;
             currentPlayer.celebrationType = celebrationType;
+            currentPlayer.confusionMatrix = confusionMatrix;
 
             savePlayers();
         }
@@ -11248,6 +11331,12 @@
             speedAnswers = player.speedAnswers || 0;
             roundsCompleted = player.roundsCompleted || 0;
             celebrationType = player.celebrationType || 'fireworks';
+            // Confusion matrix per player
+            if (player.confusionMatrix) {
+                confusionMatrix = player.confusionMatrix;
+            } else {
+                confusionMatrix = createEmptyConfusionMatrix();
+            }
         }
 
         // Parent Dashboard Functions
@@ -11286,6 +11375,7 @@
             score = 0; correctAnswers = 0; wrongAnswers = 0; totalQuestions = 0; currentRound = 1;
             roundCorrect = 0; roundWrong = 0; scoreAtRoundStart = 0;
             letterPerformance = {}; lettersMastered = new Set(); unlockedAchievements = new Set();
+            confusionMatrix = createEmptyConfusionMatrix();
             achievementProgress = {}; bestStreak = 0; speedAnswers = 0; totalPlayTime = 0; roundsCompleted = 0;
             currentStreak = 0; lastPlayDate = null; streakHistory = [];
             players = []; currentPlayer = null; currentPlayerIndex = 0; multiplayerMode = false;
@@ -11302,6 +11392,7 @@
                 roundCorrect = 0; roundWrong = 0; scoreAtRoundStart = 0;
                 letterPerformance = {}; lettersMastered = new Set(); unlockedAchievements = new Set();
                 achievementProgress = {}; bestStreak = 0; speedAnswers = 0; roundsCompleted = 0;
+                confusionMatrix = createEmptyConfusionMatrix();
                 updateBadgeCount();
                 updateAchievementStats();
                 saveGameData();
@@ -11320,6 +11411,7 @@
                 currentPlayer.bestStreak = 0;
                 currentPlayer.speedAnswers = 0;
                 currentPlayer.roundsCompleted = 0;
+                currentPlayer.confusionMatrix = createEmptyConfusionMatrix();
                 savePlayers();
                 // Reload into memory
                 loadPlayerState(currentPlayer);
@@ -11456,25 +11548,29 @@
         function generateInsights() {
             const insights = [];
 
-            // Analyze letter confusion patterns
-            const confusedPairs = [['b', 'd'], ['p', 'q'], ['m', 'n'], ['v', 'w']];
-            confusedPairs.forEach(([letter1, letter2]) => {
-                const perf1 = letterPerformance[letter1];
-                const perf2 = letterPerformance[letter2];
+            // Analyze confusion matrix for top confusions
+            try {
+                const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+                let topPairs = [];
+                letters.forEach(correct => {
+                    letters.forEach(wrong => {
+                        if (correct === wrong) return;
+                        const count = (confusionMatrix && confusionMatrix[correct]) ? confusionMatrix[correct][wrong] || 0 : 0;
+                        if (count > 0) topPairs.push({ correct, wrong, count });
+                    });
+                });
+                topPairs.sort((a, b) => b.count - a.count);
 
-                if (perf1 && perf2) {
-                    const success1 = perf1.total > 0 ? perf1.correct / perf1.total : 1;
-                    const success2 = perf2.total > 0 ? perf2.correct / perf2.total : 1;
-
-                    if (success1 < 0.7 && success2 < 0.7) {
-                        insights.push({
-                            icon: '⚠️',
-                            title: `Confusion between ${letter1.toUpperCase()} and ${letter2.toUpperCase()}`,
-                            description: `These similar-looking letters are causing difficulty. Practice them side-by-side with physical objects shaped like the letters.`
-                        });
-                    }
-                }
-            });
+                // Take up to 3 most frequent confusions above a small threshold
+                const significant = topPairs.filter(p => p.count >= 3).slice(0, 3);
+                significant.forEach(p => {
+                    insights.push({
+                        icon: '🧩',
+                        title: `Confuses ${p.correct.toUpperCase()} with ${p.wrong.toUpperCase()}`,
+                        description: `This happened ${p.count} times. Try side-by-side practice: trace ${p.correct.toUpperCase()} and ${p.wrong.toUpperCase()} next to each other, highlight their starting strokes, and use different colors.`
+                    });
+                });
+            } catch (e) { }
 
             // Speed analysis
             const avgResponseTime = responseTimes.length > 0 ?
@@ -11534,7 +11630,6 @@
                 recommendationsList.appendChild(card);
             });
         }
-
         function generateRecommendations() {
             const recs = [];
 
@@ -11613,7 +11708,8 @@
                 reduceMotionEnabled,
                 celebrationType,
                 currentTheme,
-                voiceRecordingEnabled
+                voiceRecordingEnabled,
+                confusionMatrix
             };
 
             localStorage.setItem('letterLearningGameData', JSON.stringify(gameData));
@@ -11648,6 +11744,20 @@
                     speedAnswers = gameData.speedAnswers || 0;
                     totalPlayTime = gameData.totalPlayTime || 0;
                     roundsCompleted = gameData.roundsCompleted || 0;
+                    // Restore confusion matrix, with backfill if missing
+                    if (gameData.confusionMatrix) {
+                        confusionMatrix = gameData.confusionMatrix;
+                        // Ensure full domain for future letters
+                        const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+                        letters.forEach(c => {
+                            confusionMatrix[c] = confusionMatrix[c] || {};
+                            letters.forEach(w => {
+                                if (typeof confusionMatrix[c][w] !== 'number') confusionMatrix[c][w] = 0;
+                            });
+                        });
+                    } else {
+                        confusionMatrix = createEmptyConfusionMatrix();
+                    }
 
                     // Restore streak data
                     lastPlayDate = gameData.lastPlayDate;
@@ -12061,7 +12171,6 @@
                 e.preventDefault();
             }
         }, { passive: false });
-
         // New tracing recognizer (hybrid classical + optional deep) — overrides old checkDrawing
         function checkDrawingNew() {
             const ALL_LETTERS = Object.keys(LETTER_CHECKPOINTS);
@@ -12301,6 +12410,7 @@
         let wbSlots = [];
         let wbBank = [];
         let wbFilledCount = 0;
+        let wbUsedTiles = [];
 
         // Track player progress for difficulty adjustment
         let wbConsecutiveCorrect = 0;
@@ -12354,6 +12464,7 @@
             wbTargetWord = word;
             wbSlots = new Array(word.length).fill(null);
             wbFilledCount = 0;
+            wbUsedTiles = [];
 
             const bankLetters = buildLetterBank(word);
             wbBank = bankLetters;
@@ -12424,6 +12535,30 @@
                 gsap.fromTo(cont, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' });
             }
 
+            // Gentle floating animations for bank tiles (disable CSS pulse to avoid conflicts)
+            if (typeof gsap !== 'undefined') {
+                const bankEl = document.getElementById('wbBank');
+                if (bankEl) {
+                    const tiles = bankEl.querySelectorAll('.wb-tile');
+                    tiles.forEach((tile) => {
+                        tile.style.animation = 'none';
+                        if (tile._wbFloatTl && typeof tile._wbFloatTl.kill === 'function') {
+                            try { tile._wbFloatTl.kill(); } catch (e) {}
+                        }
+                        const driftX = 2 + Math.random() * 2.5;
+                        const driftY = 2 + Math.random() * 3;
+                        const rotAmt = 0.4 + Math.random() * 0.6;
+                        const tl = gsap.timeline({ repeat: -1, yoyo: true, defaults: { ease: 'sine.inOut' } });
+                        tl.to(tile, { y: `+=${driftY}`, duration: 1.6 + Math.random() * 0.8, delay: Math.random() * 0.4 })
+                          .to(tile, { x: `+=${Math.random() < 0.5 ? -driftX : driftX}`, rotation: `+=${Math.random() < 0.5 ? -rotAmt : rotAmt}`, duration: 1.4 + Math.random() * 0.8 }, 0);
+                        tl.progress(Math.random());
+                        tile._wbFloatTl = tl;
+                        tile.addEventListener('mouseenter', () => { if (tile._wbFloatTl) tile._wbFloatTl.pause(); });
+                        tile.addEventListener('mouseleave', () => { if (tile._wbFloatTl) tile._wbFloatTl.resume(); });
+                    });
+                }
+            }
+
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
 
@@ -12470,14 +12605,16 @@
                     }
                 } catch (e) { }
             };
-            // If a level animation is pending, speak after it clears; otherwise speak immediately
+            // If a level animation is pending, wait until TTS is idle then speak
             const doSpeak = () => speakPhrase(`Build the word ${word}. Letters: ${speakLetters}.`, after);
-            if (window.wbPendingLevelAnimation) {
-                // Defer initial speak slightly to avoid overlap with "Level up" TTS
-                setTimeout(doSpeak, 350);
-            } else {
-                doSpeak();
-            }
+            const speakWhenIdle = () => {
+                if (!speechSupported || (!speechSynthesis.speaking && !speechSynthesis.pending)) {
+                    doSpeak();
+                } else {
+                    setTimeout(speakWhenIdle, 200);
+                }
+            };
+            speakWhenIdle();
         }
 
         // Word pools organized by difficulty with emoji-friendly words
@@ -12596,16 +12733,20 @@
             if (idx === -1) return;
             wbSlots[idx] = letter;
             wbFilledCount++;
+            wbUsedTiles.push({ bankIdx, slotIdx: idx, letter });
 
             // Play a pleasant sound effect (simulated with visual feedback)
             const btn = document.querySelector(`.wb-tile[data-bank-idx="${bankIdx}"]`);
             if (btn) {
+                if (btn._wbFloatTl && typeof btn._wbFloatTl.pause === 'function') {
+                    try { btn._wbFloatTl.pause(0); } catch (e) {}
+                }
                 // Clear and restart animation properly
-                btn.style.animation = '';
+                btn.style.animation = 'none';
                 void btn.offsetHeight; // Force reflow
                 btn.style.animation = 'tilePicked 0.3s ease-out';
                 setTimeout(() => {
-                    if (btn) btn.style.animation = '';
+                    if (btn) btn.style.animation = 'none';
                 }, 350);
             }
 
@@ -12629,7 +12770,6 @@
                 wbCheckWord();
             }
         }
-
         function wbCheckWord() {
             const attempt = wbSlots.join('');
             if (attempt === wbTargetWord) {
@@ -12640,6 +12780,55 @@
                 wbConsecutiveWrong = 0; // Reset wrong streak
                 updateScoreDisplay();
                 markWordResult(true);
+
+                // Animate unused tiles flying away and used tiles flying into slots
+                try {
+                    const bankEl = document.getElementById('wbBank');
+                    const slotsEl = document.getElementById('wbSlots');
+                    if (bankEl && slotsEl && typeof gsap !== 'undefined') {
+                        // Unused tiles (not disabled) fly off-screen
+                        bankEl.querySelectorAll('.wb-tile:not([disabled])').forEach((tile) => {
+                            if (tile._wbFloatTl && typeof tile._wbFloatTl.kill === 'function') {
+                                try { tile._wbFloatTl.kill(); } catch (e) {}
+                            }
+                            const dx = (Math.random() * 2 - 1) * 120;
+                            const dy = -160 - Math.random() * 140;
+                            const rot = (Math.random() * 40 - 20);
+                            gsap.to(tile, {
+                                x: dx, y: dy, rotation: rot, opacity: 0,
+                                duration: 0.55, ease: 'power2.in', delay: Math.random() * 0.12,
+                                onComplete: () => { tile.style.visibility = 'hidden'; }
+                            });
+                        });
+
+                        // Used tiles: animate clones towards their slot positions
+                        (wbUsedTiles || []).forEach(({ bankIdx, slotIdx }) => {
+                            const tile = bankEl.querySelector(`.wb-tile[data-bank-idx="${bankIdx}"]`);
+                            const slot = slotsEl.querySelector(`.wb-slot[data-idx="${slotIdx}"]`);
+                            if (!tile || !slot) return;
+                            if (tile._wbFloatTl && typeof tile._wbFloatTl.kill === 'function') {
+                                try { tile._wbFloatTl.kill(); } catch (e) {}
+                            }
+                            const tr = tile.getBoundingClientRect();
+                            const sr = slot.getBoundingClientRect();
+                            const clone = tile.cloneNode(true);
+                            clone.removeAttribute('onclick');
+                            clone.setAttribute('aria-hidden', 'true');
+                            clone.style.position = 'fixed';
+                            clone.style.left = `${tr.left}px`;
+                            clone.style.top = `${tr.top}px`;
+                            clone.style.margin = '0';
+                            clone.style.transform = 'translate(0px, 0px)';
+                            clone.style.zIndex = '10002';
+                            clone.style.pointerEvents = 'none';
+                            document.body.appendChild(clone);
+                            tile.style.visibility = 'hidden';
+                            const dx = sr.left - tr.left;
+                            const dy = sr.top - tr.top;
+                            gsap.to(clone, { x: dx, y: dy, scale: 1.05, duration: 0.6, ease: 'back.out(1.4)', onComplete: () => { clone.remove(); } });
+                        });
+                    }
+                } catch (e) { }
 
                 // Enhanced celebratory animations - always use lowercase for emoji lookup
                 if (wbTargetWord) {
