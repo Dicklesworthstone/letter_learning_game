@@ -10146,7 +10146,7 @@
                         minigameScore = matchedPairs;
                         document.getElementById('minigameScore').textContent = minigameScore;
 
-                        speakLetter(card1.dataset.letter);
+                        speakLetter(card1.dataset.letter, null, { skipCancel: true });
 
                         if (matchedPairs === 8) {
                             endMemoryMatch();
