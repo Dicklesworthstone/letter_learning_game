@@ -5742,6 +5742,25 @@
         let lastManualSpeakAt = 0; // timestamp for guarding double-speaks after manual trigger
         let isProcessing = false;
         let isDrawing = false;
+        // Lightweight TTS activity guards to smooth unreliable speaking/pending flags on some browsers
+        let ttsGuardTokens = new Set();
+        function beginTtsGuard(timeoutMs) {
+            const token = Math.random().toString(36).slice(2);
+            ttsGuardTokens.add(token);
+            const ms = typeof timeoutMs === 'number' ? timeoutMs : 6000;
+            setTimeout(() => { try { ttsGuardTokens.delete(token); } catch (e) { } }, ms);
+            return token;
+        }
+        function endTtsGuard(token) {
+            try { if (token) ttsGuardTokens.delete(token); } catch (e) { }
+        }
+        function isTtsBusy() {
+            if (!speechSupported) return false;
+            try {
+                if (speechSynthesis.speaking || speechSynthesis.pending) return true;
+            } catch (e) { }
+            return ttsGuardTokens.size > 0;
+        }
         let ctx = null;
         let voiceRecordingEnabled = false; // Hidden by default
         let phonicsRepeatCount = 0; // counts fallback repeats per phonics step
@@ -5784,6 +5803,101 @@
         let roundsCompleted = 0;
         let difficultyLevel = 1; // 1-5 scale
         let adaptivePool = [];
+
+        // Draw Analytics (per-letter acceptance metrics with lightweight persistence)
+        const DRAW_ANALYTICS_STORAGE_KEY = 'llg_draw_analytics_v1';
+        let drawAnalytics = null;
+        function initDrawAnalytics() {
+            try {
+                const raw = localStorage.getItem(DRAW_ANALYTICS_STORAGE_KEY);
+                if (raw) {
+                    drawAnalytics = JSON.parse(raw);
+                }
+            } catch (e) { }
+            if (!drawAnalytics || typeof drawAnalytics !== 'object') {
+                drawAnalytics = { letters: {}, totals: { attempts: 0, accepts: 0, rejects: 0 } };
+            }
+        }
+        function persistDrawAnalytics() {
+            try { localStorage.setItem(DRAW_ANALYTICS_STORAGE_KEY, JSON.stringify(drawAnalytics)); } catch (e) { }
+        }
+        function ensureLetterAnalytics(letter) {
+            if (!drawAnalytics) initDrawAnalytics();
+            if (!drawAnalytics.letters[letter]) {
+                drawAnalytics.letters[letter] = {
+                    attempts: 0,
+                    accepts: 0,
+                    rejects: 0,
+                    qualitySum: 0,
+                    classicalSum: 0,
+                    deepSum: 0,
+                    responseTimeSum: 0,
+                    pointsSum: 0,
+                    reasons: { nearTop: 0, deepTop: 0, blended: 0, wrongDom: 0, loopIoU: 0, crossGuard: 0, other: 0 }
+                };
+            }
+            return drawAnalytics.letters[letter];
+        }
+        function recordDrawAttempt(params) {
+            // params: { letter, accepted, reason, finalScore, classicalScore, deepScore, responseTime, points }
+            const { letter, accepted, reason, finalScore, classicalScore, deepScore, responseTime, points } = params || {};
+            if (!letter) return;
+            const stats = ensureLetterAnalytics(letter);
+            stats.attempts += 1;
+            drawAnalytics.totals.attempts += 1;
+            const r = reason || 'other';
+            if (accepted) {
+                stats.accepts += 1;
+                drawAnalytics.totals.accepts += 1;
+                if (stats.reasons[r] !== undefined) stats.reasons[r] += 1; else stats.reasons.other += 1;
+            } else {
+                stats.rejects += 1;
+                drawAnalytics.totals.rejects += 1;
+                if (stats.reasons[r] !== undefined) stats.reasons[r] += 1; else stats.reasons.other += 1;
+            }
+            if (typeof finalScore === 'number') stats.qualitySum += finalScore;
+            if (typeof classicalScore === 'number') stats.classicalSum += classicalScore;
+            if (typeof deepScore === 'number') stats.deepSum += deepScore;
+            if (typeof responseTime === 'number') stats.responseTimeSum += responseTime;
+            if (typeof points === 'number') stats.pointsSum += Math.max(0, points);
+            persistDrawAnalytics();
+        }
+        function resetDrawAnalytics() {
+            drawAnalytics = null; initDrawAnalytics(); persistDrawAnalytics();
+        }
+        function getDrawAnalytics() {
+            if (!drawAnalytics) initDrawAnalytics();
+            // Compute lightweight derived rates
+            const out = JSON.parse(JSON.stringify(drawAnalytics));
+            Object.entries(out.letters).forEach(([L, s]) => {
+                const a = s.attempts || 1;
+                s.acceptRate = +(s.accepts / a).toFixed(3);
+                s.avgQuality = +(s.qualitySum / a).toFixed(3);
+                s.avgClassical = +(s.classicalSum / a).toFixed(3);
+                s.avgDeep = +(s.deepSum / a).toFixed(3);
+                s.avgResponseTime = +(s.responseTimeSum / a).toFixed(3);
+                s.avgPoints = +(s.pointsSum / a).toFixed(2);
+            });
+            const t = out.totals, ta = t.attempts || 1;
+            out.totals.acceptRate = +(t.accepts / ta).toFixed(3);
+            return out;
+        }
+        function exportDrawAnalyticsCsv() {
+            if (!drawAnalytics) initDrawAnalytics();
+            const rows = [['letter','attempts','accepts','rejects','accept_rate','avg_quality','avg_classical','avg_deep','avg_response_time','avg_points','nearTop','deepTop','blended','wrongDom','loopIoU','crossGuard','other']];
+            Object.entries(getDrawAnalytics().letters).forEach(([L, s]) => {
+                rows.push([
+                    L, s.attempts, s.accepts, s.rejects, s.acceptRate, s.avgQuality, s.avgClassical, s.avgDeep, s.avgResponseTime, s.avgPoints,
+                    s.reasons.nearTop, s.reasons.deepTop, s.reasons.blended, s.reasons.wrongDom, s.reasons.loopIoU, s.reasons.crossGuard, s.reasons.other
+                ]);
+            });
+            return rows.map(r => r.join(',')).join('\n');
+        }
+        // Expose minimal API for dashboard
+        window.getDrawAnalytics = getDrawAnalytics;
+        window.resetDrawAnalytics = resetDrawAnalytics;
+        window.exportDrawAnalyticsCsv = exportDrawAnalyticsCsv;
+        initDrawAnalytics();
 
         // Shape-similarity tiers for targeted practice after errors
         const shapeSimilarityGroups = {
@@ -7538,13 +7652,19 @@
             }
         }
 
-        function speakLetter(letter, callback) {
+        function speakLetter(letter, callback, options) {
             if (!speechSupported || !soundEnabled) {
                 if (callback) callback();
                 return;
             }
 
-            cancelSpeech();
+            const opts = options || {};
+            // priority: hard-cancel any ongoing speech; default: only cancel if currently speaking to avoid stutter
+            if (opts.priority === true) {
+                cancelSpeech();
+            } else if (opts.skipCancel !== true) {
+                try { if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); } catch (e) { }
+            }
 
             // Improved pronunciation for letter names using unified map
             let textToSpeak = letter;
@@ -7563,20 +7683,25 @@
                 utterance.voice = selectedVoice;
             }
 
-            if (callback) {
-                utterance.onend = callback;
-            }
+            let guardToken = beginTtsGuard(4000);
+            utterance.onend = () => { endTtsGuard(guardToken); if (callback) callback(); };
+            utterance.onerror = () => { endTtsGuard(guardToken); if (callback) callback(); };
 
             speechSynthesis.speak(utterance);
         }
 
-        function speakPhrase(phrase, callback) {
+        function speakPhrase(phrase, callback, options) {
             if (!speechSupported || !soundEnabled) {
                 if (callback) callback();
                 return;
             }
 
-            cancelSpeech();
+            const opts = options || {};
+            if (opts.priority === true) {
+                cancelSpeech();
+            } else if (opts.skipCancel !== true) {
+                try { if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); } catch (e) { }
+            }
 
             // Clean up the phrase for better speech
             let cleanPhrase = phrase
@@ -7595,11 +7720,27 @@
                 utterance.voice = selectedVoice;
             }
 
-            if (callback) {
-                utterance.onend = callback;
-            }
+            let guardToken = beginTtsGuard(6000);
+            utterance.onend = () => { endTtsGuard(guardToken); if (callback) callback(); };
+            utterance.onerror = () => { endTtsGuard(guardToken); if (callback) callback(); };
 
             speechSynthesis.speak(utterance);
+        }
+
+        // Politely speak: wait briefly for TTS to be idle, then speak without cancelling others
+        function speakPhrasePolitely(phrase, callback, maxWaitMs) {
+            const start = Date.now();
+            const cap = typeof maxWaitMs === 'number' ? maxWaitMs : 1500;
+            const attempt = () => {
+                if (!speechSupported || !isTtsBusy()) {
+                    speakPhrase(phrase, callback, { skipCancel: true });
+                } else if (Date.now() - start > cap) {
+                    speakPhrase(phrase, callback, { skipCancel: true });
+                } else {
+                    setTimeout(attempt, 180);
+                }
+            };
+            attempt();
         }
 
         function speakTracePrompt(letter) {
@@ -7617,7 +7758,7 @@
                 // brief pause between sentences for clarity; skip if user just manually triggered
                 const now = Date.now();
                 if (now - lastManualSpeakAt < 500) return;
-                setTimeout(() => speakLetter(letter), 120);
+                setTimeout(() => speakLetter(letter, null, { skipCancel: true }), 120);
             };
             speechSynthesis.speak(lead);
         }
@@ -7627,7 +7768,7 @@
             const phonetic = phoneticSounds[lower];
             if (!phonetic) { if (callback) callback(); return; }
 
-            cancelSpeech();
+            try { if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel(); } catch (e) { }
             const letterName = letterNamePronunciations[lower] || letter;
             const sound = phonetic.split(',')[0].trim();
             const anchorIdx = phonetic.toLowerCase().indexOf('as in');
@@ -7669,7 +7810,7 @@
                 speechSynthesis.speak(u);
             };
             // Total-duration fallback in case onend never fires
-            const totalMs = parts.length * 900 + (anchor ? 400 : 0);
+            const totalMs = parts.length * 1100 + (anchor ? 500 : 0);
             fallback = setTimeout(() => { finish(); }, totalMs);
             // Start sequence
             speakNext();
@@ -7822,12 +7963,11 @@
                 if (timeLeft <= 3 && timeLeft > 0) {
                     timerDisplay.className = 'timer-display warning';
                     timerBarFill.classList.add('warning');
-                    // Speak countdown once per second (no overlaps)
+                    // Speak countdown once per second (no overlaps) using polite speak
                     if (lastSpokenCountdown !== timeLeft && soundEnabled) {
-                        // Only speak if TTS is idle to avoid interrupting important prompts
-                        if (speechSupported && !speechSynthesis.speaking && !speechSynthesis.pending) {
+                        if (!isTtsBusy()) {
                             lastSpokenCountdown = timeLeft;
-                            speakPhrase(timeLeft.toString());
+                            speakPhrase(timeLeft.toString(), null, { skipCancel: true });
                         }
                     }
                 } else if (timeLeft === 0) {
@@ -7839,10 +7979,8 @@
                     clearTimer();
                     timerDisplay.innerHTML = "⏰ Time's up!";
                     timerBarFill.style.width = '0%';
-                    // Announce only if idle to avoid stomping other speech
-                    if (speechSupported && !speechSynthesis.speaking && !speechSynthesis.pending) {
-                        speakPhrase("Time's up!");
-                    }
+                    // Announce politely to avoid stomping other speech
+                    speakPhrasePolitely("Time's up!");
                     if (!isProcessing) {
                         isProcessing = true;
                         setTimeout(() => {
@@ -9326,7 +9464,7 @@
                         speakLetter(thisQuestionLetter);
                     }, 1000);
                 };
-                speakPhrase(`Find the letter ${letterNameSpoken}.`, afterPrompt);
+                speakPhrase(`Find the letter ${letterNameSpoken}.`, afterPrompt, { priority: true });
             }, 300);
         }
 
@@ -9363,7 +9501,7 @@
             lastManualSpeakAt = Date.now();
             speakLetter(currentLetter, () => {
                 soundBtn.classList.remove('playing');
-            });
+            }, { priority: true });
             // Failsafe to clear playing state if TTS never ends
             setTimeout(() => { try { soundBtn.classList.remove('playing'); } catch (e) { } }, 3500);
         }
@@ -9458,14 +9596,14 @@
                                     speakPhonetics(currentLetter, () => {
                                         const proceed = () => startIdentifyGame();
                                         if (assoc) {
-                                            try { speakPhrase(`${currentLetter} is for ${assoc.word}.`, proceed); } catch (e) { proceed(); }
+                                            try { speakPhrasePolitely(`${currentLetter} is for ${assoc.word}.`, proceed); } catch (e) { proceed(); }
                                         } else {
                                             proceed();
                                         }
                                     });
                                 }
                             };
-                            try { speakPhrase(`What sound does ${letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter} make?`, () => setTimeout(tick, 1000)); } catch (e) { setTimeout(tick, 1000); }
+                            try { speakPhrase(`What sound does ${letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter} make?`, () => setTimeout(tick, 1000), { priority: true }); } catch (e) { setTimeout(tick, 1000); }
                         }, baseDelay + extraDelay);
                     } else {
                         setTimeout(() => { isProcessing = false; startIdentifyGame(); }, baseDelay + extraDelay);
@@ -9475,7 +9613,7 @@
                         }, 1500);
                     }
                 };
-                speakPhrase('Excellent! That\'s correct!', scheduleAdvance);
+                speakPhrase('Excellent! That\'s correct!', scheduleAdvance, { skipCancel: true });
                 // Fallback in case speech is cancelled or onend never fires
                 advanceFallback = setTimeout(() => {
                     isProcessing = false;
@@ -9754,7 +9892,7 @@
             speakPhrase(`What sound does ${promptName} make?`, () => {
                 if (!waitingForPhonics) return; // in case it was skipped
                 phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
-            });
+            }, { priority: true });
         }
 
         function skipPhonics() {
@@ -9826,7 +9964,7 @@
 
             document.body.appendChild(announcement);
 
-            speakPhrase(`Time for a fun break! Let's play ${info.title}`);
+            speakPhrasePolitely(`Time for a fun break! Let's play ${info.title}`);
 
             setTimeout(() => {
                 announcement.remove();
@@ -9924,7 +10062,7 @@
                             minigameScore += 10;
                             document.getElementById('minigameScore').textContent = minigameScore;
                             createConfetti(basket);
-                            speakPhrase('Good catch!');
+                            speakPhrasePolitely('Good catch!');
                         } else {
                             minigameScore = Math.max(0, minigameScore - 5);
                             document.getElementById('minigameScore').textContent = minigameScore;
@@ -9945,7 +10083,7 @@
             currentMinigame = null;
 
             showFeedback(`Great job! Score: ${minigameScore}`, 'success');
-            speakPhrase(`Nice work! You scored ${minigameScore} points!`);
+            speakPhrasePolitely(`Nice work! You scored ${minigameScore} points!`);
 
             setTimeout(() => startIdentifyGame(), 3000);
         }
@@ -10033,7 +10171,7 @@
             currentMinigame = null;
 
             showFeedback(`Excellent! ${matchedPairs} matches!`, 'success');
-            speakPhrase(`Great memory! You found ${matchedPairs} pairs!`);
+            speakPhrasePolitely(`Great memory! You found ${matchedPairs} pairs!`);
 
             setTimeout(() => startIdentifyGame(), 3000);
         }
@@ -10117,8 +10255,8 @@
 
             document.body.classList.add('modal-open');
 
-            // Play celebration sound
-            speakPhrase(`Congratulations! You completed round ${currentRound}!`);
+            // Play celebration sound politely to avoid stomping active guidance
+            speakPhrasePolitely(`Congratulations! You completed round ${currentRound}!`);
         }
 
         function startNextRound() {
@@ -10306,7 +10444,7 @@
                 }
             });
 
-            speakPhrase(`Watch how to write ${currentLetter}`);
+            speakPhrasePolitely(`Watch how to write ${currentLetter}`);
         }
 
         function hideFormationGuide() {
@@ -10543,7 +10681,7 @@
 
             // Speak examples for non-readers
             const say = ` ${letter.toUpperCase()} is for ${examples.join(', ')}.`;
-            try { speakPhrase(say); } catch (e) { }
+            try { speakPhrasePolitely(say); } catch (e) { }
             // Auto-dismiss quickly to avoid disrupting flow
             setTimeout(() => {
                 if (typeof gsap !== 'undefined') {
@@ -10763,7 +10901,7 @@
                     recordBtn.innerHTML = '<span id="recordIcon">🔴</span><div class="recording-indicator"></div>';
                     recordBtn.setAttribute('aria-label', 'Stop recording');
 
-                    speakPhrase('Recording started. Say the letter!');
+                    speakPhrasePolitely('Recording started. Say the letter!');
                 })
                 .catch(err => {
                     console.error('Error accessing microphone:', err);
@@ -10781,7 +10919,7 @@
                 recordBtn.innerHTML = '<span id="recordIcon">🎤</span>';
                 recordBtn.setAttribute('aria-label', 'Start recording');
 
-                speakPhrase('Recording saved!');
+                speakPhrasePolitely('Recording saved!');
             }
         }
 
@@ -10804,9 +10942,9 @@
                 cancelSpeech();
                 playLastRecording();
                 const waitThenSpeak = () => {
-                    speakPhrase('Now listen to the correct pronunciation', () => {
-                        setTimeout(() => speakLetter(currentLetter), 800);
-                    });
+                    speakPhrasePolitely('Now listen to the correct pronunciation', () => {
+                        setTimeout(() => speakLetter(currentLetter, null, { skipCancel: true }), 800);
+                    }, 1800);
                 };
                 if (playbackAudio) {
                     playbackAudio.onended = () => { playbackAudio = null; waitThenSpeak(); };
@@ -10844,12 +10982,14 @@
         if (speechSupported) {
             speechSynthesis.onvoiceschanged = loadVoices;
             loadVoices();
-            // Nudge some browsers to populate voices
+            // Nudge some browsers to populate voices without cancelling legitimate utterances
             if (voices.length === 0) {
                 const silent = new SpeechSynthesisUtterance('');
                 silent.volume = 0;
-                speechSynthesis.speak(silent);
-                setTimeout(() => speechSynthesis.cancel(), 100);
+                const nudgeToken = beginTtsGuard(800);
+                silent.onend = () => { endTtsGuard(nudgeToken); };
+                silent.onerror = () => { endTtsGuard(nudgeToken); };
+                try { speechSynthesis.speak(silent); } catch (e) { endTtsGuard(nudgeToken); }
             }
         }
 
@@ -11300,7 +11440,7 @@
 
                 // Announce player switch
                 if (currentPlayer) {
-                    speakPhrase(`Now playing: ${currentPlayer.name}`);
+                    speakPhrasePolitely(`Now playing: ${currentPlayer.name}`);
                 }
 
                 // If in game, restart for new player
@@ -11828,7 +11968,7 @@
                         const hoursSinceLastPlay = (Date.now() - gameData.lastPlayed) / (1000 * 60 * 60);
                         if (hoursSinceLastPlay > 24) {
                             setTimeout(() => {
-                                speakPhrase('Welcome back! Ready to learn more letters?');
+                                speakPhrasePolitely('Welcome back! Ready to learn more letters?');
                             }, 1000);
                         }
                     }
@@ -11858,13 +11998,13 @@
                 // Remove distractions while enabling focus mode
                 clearAllTimers();
                 cancelSpeech();
-                speakPhrase('Focus mode enabled. Simplified interface activated.');
+                speakPhrase('Focus mode enabled. Simplified interface activated.', null, { priority: true });
             } else {
                 document.body.classList.remove('focus-mode');
                 if (switchEl) { switchEl.checked = false; }
                 // Restore previous timer state instead of always enabling
                 timerEnabled = previousTimerState;
-                speakPhrase('Focus mode disabled.');
+                speakPhrasePolitely('Focus mode disabled.');
             }
 
             saveGameData();
@@ -11939,7 +12079,7 @@
             } else {
                 // Streak broken
                 if (currentStreak > 1) {
-                    speakPhrase(`Oh no! Your ${currentStreak} day streak ended. Let's start a new one!`);
+                    speakPhrasePolitely(`Oh no! Your ${currentStreak} day streak ended. Let's start a new one!`);
                 }
                 currentStreak = 1;
                 lastPlayDate = today;
@@ -12029,7 +12169,7 @@
                 }, 500);
 
                 // Announce achievement
-                speakPhrase(`Wow! ${data.title} ${data.subtitle}`);
+                speakPhrasePolitely(`Wow! ${data.title} ${data.subtitle}`);
             }
         }
 
@@ -12294,7 +12434,7 @@
             if (!canvas) return;
             if (drawingPoints.length < 12) {
                 showFeedback('Keep drawing! Try to complete the letter. ✏️', 'info');
-                speakPhrase('Add a little more to your drawing!');
+                speakPhrasePolitely('Add a little more to your drawing!');
                 return;
             }
 
@@ -12312,7 +12452,7 @@
             const tmpl = C.tmplCache[currentLetter];
             if (!tmpl) {
                 showFeedback("Great practice! Let's try another one. 👍", 'info');
-                speakPhrase('Good job practicing that letter!');
+                speakPhrasePolitely('Good job practicing that letter!');
                 setTimeout(() => startDrawGame(), 2000);
                 return;
             }
@@ -12360,7 +12500,7 @@
             const crossbarOK = hasMidCrossbar(userNorm);
 
             // Blend decision
-            const BASE_ACCEPT = 0.30;
+            const BASE_ACCEPT = 0.26;
             const LETTER_EASING = new Map([
                 ...['S', 's', 'G', 'g', 'Q', 'q', 'O', 'o', 'Z', 'z', 'V', 'v', 'N', 'n', 'Y', 'y', 'i', 'e', 'E', 'B', 'R', 'W', 'w', 'M', 'm', 'K', 'k', 'a', 'b'].map(L => [L, -0.10]),
                 ...['l', 'I', 't', 'T'].map(L => [L, +0.02])
@@ -12374,14 +12514,15 @@
                 // Curvy letters get a slightly lower floor
                 ['S', 0.30], ['s', 0.30], ['G', 0.30], ['g', 0.30], ['Q', 0.30], ['q', 0.30], ['E', 0.30], ['e', 0.30], ['a', 0.28], ['b', 0.28]
             ]);
-            const floor = letterFloors.get(currentLetter) || 0.28;
+            let floor = letterFloors.get(currentLetter) || 0.28;
+            floor = Math.max(0.22, floor - 0.04);
             let finalScore = classicalScore;
             if (deepOk) {
                 finalScore = 0.50 * classicalScore + 0.50 * deepScore;
-                if (deepMargin >= 0.05) acceptThresh -= 0.04;
-                if (deepScore >= 0.70) acceptThresh = Math.min(acceptThresh, 0.42);
+                if (deepMargin >= 0.05) acceptThresh -= 0.06;
+                if (deepScore >= 0.70) acceptThresh = Math.min(acceptThresh, 0.40);
             }
-            if (classicalMargin >= 0.05) acceptThresh -= 0.03;
+            if (classicalMargin >= 0.05) acceptThresh -= 0.05;
             if (needDot && !dotOK) acceptThresh += (currentLetter === 'i' ? 0.01 : 0.02);
             if (needCrossbar && !crossbarOK) acceptThresh += (currentLetter === 'E' ? 0.005 : 0.01);
             acceptThresh = clamp(acceptThresh, 0.24, 0.48);
@@ -12389,13 +12530,13 @@
             // Shape-first guard: reject if cloudSim is extremely low regardless of other scores
             // Middle-ground easy gate: accept on any of these low bars, else blended threshold
             // Middle-ground: accept if target is near top among letters (very low absolute bars), else blended threshold
-            const nearTopEpsilon = 0.04;
+            const nearTopEpsilon = 0.06;
             const classicalTopOk = (classicalScore + nearTopEpsilon) >= bestOtherClassical && classicalScore >= Math.max(0.22, floor - 0.10);
-            const deepTopOk = deepOk && deepMargin >= -0.02 && deepScore >= 0.55;
+            const deepTopOk = deepOk && deepMargin >= -0.02 && deepScore >= 0.52;
             let passed = classicalTopOk || deepTopOk || (finalScore >= acceptThresh);
             // Generic guard: if another letter dominates the target by a clear margin, reject
-            const wrongDomClassicalMargin = 0.16;
-            const wrongDomDeepMargin = -0.18;
+            const wrongDomClassicalMargin = 0.22;
+            const wrongDomDeepMargin = -0.22;
             const wrongDominatesClassical = (bestOtherClassical - classicalScore) > wrongDomClassicalMargin;
             const wrongDominatesDeep = deepOk && (deepMargin < wrongDomDeepMargin);
             if (passed && (wrongDominatesClassical || wrongDominatesDeep)) passed = false;
@@ -12408,34 +12549,75 @@
                     // Letter-specific IoU floors (more permissive for a/b)
                     const minIoUMap = new Map([
                         ['o', 0.10], ['O', 0.10],
-                        ['a', 0.12], ['A', 0.14],
-                        ['b', 0.12], ['B', 0.14]
+                        ['a', 0.10], ['A', 0.12],
+                        ['b', 0.10], ['B', 0.12]
                     ]);
-                    const defaultLoopIoU = 0.16;
+                    const defaultLoopIoU = 0.12;
                     const minIoU = minIoUMap.get(currentLetter) ?? defaultLoopIoU;
                     if (visual < minIoU) passed = false;
                 }
             }
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
+            // Determine reason bucket before branching
+            let reason = 'blended';
+            if (classicalTopOk) reason = 'nearTop';
+            else if (deepTopOk) reason = 'deepTop';
+            else if (!passed) {
+                if (looksLikeCross(userNorm) && !(currentLetter === 'X' || currentLetter === 'x')) reason = 'crossGuard';
+                else if (wrongDominatesClassical || wrongDominatesDeep) reason = 'wrongDom';
+                else {
+                    const loopishCheck = new Set(['o','O','Q','q','g','G','a','A','d','D','p','P','b','B']);
+                    if (loopishCheck.has(currentLetter)) {
+                        const tmpMin = (new Map([['o',0.10],['O',0.10],['a',0.10],['A',0.12],['b',0.10],['B',0.12]])).get(currentLetter) ?? 0.12;
+                        if (visual < tmpMin) reason = 'loopIoU';
+                    }
+                }
+            }
             if (passed) {
                 const base = 10 + (difficultyLevel * 5);
                 const bonus = Math.max(0, 30 - responseTime * 3);
                 const hintPenalty = hintWasShown ? 10 : 0;
-                let points = Math.max(0, Math.floor(base + bonus) - hintPenalty);
+                const qualityBase = clamp(finalScore, 0, 1);
+                const marginPenalty = Math.max(0, bestOtherClassical - classicalScore);
+                const deepMarginPenalty = deepOk ? Math.max(0, 0.02 - deepMargin) : 0;
+                const adjQuality = clamp(qualityBase - (0.25 * marginPenalty) - (0.10 * deepMarginPenalty), 0, 1);
+                let points = Math.max(0, Math.floor((base + bonus) * (0.15 + 0.85 * adjQuality)) - hintPenalty);
                 const gainedThisRound = Math.max(0, (currentPlayer ? currentPlayer.score : score) - scoreAtRoundStart);
                 if (gainedThisRound + points > 50) points = Math.max(0, 50 - gainedThisRound);
                 score += points; roundCorrect++; correctAnswers++; totalQuestions++; updateScoreDisplay();
                 updateLetterPerformance(currentLetter, true, responseTime, points);
+                // Record analytics for acceptance
+                recordDrawAttempt({
+                    letter: currentLetter,
+                    accepted: true,
+                    reason,
+                    finalScore,
+                    classicalScore,
+                    deepScore: deepOk ? deepScore : 0,
+                    responseTime,
+                    points
+                });
                 showFeedback(`That's a great "${currentLetter}"! +${points} ✨`, 'success');
-                cancelSpeech(); speakPhrase(`Great ${currentLetter}!`, () => { advanceToNextDrawLetterOnce(); });
+                cancelSpeech(); speakPhrase(`Great ${currentLetter}!`, () => { advanceToNextDrawLetterOnce(); }, { skipCancel: true });
                 const container = document.querySelector('.canvas-container');
                 if (container) { container.style.boxShadow = '0 10px 30px rgba(74, 222, 128, 0.5)'; container.style.transform = 'scale(1.03)'; setTimeout(() => { container.style.boxShadow = ''; container.style.transform = ''; }, 1000); }
                 drawAdvanceTimeout = setTimeout(() => { advanceToNextDrawLetterOnce(); }, 2200);
             } else {
                 const msg = (finalScore >= (acceptThresh - 0.06)) ? (tmpl.feedback.incomplete || 'So close! A little more will do it.') : (tmpl.feedback.wrong || "Let's try again with this letter shape.");
-                showFeedback(msg, 'error'); speakPhrase(msg);
+                showFeedback(msg, 'error'); speakPhrasePolitely(msg);
                 const container = document.querySelector('.canvas-container');
                 if (container) { container.classList.add('animate__animated', 'animate__shakeX'); setTimeout(() => container.classList.remove('animate__animated', 'animate__shakeX'), 800); }
+                // Record analytics for rejection
+                recordDrawAttempt({
+                    letter: currentLetter,
+                    accepted: false,
+                    reason,
+                    finalScore,
+                    classicalScore,
+                    deepScore: deepOk ? deepScore : 0,
+                    responseTime,
+                    points: 0
+                });
                 setTimeout(() => clearCanvas(), 2000);
             }
         }
@@ -12644,12 +12826,17 @@
                 } catch (e) { }
             };
             // If a level animation is pending, wait until TTS is idle then speak
-            const doSpeak = () => speakPhrase(`Build the word ${word}. Letters: ${speakLetters}.`, after);
+            const doSpeak = () => speakPhrase(`Build the word ${word}. Letters: ${speakLetters}.`, after, { skipCancel: true });
+            const start = Date.now();
+            const maxWaitMs = 1800;
             const speakWhenIdle = () => {
-                if (!speechSupported || (!speechSynthesis.speaking && !speechSynthesis.pending)) {
+                if (!speechSupported || !isTtsBusy()) {
+                    doSpeak();
+                } else if (Date.now() - start > maxWaitMs) {
+                    // soft preempt after timeout
                     doSpeak();
                 } else {
-                    setTimeout(speakWhenIdle, 200);
+                    setTimeout(speakWhenIdle, 180);
                 }
             };
             speakWhenIdle();
@@ -12895,7 +13082,7 @@
                 ];
                 const message = celebrations[Math.floor(Math.random() * celebrations.length)];
                 showFeedback(message, 'success');
-                speakPhrase(message.replace(/[^a-zA-Z\s]/g, ''));
+                speakPhrasePolitely(message.replace(/[^a-zA-Z\s]/g, ''));
 
                 // Container celebration animation
                 const cont = document.querySelector('.wb-container');
@@ -12966,7 +13153,7 @@
                 ];
                 const message = encouragements[Math.floor(Math.random() * encouragements.length)];
                 showFeedback(message, 'error');
-                speakPhrase(message.replace(/[^a-zA-Z\s]/g, ''));
+                speakPhrasePolitely(message.replace(/[^a-zA-Z\s]/g, ''));
 
                 const cont = document.querySelector('.wb-container');
                 if (cont) {
@@ -13254,11 +13441,11 @@
             if (!wbTargetWord) return;
             const speakLetters = wbTargetWord.split('').join(', ');
             // Avoid interrupting active speech if a prompt is currently playing
-            if (speechSupported && (speechSynthesis.speaking || speechSynthesis.pending)) {
+            if (isTtsBusy()) {
                 // Try again shortly after current speech
-                setTimeout(() => speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`), 400);
+                setTimeout(() => speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`, null, { skipCancel: true }), 400);
             } else {
-                speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`);
+                speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`, null, { skipCancel: true });
             }
         }
 
@@ -13335,7 +13522,7 @@
             document.body.appendChild(overlay);
 
             // Play sound (speakPhrase handles muting internally)
-            speakPhrase('Level up! ' + levelNames[newLevel] + ' words!');
+            speakPhrasePolitely('Level up! ' + levelNames[newLevel] + ' words!');
 
             // Remove after animation with safety check
             setTimeout(() => {
