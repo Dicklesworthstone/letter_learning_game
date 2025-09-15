@@ -3872,7 +3872,13 @@
             font-weight: bold;
             box-shadow: 0 4px 20px rgba(251, 191, 36, 0.4);
             z-index: 100;
+            opacity: 0;
+            transition: opacity 0.35s ease;
             /* remove continuous float; trigger on update only */
+        }
+
+        .streak-display.visible {
+            opacity: 1;
         }
 
         @keyframes streakFloat {
@@ -4481,6 +4487,8 @@
             flex-direction: column;
             align-items: center;
             gap: 8px;
+            position: relative;
+            z-index: 2;
         }
 
         .wb-title-row {
@@ -4488,6 +4496,7 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
+            flex-wrap: wrap; /* allow wrap on small screens so items aren't clipped */
         }
         .wb-speaker-btn {
             width: 40px;
@@ -4506,6 +4515,8 @@
                 0 4px 12px rgba(59, 130, 246, 0.3),
                 0 2px 4px rgba(0, 0, 0, 0.1);
             flex-shrink: 0;
+            position: relative;
+            z-index: 3; /* keep speaker above any overlapping badges/avatars */
         }
 
         .wb-speaker-btn:hover {
@@ -4899,6 +4910,19 @@
                 gap: 10px;
                 padding: 12px 8px;
             }
+            /* Improve visibility and layout of header on iPhones */
+            .wb-title-row { gap: 8px; }
+            .wb-title {
+                font-size: 26px;
+                /* Switch to solid, high-contrast text to ensure readability on iOS */
+                background: none !important;
+                -webkit-background-clip: initial !important;
+                background-clip: initial !important;
+                color: #0f172a !important;
+                -webkit-text-fill-color: #0f172a !important;
+                text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+            }
+            .wb-speaker-btn { width: 36px; height: 36px; font-size: 18px; }
         }
 
         /* Additional mobile optimizations for very small screens */
@@ -4924,6 +4948,7 @@
                 height: 32px;
                 font-size: 16px;
             }
+            .wb-title { font-size: 24px; }
         }
 
         @keyframes particleFloat {
@@ -5286,7 +5311,7 @@
                 <div class="achievement-stats">
                     <div class="mastery-pie-wrap">
                         <canvas id="masteryPie" width="200" height="200"
-                            aria-label="Letters mastered progress"></canvas>
+                            aria-label="Achievements unlocked progress"></canvas>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Total Stars Earned:</span>
@@ -10991,7 +11016,7 @@
             document.getElementById('bestStreak').textContent = bestStreak;
             document.getElementById('totalPlayTime').textContent = `${totalTime} min`;
 
-            // Draw mastery pie
+            // Draw achievements pie
             drawMasteryPie();
         }
         function drawMasteryPie() {
@@ -11000,9 +11025,9 @@
             const ctx = canvas.getContext('2d');
             if (!ctx) return;
 
-            const total = 26;
-            const mastered = Math.max(0, Math.min(total, lettersMastered.size || 0));
-            const progress = mastered / total;
+            const total = ACHIEVEMENTS.length;
+            const mastered = Math.max(0, Math.min(total, unlockedAchievements ? unlockedAchievements.size : 0));
+            const progress = total > 0 ? mastered / total : 0;
 
             // Handle HiDPI crispness based on CSS size
             const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
@@ -11094,11 +11119,11 @@
             textGrad.addColorStop(1, '#764ba2');
             ctx.font = '600 22px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
             ctx.fillStyle = textGrad;
-            ctx.fillText(`${mastered}/26`, cx, valueY);
+            ctx.fillText(`${mastered}/${total}`, cx, valueY);
             // Label
             ctx.font = '600 11px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial';
             ctx.fillStyle = '#6b7280';
-            ctx.fillText('MASTERED', cx, valueY + 18);
+            ctx.fillText('ACHIEVEMENTS', cx, valueY + 18);
         }
 
         // Multiplayer Functions
@@ -11926,6 +11951,8 @@
         function updateStreakDisplay() {
             const display = document.getElementById('streakDisplay');
             const number = document.getElementById('streakNumber');
+            // ensure we can clear any pending hide timers to avoid lingering UI
+            window.__streakToastTimer && clearTimeout(window.__streakToastTimer);
 
             if (currentStreak > 1) {
                 display.style.display = 'flex';
@@ -11942,8 +11969,19 @@
                 } else if (currentStreak >= 7) {
                     display.style.background = 'linear-gradient(135deg, #fbbf24, #f59e0b)';
                 }
+
+                // show with fade-in
+                requestAnimationFrame(() => display.classList.add('visible'));
+
+                // auto-dismiss after a short period
+                window.__streakToastTimer = setTimeout(() => {
+                    display.classList.remove('visible');
+                    // match CSS transition before hiding to avoid focus traps
+                    setTimeout(() => { if (!display.classList.contains('visible')) display.style.display = 'none'; }, 400);
+                }, 2500);
             } else {
-                display.style.display = 'none';
+                display.classList.remove('visible');
+                setTimeout(() => { display.style.display = 'none'; }, 350);
             }
         }
         function showStreakMilestone(days) {
