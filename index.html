@@ -5739,6 +5739,7 @@
         let phonicsTimer = null;
         let speakPromptTimeout = null;
         let speakLetterTimeout = null;
+        let identifyPromptId = 0; // increments per Identify prompt to invalidate stale speech callbacks
         let lastManualSpeakAt = 0; // timestamp for guarding double-speaks after manual trigger
         let isProcessing = false;
         let isDrawing = false;
@@ -9393,6 +9394,7 @@
             if (waitingForPhonics) return;
             isAnswering = false;
 
+            const promptToken = ++identifyPromptId;
             clearAllTimers();
             cancelSpeech();
 
@@ -9461,12 +9463,20 @@
             const thisQuestionLetter = currentLetter;
             const letterNameSpoken = letterNamePronunciations[thisQuestionLetter.toLowerCase()] || thisQuestionLetter;
             speakPromptTimeout = setTimeout(() => {
+                speakPromptTimeout = null;
+                if (promptToken !== identifyPromptId) return;
                 const afterPrompt = () => {
+                    if (promptToken !== identifyPromptId) return;
                     speakLetterTimeout = setTimeout(() => {
+                        speakLetterTimeout = null;
+                        if (promptToken !== identifyPromptId) return;
                         speakLetter(thisQuestionLetter, null, { skipCancel: true });
                     }, 1000);
                 };
-                speakPhrase(`Find the letter ${letterNameSpoken}.`, afterPrompt, { priority: true });
+                speakPhrase(`Find the letter ${letterNameSpoken}.`, () => {
+                    if (promptToken !== identifyPromptId) return;
+                    afterPrompt();
+                }, { priority: true });
             }, 300);
         }
 
