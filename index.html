@@ -9395,6 +9395,7 @@
             isAnswering = false;
 
             const promptToken = ++identifyPromptId;
+            const questionId = identifyPromptId;
             clearAllTimers();
             cancelSpeech();
 
@@ -9423,12 +9424,12 @@
                 optionsHTML = options.map(letter => {
                     const isVowel = 'aeiouAEIOU'.includes(letter);
                     const highlightClass = isVowel ? 'vowel-highlight' : 'consonant-highlight';
-                    return `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')" aria-label="Choose letter ${letter}"><span class="${highlightClass}">${letter}</span></button>`;
+                    return `<button class="option-btn" data-letter="${letter}" data-qid="${questionId}" onclick="checkAnswer('${letter}', ${questionId})" aria-label="Choose letter ${letter}"><span class="${highlightClass}">${letter}</span></button>`;
                 }).join('');
             } else if (currentTheme === 'animals') {
                 // Show with associations
                 optionsHTML = options.map(letter =>
-                    `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')" style="position: relative;" aria-label="Choose letter ${letter}">
+                    `<button class="option-btn" data-letter="${letter}" data-qid="${questionId}" onclick="checkAnswer('${letter}', ${questionId})" style="position: relative;" aria-label="Choose letter ${letter}">
                         ${letter}
                         ${letter.toLowerCase() === currentLetter.toLowerCase() ?
                         `<div class="letter-association">
@@ -9440,13 +9441,13 @@
             } else {
                 // Classic mode
                 optionsHTML = options.map(letter =>
-                    `<button class="option-btn" data-letter="${letter}" onclick="checkAnswer('${letter}')" aria-label="Choose letter ${letter}">${letter}</button>`
+                    `<button class="option-btn" data-letter="${letter}" data-qid="${questionId}" onclick="checkAnswer('${letter}', ${questionId})" aria-label="Choose letter ${letter}">${letter}</button>`
                 ).join('');
             }
 
             gameArea.innerHTML = `
                 <div class="options">${optionsHTML}</div>
-                <button class="sound-btn" id="soundBtn" onclick="playCurrentLetter()" aria-label="Play the current letter sound">🔊</button>
+                <button class="sound-btn" id="soundBtn" data-qid="${questionId}" onclick="playCurrentLetter(${questionId})" aria-label="Play the current letter sound">🔊</button>
                 <div class="instruction">Tap the speaker, then find the letter!</div>
                 ${voiceRecordingEnabled ? getVoiceRecorderHTML() : ''}
             `;
@@ -9500,7 +9501,9 @@
             `;
         }
 
-        function playCurrentLetter() {
+        function playCurrentLetter(qid) {
+            // Ignore plays from stale UI buttons
+            if (qid != null && qid !== identifyPromptId) return;
             const soundBtn = document.getElementById('soundBtn');
             soundBtn.classList.add('playing');
             // Subtle press animation
@@ -9517,7 +9520,10 @@
             // Failsafe to clear playing state if TTS never ends
             setTimeout(() => { try { soundBtn.classList.remove('playing'); } catch (e) { } }, 3500);
         }
-        function checkAnswer(letter) {
+        function checkAnswer(letter, qid) {
+            // Ignore clicks from a stale question rendered before the latest prompt
+            if (qid != null && qid !== identifyPromptId) return;
+            const questionIdAtClick = (qid != null) ? qid : identifyPromptId;
             if (waitingForPhonics || isAnswering || isProcessing) return;
             // Disable all buttons immediately to prevent rapid double clicks
             document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'none');
@@ -9576,6 +9582,7 @@
                 let advanceFallback = null;
                 let showedExamples = false; // declared early so TTS callback can reference it
                 const scheduleAdvance = () => {
+                    if (identifyPromptId !== questionIdAtClick) return; // stale, do nothing
                     // Clear fallback if it was set (e.g., in case TTS onend fires)
                     if (advanceFallback) { try { clearTimeout(advanceFallback); } catch (e) { } advanceFallback = null; }
                     const baseDelay = phonicsEnabled ? 1500 : 1200;
@@ -9583,6 +9590,7 @@
                     if (phonicsEnabled) {
                         if (phonicsPhaseTimeout) { clearTimeout(phonicsPhaseTimeout); phonicsPhaseTimeout = null; }
                         phonicsPhaseTimeout = setTimeout(() => {
+                            if (identifyPromptId !== questionIdAtClick) { isProcessing = false; return; }
                             isProcessing = false;
                             // Start phonics phase: ask child to say the sound (3s), then pronounce + mention word
                             const gameArea = document.getElementById('gameArea');
@@ -9606,6 +9614,7 @@
                                     timerEl.textContent = '';
                                     // Say phonetics and association after countdown
                                     speakPhonetics(currentLetter, () => {
+                                        if (identifyPromptId !== questionIdAtClick) return;
                                         const proceed = () => startIdentifyGame();
                                         if (assoc) {
                                             try { speakPhrasePolitely(`${currentLetter} is for ${assoc.word}.`, proceed); } catch (e) { proceed(); }
@@ -9615,19 +9624,20 @@
                                     });
                                 }
                             };
-                            try { speakPhrase(`What sound does ${letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter} make?`, () => setTimeout(tick, 1000), { priority: true }); } catch (e) { setTimeout(tick, 1000); }
+                            try { speakPhrase(`What sound does ${letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter} make?`, () => { if (identifyPromptId !== questionIdAtClick) return; setTimeout(tick, 1000); }, { priority: true }); } catch (e) { setTimeout(tick, 1000); }
                         }, baseDelay + extraDelay);
                     } else {
-                        setTimeout(() => { isProcessing = false; startIdentifyGame(); }, baseDelay + extraDelay);
+                        setTimeout(() => { if (identifyPromptId !== questionIdAtClick) { isProcessing = false; return; } isProcessing = false; startIdentifyGame(); }, baseDelay + extraDelay);
                         // Re-enable buttons only if not transitioning into phonics
                         setTimeout(() => {
                             document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
                         }, 1500);
                     }
                 };
-                speakPhrase('Excellent! That\'s correct!', scheduleAdvance, { skipCancel: true });
+                speakPhrase('Excellent! That\'s correct!', () => { if (identifyPromptId !== questionIdAtClick) return; scheduleAdvance(); }, { skipCancel: true });
                 // Fallback in case speech is cancelled or onend never fires
                 advanceFallback = setTimeout(() => {
+                    if (identifyPromptId !== questionIdAtClick) { isProcessing = false; return; }
                     isProcessing = false;
                     if (phonicsEnabled) {
                         startPhonicsPhase();
@@ -9688,6 +9698,7 @@
                 // Speak, then pulse-highlight the correct letter, then re-enable input (with fallback)
                 let wrongTtsHandled = false;
                 const doHighlightAndResume = () => {
+                    if (identifyPromptId !== questionIdAtClick) return; // stale, abort
                     const correctButton = document.querySelector(`.option-btn[data-letter="${currentLetter}"]`);
                     if (correctButton) {
                         correctButton.style.transition = 'transform 0.2s, background-color 0.2s';
@@ -9714,12 +9725,14 @@
                 };
 
                 const ttsGuard = setTimeout(() => {
+                    if (identifyPromptId !== questionIdAtClick) return;
                     if (wrongTtsHandled) return;
                     wrongTtsHandled = true;
                     doHighlightAndResume();
                 }, 3000);
 
                 speakPhrase(feedbackLine, () => {
+                    if (identifyPromptId !== questionIdAtClick) return;
                     if (wrongTtsHandled) return;
                     wrongTtsHandled = true;
                     try { clearTimeout(ttsGuard); } catch (e) { }
