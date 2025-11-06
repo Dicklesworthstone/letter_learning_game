@@ -5766,6 +5766,8 @@
         let voiceRecordingEnabled = false; // Hidden by default
         let phonicsRepeatCount = 0; // counts fallback repeats per phonics step
         let phonicsEchoCleanup = null; // cleanup function for active echo step
+        let activePhonicsGuardId = null; // track which question owns the active phonics phase
+        let activePhonicsSkipHandler = null; // pointer to the tap-to-skip handler for cleanup
         let drawingPoints = [];
         let recentLetters = [];
         let isAnswering = false; // lock input during answer animations
@@ -9592,39 +9594,7 @@
                         phonicsPhaseTimeout = setTimeout(() => {
                             if (identifyPromptId !== questionIdAtClick) { isProcessing = false; return; }
                             isProcessing = false;
-                            // Start phonics phase: ask child to say the sound (3s), then pronounce + mention word
-                            const gameArea = document.getElementById('gameArea');
-                            const assoc = letterAssociations[currentLetter.toLowerCase()];
-                            // Reuse startPhonicsPhase layout but condensed
-                            gameArea.innerHTML = `
-                                <div class="phonics-phase">
-                                    <div class="phonics-instruction">What sound does "${currentLetter}" make?</div>
-                                    <div class="phonics-timer" id="phonicsTimer">3</div>
-                                    <div class="phonics-letter">${currentLetter}</div>
-                                </div>
-                            `;
-                            let t = 3;
-                            const timerEl = document.getElementById('phonicsTimer');
-                            const tick = () => {
-                                t -= 1;
-                                if (t > 0) {
-                                    timerEl.textContent = String(t);
-                                    setTimeout(tick, 1000);
-                                } else {
-                                    timerEl.textContent = '';
-                                    // Say phonetics and association after countdown
-                                    speakPhonetics(currentLetter, () => {
-                                        if (identifyPromptId !== questionIdAtClick) return;
-                                        const proceed = () => startIdentifyGame();
-                                        if (assoc) {
-                                            try { speakPhrasePolitely(`${currentLetter} is for ${assoc.word}.`, proceed); } catch (e) { proceed(); }
-                                        } else {
-                                            proceed();
-                                        }
-                                    });
-                                }
-                            };
-                            try { speakPhrase(`What sound does ${letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter} make?`, () => { if (identifyPromptId !== questionIdAtClick) return; setTimeout(tick, 1000); }, { priority: true }); } catch (e) { setTimeout(tick, 1000); }
+                            startPhonicsPhase(questionIdAtClick);
                         }, baseDelay + extraDelay);
                     } else {
                         setTimeout(() => { if (identifyPromptId !== questionIdAtClick) { isProcessing = false; return; } isProcessing = false; startIdentifyGame(); }, baseDelay + extraDelay);
@@ -9640,7 +9610,7 @@
                     if (identifyPromptId !== questionIdAtClick) { isProcessing = false; return; }
                     isProcessing = false;
                     if (phonicsEnabled) {
-                        startPhonicsPhase();
+                        startPhonicsPhase(questionIdAtClick);
                     } else {
                         startIdentifyGame();
                         setTimeout(() => {
@@ -9743,106 +9713,149 @@
             updateScoreDisplay();
             checkRoundCompletion();
         }
-        function startPhonicsPhase() {
+        function detachActivePhonicsSkipHandler() {
+            if (!activePhonicsSkipHandler) return;
+            const area = document.getElementById('gameArea');
+            if (area) {
+                try { area.removeEventListener('click', activePhonicsSkipHandler); } catch (e) { }
+            }
+            activePhonicsSkipHandler = null;
+        }
+
+        function startPhonicsPhase(questionGuardId) {
+            const guardId = typeof questionGuardId === 'number' ? questionGuardId : identifyPromptId;
+            const phonicsLetter = currentLetter;
+
             if (!phonicsEnabled) {
-                // Skip phonics entirely when disabled
                 waitingForPhonics = false;
-                setTimeout(() => startIdentifyGame(), 300);
+                activePhonicsGuardId = null;
+                if (guardId === identifyPromptId) {
+                    setTimeout(() => startIdentifyGame(), 300);
+                }
                 return;
             }
+
+            if (guardId !== identifyPromptId) {
+                return;
+            }
+
             waitingForPhonics = true;
+            activePhonicsGuardId = guardId;
             phonicsRepeatCount = 0;
             if (phonicsEchoCleanup) { try { phonicsEchoCleanup(true); } catch (e) { } phonicsEchoCleanup = null; }
             clearTimer();
             cancelSpeech();
 
             const gameArea = document.getElementById('gameArea');
+            if (!gameArea) {
+                waitingForPhonics = false;
+                activePhonicsGuardId = null;
+                return;
+            }
+
             gameArea.innerHTML = `
                 <div class="phonics-phase">
-                    <div class="phonics-instruction">What sound does "${currentLetter}" make?</div>
+                    <div class="phonics-instruction">What sound does "${phonicsLetter}" make?</div>
                     <div class="phonics-timer" id="phonicsTimer">3</div>
-                    <div class="phonics-letter">${currentLetter}</div>
-                    <button class="phonics-skip" onclick="skipPhonics()" aria-label="Skip phonics">Skip →</button>
+                    <div class="phonics-letter">${phonicsLetter}</div>
+                    <button class="phonics-skip" onclick="skipPhonics(event)" aria-label="Skip phonics">Skip →</button>
                 </div>
             `;
-            // Speak the prompt for non-readers, then start the countdown
-            const promptName = letterNamePronunciations[currentLetter.toLowerCase()] || currentLetter;
+            const promptName = letterNamePronunciations[phonicsLetter.toLowerCase()] || phonicsLetter;
             let timeLeft = 3;
             const timerElement = document.getElementById('phonicsTimer');
 
-            // Allow skipping phonics by tapping anywhere in the game area
-            const skipPhonicsHandler = () => {
-                if (!waitingForPhonics) return;
+            const guardActive = () => waitingForPhonics && activePhonicsGuardId === guardId && guardId === identifyPromptId;
+
+            const finishPhase = (delayMs) => {
+                if (!guardActive()) return;
                 waitingForPhonics = false;
+                detachActivePhonicsSkipHandler();
+                activePhonicsGuardId = null;
                 if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
-                gameArea.removeEventListener('click', skipPhonicsHandler);
-                startIdentifyGame();
+                if (typeof delayMs !== 'number' || delayMs < 0) delayMs = 0;
+                setTimeout(() => {
+                    if (guardId === identifyPromptId) {
+                        startIdentifyGame();
+                    }
+                }, delayMs);
             };
+
+            const skipPhonicsHandler = (event) => {
+                if (!guardActive()) return;
+                if (event) event.stopPropagation();
+                cancelSpeech();
+                if (phonicsEchoCleanup) { try { phonicsEchoCleanup(true); } catch (e) { } phonicsEchoCleanup = null; }
+                finishPhase(0);
+            };
+            detachActivePhonicsSkipHandler();
+            activePhonicsSkipHandler = skipPhonicsHandler;
             gameArea.addEventListener('click', skipPhonicsHandler);
 
+            function setupRepeatButton(phaseEl) {
+                if (!guardActive()) return;
+                const instructionEl = phaseEl ? phaseEl.querySelector('.phonics-instruction') : null;
+                if (instructionEl) instructionEl.textContent = 'Repeat after me!';
+                let repeatBtn = phaseEl ? phaseEl.querySelector('.phonics-repeat') : null;
+                if (!repeatBtn && phaseEl) {
+                    repeatBtn = document.createElement('button');
+                    repeatBtn.className = 'phonics-repeat';
+                    repeatBtn.textContent = 'Repeat after me 🔁';
+                    repeatBtn.setAttribute('aria-label', 'Repeat after me');
+                    repeatBtn.onclick = (ev) => {
+                        if (ev) ev.stopPropagation();
+                        cancelSpeech();
+                        speakPhonetics(phonicsLetter);
+                        if (phonicsRepeatCount < 2) {
+                            phonicsRepeatCount++;
+                            score += 3;
+                            updateScoreDisplay();
+                            checkAchievement('score', score);
+                            showFeedback('Great repeating! +3', 'success');
+                        }
+                    };
+                    phaseEl.appendChild(repeatBtn);
+                }
+
+                phonicsEchoCleanup = () => {
+                    if (repeatBtn && repeatBtn.parentNode) {
+                        repeatBtn.parentNode.removeChild(repeatBtn);
+                    }
+                };
+
+                setTimeout(() => {
+                    if (phonicsEchoCleanup) { try { phonicsEchoCleanup(); } catch (e) { } }
+                    finishPhase(0);
+                }, 3500);
+            }
+
             function updatePhonicsTimer() {
+                if (!guardActive()) return;
                 timeLeft--;
                 if (timeLeft > 0) {
-                    timerElement.textContent = timeLeft;
+                    if (timerElement) timerElement.textContent = timeLeft;
                     phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
                 } else {
-                    timerElement.innerHTML = '🗣️';  // Speaker icon for pronunciation phase
+                    if (timerElement) timerElement.innerHTML = '🗣️';
                     if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
-                    speakPhonetics(currentLetter, () => {
-                        // Interactive echo step: mic-based when available, fallback repeat button otherwise
+                    speakPhonetics(phonicsLetter, () => {
+                        if (!guardActive()) return;
                         const phaseEl = gameArea.querySelector('.phonics-phase');
                         const canUseMic = !!voiceRecordingEnabled
                             && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
                             && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
 
-                        // Keep phonics active during echo so skip still works
-                        waitingForPhonics = true;
-
                         const finishEcho = (delayMs) => {
-                            waitingForPhonics = false;
-                            try { gameArea.removeEventListener('click', skipPhonicsHandler); } catch (e) { }
-                            setTimeout(() => startIdentifyGame(), delayMs);
+                            if (phonicsEchoCleanup) { try { phonicsEchoCleanup(); } catch (e) { } }
                             phonicsEchoCleanup = null;
+                            finishPhase(delayMs);
                         };
 
-                        function setupRepeatButton() {
-                            const instructionEl = phaseEl ? phaseEl.querySelector('.phonics-instruction') : null;
-                            if (instructionEl) instructionEl.textContent = 'Repeat after me!';
-                            let repeatBtn = phaseEl ? phaseEl.querySelector('.phonics-repeat') : null;
-                            if (!repeatBtn && phaseEl) {
-                                repeatBtn = document.createElement('button');
-                                repeatBtn.className = 'phonics-repeat';
-                                repeatBtn.textContent = 'Repeat after me 🔁';
-                                repeatBtn.setAttribute('aria-label', 'Repeat after me');
-                                repeatBtn.onclick = () => {
-                                    cancelSpeech();
-                                    speakPhonetics(currentLetter);
-                                    if (phonicsRepeatCount < 2) {
-                                        phonicsRepeatCount++;
-                                        score += 3;
-                                        updateScoreDisplay();
-                                        checkAchievement('score', score);
-                                        showFeedback('Great repeating! +3', 'success');
-                                    }
-                                };
-                                phaseEl.appendChild(repeatBtn);
-                            }
-
-                            phonicsEchoCleanup = () => {
-                                if (repeatBtn && repeatBtn.parentNode) {
-                                    repeatBtn.parentNode.removeChild(repeatBtn);
-                                }
-                            };
-
-                            setTimeout(() => {
-                                if (phonicsEchoCleanup) { try { phonicsEchoCleanup(); } catch (e) { } }
-                                finishEcho(0);
-                            }, 3500);
-                        }
-
                         if (canUseMic) {
-                            const instructionEl = phaseEl ? phaseEl.querySelector('.phonics-instruction') : null;
-                            if (instructionEl) instructionEl.textContent = 'Your turn! Say it!';
+                            if (phaseEl) {
+                                const instructionEl = phaseEl.querySelector('.phonics-instruction');
+                                if (instructionEl) instructionEl.textContent = 'Your turn! Say it!';
+                            }
                             let stopped = false;
 
                             navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
@@ -9866,6 +9879,7 @@
                                 }
 
                                 function tick(now) {
+                                    if (!guardActive()) { stopAll(); return; }
                                     if (stopped) return;
                                     analyser.getByteTimeDomainData(data);
                                     let sum = 0;
@@ -9902,34 +9916,34 @@
                                 phonicsEchoCleanup = () => { stopAll(); };
                                 requestAnimationFrame(tick);
                             }).catch(() => {
-                                // Fallback to button if mic fails
-                                setupRepeatButton();
+                                setupRepeatButton(phaseEl);
                             });
                         } else {
-                            // No mic: show repeat button and track engagement
-                            setupRepeatButton();
+                            setupRepeatButton(phaseEl);
                         }
                     });
                 }
             }
 
-            // Start countdown only after the prompt finishes speaking (or immediately if speech is disabled)
             speakPhrase(`What sound does ${promptName} make?`, () => {
-                if (!waitingForPhonics) return; // in case it was skipped
+                if (!guardActive()) return;
                 phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
             }, { priority: true });
         }
 
-        function skipPhonics() {
-            const gameArea = document.getElementById('gameArea');
-            if (!waitingForPhonics) return;
-            waitingForPhonics = false;
-            isProcessing = true;
+        function skipPhonics(event) {
+            if (event) event.stopPropagation();
+            if (!waitingForPhonics || activePhonicsGuardId === null) return;
             cancelSpeech();
             if (phonicsTimer) { window.clearTimeout(phonicsTimer); phonicsTimer = null; }
             if (phonicsEchoCleanup) { try { phonicsEchoCleanup(true); } catch (e) { } phonicsEchoCleanup = null; }
-            if (gameArea) gameArea.onclick = null;
-            startIdentifyGame();
+            const guardId = activePhonicsGuardId;
+            waitingForPhonics = false;
+            activePhonicsGuardId = null;
+            detachActivePhonicsSkipHandler();
+            if (guardId === identifyPromptId) {
+                startIdentifyGame();
+            }
         }
 
         // Settings controls
