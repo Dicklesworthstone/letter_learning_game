@@ -810,3 +810,16 @@ test('native phone touch scrolling reaches drawing controls without losing ink',
     assert.ok(await page.evaluate(() => [...ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data].some((value, i) => i % 4 === 3 && value > 0)));
     await client.detach();
 }, { viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }));
+
+test('player switches and statistics resets discard the previous selection bias', t => run(t, async page => {
+    for (const name of ['Alice', 'Bob']) {
+        await page.locator('.add-player-btn').press('Enter');
+        await page.locator('#playerNameInput').fill(name);
+        await page.locator('.player-modal-save').press('Enter');
+    }
+    await page.evaluate(() => { recentLetters = ['a', 'b', 'c']; shapeBiasTargetLower = 'a'; shapeBiasRoundsRemaining = 3; });
+    await page.locator('.player-chip').filter({ hasText: 'Alice' }).press('Enter');
+    assert.deepEqual(await page.evaluate(() => ({ recent: recentLetters.length, target: shapeBiasTargetLower, remaining: shapeBiasRoundsRemaining })), { recent: 0, target: null, remaining: 0 });
+    await page.evaluate(() => { recentLetters = ['a', 'b', 'c']; shapeBiasTargetLower = 'b'; shapeBiasRoundsRemaining = 3; resetCurrentPlayerStatistics(); });
+    assert.deepEqual(await page.evaluate(() => ({ recent: recentLetters.length, target: shapeBiasTargetLower, remaining: shapeBiasRoundsRemaining })), { recent: 1, target: null, remaining: 0 });
+}));

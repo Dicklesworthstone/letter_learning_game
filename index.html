@@ -11781,7 +11781,12 @@
 
             savePlayers();
         }
+        function resetSelectionHistory() {
+            recentLetters = []; adaptivePool = []; latestLetterWeights = {};
+            shapeBiasTargetLower = null; shapeBiasRoundsRemaining = 0;
+        }
         function loadPlayerState(player) {
+            resetSelectionHistory();
             score = nonnegative(player.score);
             correctAnswers = nonnegative(player.correctAnswers);
             wrongAnswers = nonnegative(player.wrongAnswers);
@@ -11887,6 +11892,7 @@
         }
         function resetLearnedProgress() {
             lessonVersion++; clearAllTimers(); stopPlayClock();
+            resetSelectionHistory();
             score = 0; correctAnswers = 0; wrongAnswers = 0; totalQuestions = 0; currentRound = 1;
             resetRoundState(); correctStreak = 0;
             letterPerformance = {}; lettersMastered = new Set(); unlockedAchievements = new Set();
