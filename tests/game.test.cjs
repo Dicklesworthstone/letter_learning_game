@@ -1,9 +1,15 @@
-const { test, before, after } = require('node:test');
+const { test: nodeTest, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { createServer } = require('node:http');
 const { readFileSync, mkdirSync, writeFileSync } = require('node:fs');
 const { join } = require('node:path');
 const { chromium, firefox, webkit } = require('playwright');
+
+// The CLI also bounds the whole file on Node 22. Bound each scenario separately.
+function test(name, options, work) {
+    if (typeof options === 'function') return nodeTest(name, { timeout: 120000 }, options);
+    return nodeTest(name, { timeout: 120000, ...options }, work);
+}
 
 let browser, server, origin;
 const engine = process.env.LLG_BROWSER || 'chromium';
@@ -139,6 +145,7 @@ test('a 15-question Identify round completes exactly once', { timeout: 120000 },
     await page.locator(`.option-btn[data-letter="${wrong}"]`).press('Enter');
     await page.waitForFunction(() => !isProcessing);
     for (let i = 0; i < 15; i++) {
+        t.diagnostic(`recognition question ${i + 1}/15`);
         const id = await page.evaluate(() => identifyPromptId);
         await correctLetter(page);
         await page.waitForFunction(previous => identifyPromptId !== previous || document.getElementById('roundModal').style.display === 'flex' || currentMinigame, id);
@@ -694,6 +701,15 @@ test('dialog pauses do not inflate response time', t => run(t, async page => {
 
 test('high contrast paints the heading and primary controls in dark text on white', t => run(t, async page => {
     await identify(page); await page.evaluate(() => toggleHighContrast());
+    t.diagnostic(JSON.stringify(await page.evaluate(() => {
+        const style = getComputedStyle(document.querySelector('.option-btn'));
+        return { bodyClass: document.body.className, highContrastEnabled, colorBeforeTransition: style.color, transition: style.transition };
+    })));
+    // The ordinary color transition must settle; keep the exact required colors.
+    await page.waitForFunction(() => {
+        const style = getComputedStyle(document.querySelector('.option-btn'));
+        return style.color === 'rgb(17, 17, 17)' && style.backgroundColor === 'rgb(255, 255, 255)';
+    });
     const heading = await page.locator('.header-title').evaluate(element => { const style = getComputedStyle(element); return { color: style.color, fill: style.webkitTextFillColor }; });
     assert.deepEqual(heading, { color: 'rgb(17, 17, 17)', fill: 'rgb(17, 17, 17)' });
     const colors = await page.locator('.option-btn').first().evaluate(element => { const style = getComputedStyle(element); return [style.color, style.backgroundColor]; });
@@ -756,3 +772,37 @@ test('native microphone denial leaves no recorder and the lesson remains playabl
     await correctLetter(page);
     assert.equal(await page.evaluate(() => correctAnswers), 1);
 }));
+
+test('native phone touch scrolling reaches drawing controls without losing ink', { skip: engine !== 'chromium' }, t => run(t, async page => {
+    await page.locator('[aria-label="Tracing practice mode"]').press('Enter');
+    const before = await page.evaluate(() => {
+        ctx.beginPath(); ctx.moveTo(40, 40); ctx.lineTo(80, 80); ctx.stroke();
+        drawingPoints = [{ x: 40, y: 40, newStroke: true }, { x: 80, y: 80 }];
+        const container = document.querySelector('.container');
+        container.scrollTop = 0;
+        return container.scrollTop;
+    });
+    const client = await page.context().newCDPSession(page);
+    const container = await page.locator('.container').boundingBox();
+    // Dispatch real touch input within the scroller's gutter, outside the canvas.
+    const x = container.x + 3;
+    t.diagnostic(JSON.stringify(await page.evaluate(x => ({ target: document.elementFromPoint(x, 450)?.className, containerTouchAction: getComputedStyle(document.querySelector('.container')).touchAction, bodyTouchAction: getComputedStyle(document.body).touchAction }), x)));
+    await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y: 450 }] });
+    for (let y = 425; y >= 125; y -= 25) {
+        await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x, y }] });
+        await page.waitForTimeout(30);
+    }
+    await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    t.diagnostic(JSON.stringify(await page.evaluate(() => ({ scrollTop: document.querySelector('.container').scrollTop, maximum: document.querySelector('.container').scrollHeight - document.querySelector('.container').clientHeight }))));
+    await page.waitForFunction(previous => document.querySelector('.container').scrollTop > previous + 50, before);
+    const done = page.getByRole('button', { name: "I'm Done!", exact: true });
+    const box = await done.boundingBox();
+    assert.ok(box && box.y >= 0 && box.y + box.height <= 568);
+    assert.equal(await done.evaluate(element => {
+        const rect = element.getBoundingClientRect();
+        return element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+    }), true);
+    assert.equal(await page.evaluate(() => drawingPoints.length), 2);
+    assert.ok(await page.evaluate(() => [...ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data].some((value, i) => i % 4 === 3 && value > 0)));
+    await client.detach();
+}, { viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }));

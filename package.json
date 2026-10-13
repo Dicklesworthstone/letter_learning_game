@@ -4,7 +4,7 @@
   "description": "Learn Your Letters - Educational Game",
   "scripts": {
     "build": "node --test tests/syntax.test.cjs",
-    "test": "node --test --test-timeout=120000 tests/*.test.cjs"
+    "test": "node --test --test-timeout=900000 tests/*.test.cjs"
   },
   "devDependencies": {
     "playwright": "1.64.0"

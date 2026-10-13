@@ -198,7 +198,7 @@ Core CSS variables used in the app:
 
 ## Verification and Known Limits
 
-Install the development-only browser test dependency, then run:
+Use Node 22 for development checks, matching CI. Install the development-only browser test dependency, then run:
 
 ```sh
 npm ci

@@ -10,7 +10,9 @@ const context = vm.createContext({});
 vm.runInContext(html.slice(start, end), context);
 
 test('original 48-point hang terminates with bounded finite coordinates', () => {
-    const child = require('node:child_process').spawnSync(process.execPath, ['-e', html.slice(start, end) + '\nif(resampleStroke(Array.from({length:48},(_,i)=>({x:i,y:0})),48).length!==48)process.exit(1);'], { timeout: 1500 });
+    const code = html.slice(start, end) + '\nif(resampleStroke(Array.from({length:48},(_,i)=>({x:i,y:0})),48).length!==48)throw new Error("Invalid sample count");';
+    // Process startup has its own bound; the actual geometry still gets only 500ms.
+    const child = require('node:child_process').spawnSync(process.execPath, ['-e', `require('node:vm').runInNewContext(${JSON.stringify(code)}, {}, { timeout: 500 });`], { timeout: 10000 });
     assert.equal(child.error, undefined, 'the original hanging input must complete before the hard process timeout');
     assert.equal(child.status, 0);
     const result = vm.runInContext('resampleStroke(Array.from({length:48}, (_,i)=>({x:i,y:0})),48)', context, { timeout: 500 });
