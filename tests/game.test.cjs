@@ -61,6 +61,7 @@ async function run(t, work, options = {}) {
     });
     if (setup) await setup(context);
     const page = await bounded(context.newPage(), 'newPage');
+    await page.bringToFront();
     page.setDefaultTimeout(6000);
     page.setDefaultNavigationTimeout(30000);
     const errors = [], logs = [];
