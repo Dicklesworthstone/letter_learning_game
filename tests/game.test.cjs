@@ -86,6 +86,10 @@ async function identify(page) {
     await page.locator('.start-btn').press('Enter');
     return page.evaluate(() => identifyPromptId);
 }
+function waitForState(page, predicate, arg, options = {}) {
+    // State producers use timers; WebKit can suspend RAF in an inactive test page.
+    return page.waitForFunction(predicate, arg, { polling: 50, ...options });
+}
 async function correctLetter(page) {
     const letter = await page.evaluate(() => currentLetter);
     await page.locator(`.option-btn[data-letter="${letter}"]`).press('Enter');
@@ -112,7 +116,7 @@ test('Identify renders unique same-case options across every theme/case', t => r
 
 test('Identify correct and wrong answers update ordinary single-player progress', t => run(t, async page => {
     await identify(page); await correctLetter(page);
-    await page.waitForFunction(() => !isProcessing);
+    await waitForState(page, () => !isProcessing);
     const before = await page.evaluate(() => ({ score, correctAnswers, badges: [...unlockedAchievements] }));
     assert.ok(before.score > 0); assert.equal(before.correctAnswers, 1); assert.ok(before.badges.includes('first_letter'));
     const wrong = await page.evaluate(() => [...document.querySelectorAll('.option-btn')].find(button => button.dataset.letter !== currentLetter).dataset.letter);
@@ -124,7 +128,7 @@ test('Identify correct and wrong answers update ordinary single-player progress'
 test('Word Builder accepts a real bank spelling and advances', t => run(t, async page => {
     await page.locator('#wordBuilderBtn').press('Enter'); await correctWord(page);
     assert.equal(await page.evaluate(() => score), 20);
-    await page.waitForFunction(() => !wbTransitioning);
+    await waitForState(page, () => !wbTransitioning);
     assert.ok(await page.evaluate(() => wbSlots.every(slot => slot === null)));
 }));
 
@@ -143,12 +147,12 @@ test('a 15-question Identify round completes exactly once', { timeout: 120000 },
     await identify(page);
     const wrong = await page.evaluate(() => [...document.querySelectorAll('.option-btn')].find(button => button.dataset.letter !== currentLetter).dataset.letter);
     await page.locator(`.option-btn[data-letter="${wrong}"]`).press('Enter');
-    await page.waitForFunction(() => !isProcessing);
+    await waitForState(page, () => !isProcessing);
     for (let i = 0; i < 15; i++) {
         t.diagnostic(`recognition question ${i + 1}/15`);
         const id = await page.evaluate(() => identifyPromptId);
         await correctLetter(page);
-        await page.waitForFunction(previous => identifyPromptId !== previous || document.getElementById('roundModal').style.display === 'flex' || currentMinigame, id);
+        await waitForState(page, previous => identifyPromptId !== previous || document.getElementById('roundModal').style.display === 'flex' || currentMinigame, id);
         if (await page.evaluate(() => !!currentMinigame)) {
             await page.waitForSelector('.lesson-return');
             await page.locator('.lesson-return').press('Enter');
@@ -193,11 +197,11 @@ test('Word Builder completes a 15-word round and persists difficulty progress', 
         const version = await page.evaluate(() => lessonVersion);
         await correctWord(page);
         if (!i) assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('letterLearningGameData')).wbConsecutiveCorrect), 1);
-        await page.waitForFunction(previous => lessonVersion !== previous || activeDialog === 'roundModal' || currentMinigame, version);
+        await waitForState(page, previous => lessonVersion !== previous || activeDialog === 'roundModal' || currentMinigame, version);
         if (await page.evaluate(() => !!currentMinigame)) {
             await page.waitForSelector('.lesson-return'); await page.locator('.lesson-return').press('Enter');
         }
-        if (i < 14) await page.waitForFunction(() => !wbTransitioning && !questionResolved && document.getElementById('wbSlots'));
+        if (i < 14) await waitForState(page, () => !wbTransitioning && !questionResolved && document.getElementById('wbSlots'));
     }
     assert.equal(await page.evaluate(() => roundsCompleted), 1);
     assert.equal(await page.evaluate(() => correctAnswers), 15);
@@ -225,7 +229,7 @@ test('timeout resolves the last question once and resets the correct streak', t 
     await identify(page);
     // Seed only the preceding fourteen outcomes to exercise the timeout boundary.
     await page.evaluate(() => { roundResolved = 14; roundCorrect = 14; correctStreak = 14; score = 50; handleTimeUp(); handleTimeUp(); });
-    await page.waitForFunction(() => activeDialog === 'roundModal');
+    await waitForState(page, () => activeDialog === 'roundModal');
     assert.deepEqual(await page.evaluate(() => ({ wrongAnswers, roundResolved, correctStreak, roundsCompleted, score })), { wrongAnswers: 1, roundResolved: 15, correctStreak: 0, roundsCompleted: 1, score: 40 });
 }));
 
@@ -303,7 +307,7 @@ test('all 52 formation guides exist and resize preserves ink and pen style', t =
     const before = await page.evaluate(() => drawingPoints.length);
     assert.ok(before > 5);
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.waitForFunction(() => parseFloat(document.getElementById('drawCanvas').style.width) <= 390);
+    await waitForState(page, () => parseFloat(document.getElementById('drawCanvas').style.width) <= 390);
     const result = await page.evaluate(() => ({ width: ctx.lineWidth, color: ctx.strokeStyle, points: drawingPoints.length, ink: [...ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data].some((value, i) => i % 4 === 3 && value > 0) }));
     assert.equal(result.width, 8); assert.equal(result.color, '#764ba2'); assert.equal(result.points, before); assert.equal(result.ink, true);
 }));
@@ -334,10 +338,10 @@ test('synthetic Chromium microphone tracks stop when the recording UI is removed
     await page.evaluate(() => { voiceRecordingEnabled = true; });
     await identify(page);
     await page.locator('#recordBtn').press('Enter');
-    await page.waitForFunction(() => isRecording && mediaRecorder.state === 'recording');
+    await waitForState(page, () => isRecording && mediaRecorder.state === 'recording');
     await page.evaluate(() => { window.testTracks = mediaRecorder.stream.getTracks(); });
     await page.locator('#wordBuilderBtn').press('Enter');
-    await page.waitForFunction(() => window.testTracks.every(track => track.readyState === 'ended'));
+    await waitForState(page, () => window.testTracks.every(track => track.readyState === 'ended'));
     assert.equal(await page.evaluate(() => isRecording), false);
 }));
 
@@ -398,7 +402,7 @@ test('synthetic tracing completes fifteen questions and keeps recognition master
             return lessonVersion;
         });
         await page.getByRole('button', { name: "I'm Done!", exact: true }).press('Enter');
-        await page.waitForFunction(previous => lessonVersion !== previous || activeDialog === 'roundModal', version);
+        await waitForState(page, previous => lessonVersion !== previous || activeDialog === 'roundModal', version);
     }
     assert.equal(await page.evaluate(() => roundsCompleted), 1);
     assert.equal(await page.evaluate(() => correctAnswers), 15);
@@ -429,9 +433,9 @@ test('final phonics skip finishes the round and old phonics work cannot restore 
     await identify(page);
     await page.evaluate(() => { roundResolved = 14; roundCorrect = 14; setPhonicsMode('on'); });
     await correctLetter(page);
-    await page.waitForFunction(() => waitingForPhonics);
+    await waitForState(page, () => waitingForPhonics);
     await page.evaluate(() => skipPhonics());
-    await page.waitForFunction(() => activeDialog === 'roundModal');
+    await waitForState(page, () => activeDialog === 'roundModal');
     assert.equal(await page.evaluate(() => roundsCompleted), 1);
     await page.keyboard.press('Escape');
     await page.locator('#wordBuilderBtn').press('Enter');
@@ -490,7 +494,7 @@ test('real optional MobileNet loads 52 embeddings after a drawing check', { skip
     assert.equal(await page.evaluate(() => typeof window.tf), 'undefined');
     await page.locator('[aria-label="Tracing practice mode"]').press('Enter');
     await page.evaluate(() => checkDrawing());
-    await page.waitForFunction(() => checkDrawingNew.mbnet && checkDrawingNew.deepEmb?.size === 52, null, { timeout: 90000 });
+    await waitForState(page, () => checkDrawingNew.mbnet && checkDrawingNew.deepEmb?.size === 52, null, { timeout: 90000 });
     t.diagnostic(JSON.stringify(await page.evaluate(() => ({ tensorflow: tf.version.tfjs, embeddings: checkDrawingNew.deepEmb.size, backend: tf.getBackend() }))));
 }, { liveModels: true }));
 
@@ -552,7 +556,7 @@ test('synthetic native microphone permission resolving after a mode switch is di
         navigator.mediaDevices.getUserMedia = (...args) => nativeGetUserMedia(...args).then(stream => { window.permissionTracks = stream.getTracks(); return stream; });
         startRecording(); setMode('draw');
     });
-    await page.waitForFunction(() => window.permissionTracks?.length && window.permissionTracks.every(track => track.readyState === 'ended'));
+    await waitForState(page, () => window.permissionTracks?.length && window.permissionTracks.every(track => track.readyState === 'ended'));
     assert.equal(await page.evaluate(() => isRecording), false);
 }));
 
@@ -560,7 +564,7 @@ test('synthetic native microphone stops for a settings dialog and remains stoppe
     await page.context().grantPermissions(['microphone']);
     await page.evaluate(() => { voiceRecordingEnabled = true; }); await identify(page);
     await page.locator('#recordBtn').press('Enter');
-    await page.waitForFunction(() => isRecording);
+    await waitForState(page, () => isRecording);
     await page.evaluate(() => { window.dialogTracks = mediaRecorder.stream.getTracks(); });
     await page.locator('.settings-btn').press('Enter');
     assert.equal(await page.evaluate(() => window.dialogTracks.every(track => track.readyState === 'ended')), true);
@@ -640,7 +644,7 @@ test('wrong-answer, timeout and minigame callbacks cannot overwrite a new mode',
 }));
 
 test('real GSAP animations stop when reduced motion is enabled during a lesson', { skip: !process.env.LLG_LIVE_ANIMATIONS }, t => run(t, async page => {
-    await page.waitForFunction(() => typeof gsap !== 'undefined');
+    await waitForState(page, () => typeof gsap !== 'undefined');
     await page.locator('#wordBuilderBtn').press('Enter');
     assert.equal(await page.evaluate(() => [...document.querySelectorAll('.wb-tile')].some(tile => !!tile._wbFloatTl)), true);
     await page.evaluate(() => toggleReduceMotion());
@@ -659,7 +663,7 @@ test('simulated fall DST calendar day continues a streak without subtracting 24 
 
 test('idle tracing hints fade in and native drawing cancels further hint work', t => run(t, async page => {
     await page.locator('[aria-label="Tracing practice mode"]').press('Enter');
-    await page.waitForFunction(() => hintWasShown && hintFadeOpacity > 0);
+    await waitForState(page, () => hintWasShown && hintFadeOpacity > 0);
     await page.locator('#drawCanvas').scrollIntoViewIfNeeded();
     const box = await page.locator('#drawCanvas').boundingBox();
     await page.mouse.move(box.x + 80, box.y + 80); await page.mouse.down(); await page.mouse.up();
@@ -706,7 +710,7 @@ test('high contrast paints the heading and primary controls in dark text on whit
         return { bodyClass: document.body.className, highContrastEnabled, colorBeforeTransition: style.color, transition: style.transition };
     })));
     // The ordinary color transition must settle; keep the exact required colors.
-    await page.waitForFunction(() => {
+    await waitForState(page, () => {
         const style = getComputedStyle(document.querySelector('.option-btn'));
         return style.color === 'rgb(17, 17, 17)' && style.backgroundColor === 'rgb(255, 255, 255)';
     });
@@ -745,13 +749,13 @@ test('drawing selection uses handwriting history independently of recognition', 
 
 test('native recorded playback respects Sound Off and stops on mode exit', { skip: engine !== 'chromium' }, t => run(t, async page => {
     await page.context().grantPermissions(['microphone']); await page.evaluate(() => { voiceRecordingEnabled = true; }); await identify(page);
-    await page.locator('#recordBtn').press('Enter'); await page.waitForFunction(() => isRecording);
+    await page.locator('#recordBtn').press('Enter'); await waitForState(page, () => isRecording);
     await page.waitForTimeout(700); await page.locator('#recordBtn').press('Enter');
-    await page.waitForFunction(() => recordings.length === 1);
+    await waitForState(page, () => recordings.length === 1);
     await page.locator('#playBtn').press('Enter');
     assert.match(await page.locator('#feedback').textContent(), /Turn Sound on/);
     await page.evaluate(() => setSoundMode('on')); await page.locator('#playBtn').press('Enter');
-    await page.waitForFunction(() => playbackAudio && !playbackAudio.paused);
+    await waitForState(page, () => playbackAudio && !playbackAudio.paused);
     await page.evaluate(() => {
         const previous = playbackAudio, lateEnded = previous.onended;
         playLastRecording(); lateEnded();
@@ -766,7 +770,7 @@ test('native microphone denial leaves no recorder and the lesson remains playabl
     await page.context().grantPermissions([]);
     await page.evaluate(() => { voiceRecordingEnabled = true; }); await identify(page);
     await page.locator('#recordBtn').press('Enter');
-    await page.waitForFunction(() => !recordingPending && document.getElementById('feedback').textContent.includes('Microphone unavailable'));
+    await waitForState(page, () => !recordingPending && document.getElementById('feedback').textContent.includes('Microphone unavailable'));
     assert.equal(await page.evaluate(() => isRecording), false);
     assert.equal(await page.evaluate(() => mediaRecorder === null), true);
     await correctLetter(page);
@@ -794,7 +798,7 @@ test('native phone touch scrolling reaches drawing controls without losing ink',
     }
     await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     t.diagnostic(JSON.stringify(await page.evaluate(() => ({ scrollTop: document.querySelector('.container').scrollTop, maximum: document.querySelector('.container').scrollHeight - document.querySelector('.container').clientHeight }))));
-    await page.waitForFunction(previous => document.querySelector('.container').scrollTop > previous + 50, before);
+    await waitForState(page, previous => document.querySelector('.container').scrollTop > previous + 50, before);
     const done = page.getByRole('button', { name: "I'm Done!", exact: true });
     const box = await done.boundingBox();
     assert.ok(box && box.y >= 0 && box.y + box.height <= 568);
