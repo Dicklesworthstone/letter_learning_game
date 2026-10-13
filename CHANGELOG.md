@@ -2,13 +2,23 @@
 
 All notable changes to **Learn Your Letters** are documented in this file,
 organized by capability rather than raw diff order. The project has no formal
-releases or version tags; the single `main` branch contains 111 commits
-spanning 2025-09-08 through 2026-02-21.
+releases or version tags in the historical snapshot documented below. Historical
+entries cover 111 commits spanning 2025-09-08 through 2026-02-21; they are not a
+claim about the current HEAD or current repository totals.
 
 Every commit link below resolves to
 `https://github.com/Dicklesworthstone/letter_learning_game/commit/<full-SHA>`.
 
 ---
+
+## Lesson Reliability Work (2026-10-13)
+
+- **Fix** Bounded tracing resampling; consistent template/input geometry; ink and pen attributes preserved during resizing; all 52 formation guides.
+- **Fix** Scoped lesson callbacks, complete round transitions, mini-game returns, immediate profile saves, settings hydration, outcome and achievement producers.
+- **Fix** Microphone cleanup before UI removal; guarded storage and normalized saved metrics; neutral empty-history insights and retained small-pool weights.
+- **Polish** Native keyboard controls, dialog focus and pause behavior, silent target prompts, short-screen scrolling, and reduced-motion support.
+- **New** Retained native browser/geometry regressions and Chromium/Firefox/WebKit CI. Optional recognition libraries load after a drawing check rather than blocking startup.
+- **Qualification pending** Real handwriting, physical phone/Safari audio, human screen-reader usability, and educational effectiveness. Synthetic browser evidence does not close these gates.
 
 ## How to Read This File
 
@@ -30,7 +40,7 @@ Housekeeping commits that do not change the application itself.
 - [`312683d`](https://github.com/Dicklesworthstone/letter_learning_game/commit/312683d5737efecdc38e4b4b16445819b62a4f48) -- **New** Add MIT License (2026-01-21).
 - [`06e83af`](https://github.com/Dicklesworthstone/letter_learning_game/commit/06e83afef804f631760f674bf87a28dcf120a745) -- **Chore** Add `.gitignore` with `.DS_Store` pattern (2026-02-15).
 - [`92ce091`](https://github.com/Dicklesworthstone/letter_learning_game/commit/92ce091881ecc4edad6c0595c6a7b39bc122e25a) -- **Chore** Add GitHub social preview image, 1280x640 (2026-02-21).
-- [`66c8a06`](https://github.com/Dicklesworthstone/letter_learning_game/commit/66c8a067bdb92fb7601f1c4a725b3f86f0c15327) -- **Chore** Update license to MIT with OpenAI/Anthropic Rider (2026-02-21). *Current HEAD.*
+- [`66c8a06`](https://github.com/Dicklesworthstone/letter_learning_game/commit/66c8a067bdb92fb7601f1c4a725b3f86f0c15327) -- **Chore** Update license to MIT with OpenAI/Anthropic Rider (2026-02-21).
 
 ---
 
@@ -347,7 +357,7 @@ specificity -- no behavioral changes.
 
 ---
 
-## Commit Statistics
+## Historical Commit Statistics (through 2026-02-21)
 
 | Metric | Value |
 |--------|-------|

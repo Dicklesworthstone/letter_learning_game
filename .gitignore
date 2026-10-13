@@ -1,2 +1,5 @@
 # macOS metadata
 .DS_Store
+node_modules/
+test-results/
+.beads/.br-wal-index-*/

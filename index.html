@@ -17,17 +17,12 @@
     </script>
 
     <!-- Modern Libraries via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-
-    <!-- Optional deep similarity support for tracing (gracefully falls back if blocked/offline) -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.19.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1"></script>
+    <script async src="https://cdn.tailwindcss.com"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
         :root {
             --primary: #6366F1;
             --primary-dark: #4F46E5;
@@ -2900,6 +2895,7 @@
         }
 
         .stroke-number {
+            pointer-events: none;
             width: 24px;
             height: 24px;
             background: linear-gradient(135deg, #f093fb, #f5576c);
@@ -5011,6 +5007,27 @@
                 opacity: 0;
             }
         }
+        /* A single viewport scroll area keeps controls reachable on short screens. */
+        [hidden] { display: none !important; }
+        body { touch-action: pan-y pinch-zoom; }
+        .container { height: 100dvh; min-height: 0; overflow-y: auto; overflow-x: hidden; touch-action: pan-y pinch-zoom; backdrop-filter: none; }
+        .header { position: sticky; top: 0; }
+        .player-selector { position: static; transform: none; flex-shrink: 0; width: 100%; }
+        .mode-selector, .score-panel { flex-shrink: 0; }
+        .game-area { flex: 1 0 auto; min-height: 300px; overflow: visible; padding-bottom: 24px; }
+        .canvas-container { flex-shrink: 0; }
+        .player-chip { font: inherit; }
+        .avatar-option, .memory-card { font: inherit; color: inherit; cursor: pointer; }
+        .minigame-container { padding-bottom: 12px; }
+        .lesson-return { padding: 10px 16px; min-height: 44px; border-radius: 12px; background: #fff; color: #243047; border: 2px solid #64748b; }
+        .lesson-paused .falling-letter { animation-play-state: paused; }
+        .high-contrast .container, .high-contrast .header, .high-contrast .option-btn { background: white !important; color: #111 !important; }
+        .high-contrast .header-title, .high-contrast .instruction, .high-contrast .score-value, .high-contrast .setting-label { color: #111 !important; }
+        .high-contrast .header-title { background: none; -webkit-text-fill-color: #111; }
+        .high-contrast #gameArea .options .option-btn { background: white !important; color: #111 !important; }
+        .high-contrast .mode-btn, .high-contrast .control-btn, .high-contrast .formation-btn, .high-contrast .wb-tile, .high-contrast .wb-btn, .high-contrast .feedback { background: white !important; color: #111 !important; border: 2px solid #111; }
+        :focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
     </style>
 </head>
 <body>
@@ -5084,7 +5101,7 @@
                 <p>🔊 Make sure your volume is turned up</p>
                 <p>⭐ Earn stars and points as you play</p>
                 <p>🎯 Complete rounds to unlock new challenges</p>
-                <button class="start-btn" onclick="startIdentifyGame(true)" aria-label="Start the game">Let's
+                <button class="start-btn" onclick="startCurrentMode()" aria-label="Start the game">Let's
                     Start!</button>
             </div>
         </div>
@@ -5205,7 +5222,7 @@
                             <label class="setting-label">Voice Recording <span class="info-tip"
                                     title="Record the child's voice to practice and compare.">?</span></label>
                             <div class="toggle-switch">
-                                <input type="checkbox" id="voiceToggle" onchange="toggleVoiceRecording(this.checked)">
+                                <input type="checkbox" id="voiceToggle" aria-label="Voice recording" onchange="toggleVoiceRecording(this.checked)">
                                 <label for="voiceToggle" class="toggle-switch-label"></label>
                             </div>
                         </div>
@@ -5215,7 +5232,7 @@
                                 <span>Focus Mode <span class="info-tip"
                                         title="Hide distractions to help kids focus.">?</span></span>
                                 <div class="toggle-switch">
-                                    <input type="checkbox" id="focusModeCheck" onchange="toggleFocusMode()">
+                                    <input type="checkbox" id="focusModeCheck" aria-label="Focus mode" onchange="toggleFocusMode()">
                                     <label for="focusModeCheck" class="toggle-switch-label"></label>
                                 </div>
                             </label>
@@ -5226,7 +5243,7 @@
                                 <span>High Contrast <span class="info-tip"
                                         title="Boost contrast for better visibility.">?</span></span>
                                 <div class="toggle-switch">
-                                    <input type="checkbox" id="highContrastCheck" onchange="toggleHighContrast()">
+                                    <input type="checkbox" id="highContrastCheck" aria-label="High contrast" onchange="toggleHighContrast()">
                                     <label for="highContrastCheck" class="toggle-switch-label"></label>
                                 </div>
                             </label>
@@ -5237,7 +5254,7 @@
                                 <span>Reduce Motion <span class="info-tip"
                                         title="Reduce animations for sensitive users or older devices.">?</span></span>
                                 <div class="toggle-switch">
-                                    <input type="checkbox" id="reduceMotionCheck" onchange="toggleReduceMotion()">
+                                    <input type="checkbox" id="reduceMotionCheck" aria-label="Reduce motion" onchange="toggleReduceMotion()">
                                     <label for="reduceMotionCheck" class="toggle-switch-label"></label>
                                 </div>
                             </label>
@@ -5354,16 +5371,16 @@
                 <div class="player-modal-title">Create New Player</div>
 
                 <div class="avatar-grid" id="avatarGrid">
-                    <div class="avatar-option" data-avatar="🦁">🦁</div>
-                    <div class="avatar-option" data-avatar="🐻">🐻</div>
-                    <div class="avatar-option" data-avatar="🐼">🐼</div>
-                    <div class="avatar-option" data-avatar="🦊">🦊</div>
-                    <div class="avatar-option" data-avatar="🐸">🐸</div>
-                    <div class="avatar-option" data-avatar="🦄">🦄</div>
-                    <div class="avatar-option" data-avatar="🐙">🐙</div>
-                    <div class="avatar-option" data-avatar="🦋">🦋</div>
-                    <div class="avatar-option" data-avatar="🌟">🌟</div>
-                    <div class="avatar-option" data-avatar="🚀">🚀</div>
+                    <button type="button" class="avatar-option" data-avatar="🦁" aria-label="Lion avatar">🦁</button>
+                    <button type="button" class="avatar-option" data-avatar="🐻" aria-label="Bear avatar">🐻</button>
+                    <button type="button" class="avatar-option" data-avatar="🐼" aria-label="Panda avatar">🐼</button>
+                    <button type="button" class="avatar-option" data-avatar="🦊" aria-label="Fox avatar">🦊</button>
+                    <button type="button" class="avatar-option" data-avatar="🐸" aria-label="Frog avatar">🐸</button>
+                    <button type="button" class="avatar-option" data-avatar="🦄" aria-label="Unicorn avatar">🦄</button>
+                    <button type="button" class="avatar-option" data-avatar="🐙" aria-label="Octopus avatar">🐙</button>
+                    <button type="button" class="avatar-option" data-avatar="🦋" aria-label="Butterfly avatar">🦋</button>
+                    <button type="button" class="avatar-option" data-avatar="🌟" aria-label="Star avatar">🌟</button>
+                    <button type="button" class="avatar-option" data-avatar="🚀" aria-label="Rocket avatar">🚀</button>
                 </div>
 
                 <input type="text" class="player-name-input" id="playerNameInput" placeholder="Enter player name"
@@ -5722,6 +5739,27 @@
         let currentRound = 1;
         let roundCorrect = 0;
         let roundWrong = 0;
+        let roundResolved = 0;
+        let lastBreakQuestion = -1;
+        let roundSummaryShown = false;
+        let questionResolved = false;
+        let lessonVersion = 0;
+        let lessonTimeouts = new Set();
+        let lessonPaused = false;
+        let pauseStartedAt = 0;
+        let timerDeadline = 0;
+        let playClockStartedAt = 0;
+        let sessionPlayMs = 0;
+        let modePerformance = { identify: {}, draw: {}, wordBuilder: {} };
+        let wordBuilderEnabled = true;
+        let storageAvailable = true;
+        let recordingPending = false;
+        let recordingRequest = 0;
+        let feedbackHideTimeout;
+        let drawRetryClearTimeout;
+        let selectedPlayerId = null;
+        let activeDialog = null;
+        let dialogReturnFocus = null;
         let scoreAtRoundStart = 0;
         let timerEnabled = true;
         let soundEnabled = true;
@@ -5783,13 +5821,13 @@
         let drawHasAdvanced = false;
 
         function advanceToNextDrawLetterOnce() {
-            if (drawHasAdvanced) return;
+            if (currentMode !== 'draw' || drawHasAdvanced || !questionResolved) return;
             drawHasAdvanced = true;
             if (drawAdvanceTimeout) { try { clearTimeout(drawAdvanceTimeout); } catch (e) { } drawAdvanceTimeout = null; }
             const modal = document.getElementById('roundModal');
             const isModalVisible = modal ? window.getComputedStyle(modal).display !== 'none' : false;
             if (!isModalVisible) {
-                startDrawGame();
+                advanceLesson();
             }
         }
         let hintWasShown = false; // used to reduce score when hint helped
@@ -5807,22 +5845,157 @@
         let difficultyLevel = 1; // 1-5 scale
         let adaptivePool = [];
 
+        function readStorage(key) {
+            try { return localStorage.getItem(key); }
+            catch (error) { showStorageStatus(); return null; }
+        }
+        function writeStorage(key, value) {
+            try { localStorage.setItem(key, value); return true; }
+            catch (error) { showStorageStatus(); return false; }
+        }
+        function removeStorage(key) {
+            try { localStorage.removeItem(key); }
+            catch (error) { showStorageStatus(); }
+        }
+        function showStorageStatus() {
+            storageAvailable = false;
+            let notice = document.getElementById('storageStatus');
+            if (!notice) {
+                notice = document.createElement('div');
+                notice.id = 'storageStatus';
+                notice.setAttribute('role', 'status');
+                notice.style.cssText = 'padding:8px 16px;text-align:center;background:#fff3cd;color:#513c06;font-size:14px;';
+                document.querySelector('.container').prepend(notice);
+            }
+            notice.textContent = 'Progress cannot be saved in this browser. You can keep playing for this visit.';
+        }
+        function parseStoredObject(raw) {
+            try { const value = JSON.parse(raw); return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; }
+            catch (error) { return {}; }
+        }
+        function nonnegative(value, fallback = 0) {
+            return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
+        }
+        function normalizeLetterErrors(value) {
+            return Object.fromEntries(Object.entries(value && typeof value === 'object' ? value : {})
+                .filter(([letter]) => /^[a-z]$/.test(letter)).map(([letter, count]) => [letter, nonnegative(count)]));
+        }
+        function escapeText(value) {
+            const element = document.createElement('span');
+            element.textContent = String(value);
+            return element.innerHTML;
+        }
+        function normalizePerformance(value) {
+            const normalized = {};
+            if (!value || typeof value !== 'object' || Array.isArray(value)) return normalized;
+            for (const [letter, data] of Object.entries(value)) {
+                if (!/^[a-zA-Z]{1,20}$/.test(letter)) continue;
+                if (!data || typeof data !== 'object' || Array.isArray(data)) continue;
+                const total = nonnegative(data.total);
+                normalized[letter] = { ...data, total, correct: Math.min(total, nonnegative(data.correct)),
+                    avgTime: nonnegative(data.avgTime), times: Array.isArray(data.times) ? data.times.filter(t => typeof t === 'number' && Number.isFinite(t) && t >= 0).slice(-10) : [],
+                    easeFactor: Math.max(1.3, nonnegative(data.easeFactor, 2.5)), interval: nonnegative(data.interval), nextReview: nonnegative(data.nextReview, Date.now()),
+                    score: typeof data.score === 'number' && Number.isFinite(data.score) ? data.score : 0 };
+            }
+            return normalized;
+        }
+        function getTotalPlayMilliseconds() {
+            return totalPlayTime * 60000 + sessionPlayMs + (playClockStartedAt ? Date.now() - playClockStartedAt : 0);
+        }
+        function getTotalPlayMinutes() {
+            return Math.floor(getTotalPlayMilliseconds() / 60000);
+        }
+        function startPlayClock() {
+            if (!lessonPaused && !playClockStartedAt) playClockStartedAt = Date.now();
+        }
+        function stopPlayClock() {
+            if (playClockStartedAt) sessionPlayMs += Date.now() - playClockStartedAt;
+            playClockStartedAt = 0;
+        }
+        function scheduleLesson(callback, delay = 0, version = lessonVersion, pauseAware = true) {
+            const id = setTimeout(() => {
+                lessonTimeouts.delete(id);
+                if (version !== lessonVersion) return;
+                if (lessonPaused && pauseAware) { scheduleLesson(callback, 100, version, pauseAware); return; }
+                callback();
+            }, delay);
+            lessonTimeouts.add(id);
+            return id;
+        }
+        function beginQuestion() {
+            lessonVersion++;
+            clearAllTimers();
+            cancelSpeech();
+            isProcessing = false;
+            isAnswering = false;
+            waitingForPhonics = false;
+            questionResolved = false;
+            startPlayClock();
+        }
+        function resetRoundState() {
+            roundCorrect = 0; roundWrong = 0; roundResolved = 0;
+            lastBreakQuestion = -1; roundSummaryShown = false;
+            responseTimes = []; letterErrors = {}; problemLetters = [];
+            scoreAtRoundStart = score;
+        }
+        function recordOutcome(correct, responseTime, resolved, key) {
+            if (resolved && questionResolved) return false;
+            if (resolved) { questionResolved = true; roundResolved++; }
+            totalQuestions++;
+            const domain = modePerformance[currentMode] || (modePerformance[currentMode] = {});
+            const item = domain[key] || (domain[key] = { correct: 0, total: 0, avgTime: 0, times: [] });
+            item.total++;
+            if (correct) {
+                roundCorrect++; correctAnswers++; correctStreak++; item.correct++;
+                responseTimes.push(responseTime);
+                item.times.push(responseTime); item.times = item.times.slice(-10);
+                item.avgTime = item.times.reduce((sum, time) => sum + time, 0) / item.times.length;
+                bestStreak = Math.max(bestStreak, correctStreak);
+                if (responseTime < 2) speedAnswers++;
+                checkAchievement('correct', correctAnswers);
+                checkAchievement('streak', correctStreak);
+                checkAchievement('speed', speedAnswers);
+            } else {
+                roundWrong++; wrongAnswers++; correctStreak = 0;
+                if (currentMode !== 'wordBuilder') trackLetterError(key);
+            }
+            checkStreakContinuity();
+            checkAchievement('score', score);
+            checkAchievement('time', getTotalPlayMinutes());
+            saveGameData();
+            updateScoreDisplay();
+            return true;
+        }
+        function startCurrentMode(reset = false) {
+            if (roundSummaryShown && !reset) { startNextRound(); return; }
+            if (!reset && roundResolved >= QUESTIONS_PER_ROUND) { showRoundCompletion(); return; }
+            if (currentMode === 'draw') startDrawGame(reset);
+            else if (currentMode === 'wordBuilder' && wordBuilderEnabled) startWordBuilderGame(reset);
+            else startIdentifyGame(reset);
+        }
+        function advanceLesson() {
+            if (lessonPaused) { scheduleLesson(advanceLesson, 100); return; }
+            isProcessing = false; isAnswering = false; wbTransitioning = false;
+            if (!checkRoundCompletion()) startCurrentMode();
+        }
+
         // Draw Analytics (per-letter acceptance metrics with lightweight persistence)
         const DRAW_ANALYTICS_STORAGE_KEY = 'llg_draw_analytics_v1';
         let drawAnalytics = null;
         function initDrawAnalytics() {
-            try {
-                const raw = localStorage.getItem(DRAW_ANALYTICS_STORAGE_KEY);
-                if (raw) {
-                    drawAnalytics = JSON.parse(raw);
-                }
-            } catch (e) { }
-            if (!drawAnalytics || typeof drawAnalytics !== 'object') {
-                drawAnalytics = { letters: {}, totals: { attempts: 0, accepts: 0, rejects: 0 } };
+            const saved = parseStoredObject(readStorage(DRAW_ANALYTICS_STORAGE_KEY));
+            drawAnalytics = { letters: {}, totals: { attempts: 0, accepts: 0, rejects: 0 } };
+            for (const [letter, value] of Object.entries(saved.letters || {})) {
+                if (!/^[a-zA-Z]$/.test(letter) || !value || typeof value !== 'object') continue;
+                const stats = ensureLetterAnalytics(letter);
+                for (const key of Object.keys(stats)) if (key !== 'reasons') stats[key] = nonnegative(value[key]);
+                for (const reason of Object.keys(stats.reasons)) stats.reasons[reason] = nonnegative(value.reasons?.[reason]);
+                stats.attempts = stats.accepts + stats.rejects;
+                for (const key of ['attempts', 'accepts', 'rejects']) drawAnalytics.totals[key] += stats[key];
             }
         }
         function persistDrawAnalytics() {
-            try { localStorage.setItem(DRAW_ANALYTICS_STORAGE_KEY, JSON.stringify(drawAnalytics)); } catch (e) { }
+            writeStorage(DRAW_ANALYTICS_STORAGE_KEY, JSON.stringify(drawAnalytics));
         }
         function ensureLetterAnalytics(letter) {
             if (!drawAnalytics) initDrawAnalytics();
@@ -5867,7 +6040,8 @@
             persistDrawAnalytics();
         }
         function resetDrawAnalytics() {
-            drawAnalytics = null; initDrawAnalytics(); persistDrawAnalytics();
+            drawAnalytics = { letters: {}, totals: { attempts: 0, accepts: 0, rejects: 0 } };
+            persistDrawAnalytics();
         }
         function getDrawAnalytics() {
             if (!drawAnalytics) initDrawAnalytics();
@@ -5879,7 +6053,7 @@
                 s.avgQuality = +(s.qualitySum / a).toFixed(3);
                 s.avgClassical = +(s.classicalSum / a).toFixed(3);
                 const dc = s.deepCount || 0;
-                s.avgDeep = dc ? +(s.deepSum / dc).toFixed(3) : 0;
+                s.avgDeep = dc ? +(s.deepSum / dc).toFixed(3) : null;
                 s.avgResponseTime = +(s.responseTimeSum / a).toFixed(3);
                 s.avgPoints = +(s.pointsSum / a).toFixed(2);
             });
@@ -5948,39 +6122,11 @@
         }
 
         // Letter Formation Data
-        const letterFormations = {
-            'a': [
-                { path: 'M 20 40 Q 20 20, 40 20 Q 60 20, 60 40 L 60 60', strokes: 1 },
-                { path: 'M 60 40 L 60 20', strokes: 2 }
-            ],
-            'j': [
-                { path: 'M 60 25 L 60 65 Q 60 80, 45 80 Q 35 80, 30 75', strokes: 1 },
-                { path: 'M 60 15 L 60 15', strokes: 2 }
-            ],
-            'A': [
-                { path: 'M 20 80 L 50 20', strokes: 1 },
-                { path: 'M 80 80 L 50 20', strokes: 2 },
-                { path: 'M 35 60 L 65 60', strokes: 3 }
-            ],
-            'J': [
-                { path: 'M 70 20 L 70 60 Q 70 80, 50 85 Q 35 80, 25 70', strokes: 1 }
-            ],
-            'b': [
-                { path: 'M 20 10 L 20 60', strokes: 1 },
-                { path: 'M 20 35 Q 45 35, 45 45 Q 45 60, 20 60', strokes: 2 }
-            ],
-            'c': [
-                { path: 'M 50 30 Q 30 20, 20 40 Q 30 60, 50 50', strokes: 1 }
-            ],
-            'd': [
-                { path: 'M 50 35 Q 25 35, 25 45 Q 25 60, 50 60', strokes: 1 },
-                { path: 'M 50 10 L 50 60', strokes: 2 }
-            ],
-            'e': [
-                { path: 'M 20 40 L 50 40 Q 50 20, 30 20 Q 20 20, 20 40 Q 20 60, 40 60', strokes: 1 }
-            ]
-            // Add more letters as needed
-        };
+        const letterFormations = Object.fromEntries(Object.entries(LETTER_CHECKPOINTS).map(([letter, data]) => [letter,
+            data.strokes.map((stroke, index) => ({
+                path: stroke.length === 1 ? `M ${stroke[0].x} ${stroke[0].y} l 0.1 0` : stroke.map((point, i) => `${i ? 'L' : 'M'} ${point.x} ${point.y}`).join(' '),
+                strokes: index + 1
+            }))]));
 
         // Parent Dashboard State
         let dashboardTimer = null;
@@ -6086,10 +6232,8 @@
             hearts: ['💖', '💝', '💗', '💓', '💕']
         };
 
-        // Load saved data
-        loadGameData();
         // Speech settings
-        let speechSupported = 'speechSynthesis' in window;
+        let speechSupported = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
         // Letter collections
         const lowerLetters = 'abcdefghijklmnopqrstuvwxyz'.split('');
         const upperLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -7445,7 +7589,7 @@
             const nowTs = Date.now();
             const overdueLetters = letters.filter(letter => {
                 const key = letter.toLowerCase();
-                const perf = letterPerformance[key];
+                const perf = currentMode === 'draw' ? modePerformance.draw[letter] : letterPerformance[key];
                 if (!perf) return true; // new letters are due now
                 if (typeof perf.nextReview !== 'number') return true;
                 return perf.nextReview <= nowTs;
@@ -7502,7 +7646,7 @@
 
             availableLetters.forEach(letter => {
                 const key = letter.toLowerCase();
-                const perf = letterPerformance[key] || { correct: 0, total: 0, avgTime: 0 };
+                const perf = (currentMode === 'draw' ? modePerformance.draw[letter] : letterPerformance[key]) || { correct: 0, total: 0, avgTime: 0 };
 
                 // Calculate success rate (0-1)
                 const successRate = perf.total > 0 ? perf.correct / perf.total : 0.5;
@@ -7547,10 +7691,7 @@
                 }
             });
 
-            // Ensure minimum pool size
-            if (adaptivePool.length < 10) {
-                adaptivePool = [...availableLetters];
-            }
+            // Even a small lesson keeps its weighting; expanding it would erase adaptation.
         }
 
         function updateLetterPerformance(letter, correct, responseTime, pointsDelta = 0) {
@@ -7658,6 +7799,7 @@
         }
 
         function speakLetter(letter, callback, options) {
+            const version = lessonVersion;
             if (!speechSupported || !soundEnabled) {
                 if (callback) callback();
                 return;
@@ -7689,13 +7831,14 @@
             }
 
             let guardToken = beginTtsGuard(4000);
-            utterance.onend = () => { endTtsGuard(guardToken); if (callback) callback(); };
-            utterance.onerror = () => { endTtsGuard(guardToken); if (callback) callback(); };
+            utterance.onend = () => { endTtsGuard(guardToken); if (version === lessonVersion && callback) callback(); };
+            utterance.onerror = () => { endTtsGuard(guardToken); if (version === lessonVersion && callback) callback(); };
 
             speechSynthesis.speak(utterance);
         }
 
         function speakPhrase(phrase, callback, options) {
+            const version = lessonVersion;
             if (!speechSupported || !soundEnabled) {
                 if (callback) callback();
                 return;
@@ -7726,23 +7869,26 @@
             }
 
             let guardToken = beginTtsGuard(6000);
-            utterance.onend = () => { endTtsGuard(guardToken); if (callback) callback(); };
-            utterance.onerror = () => { endTtsGuard(guardToken); if (callback) callback(); };
+            utterance.onend = () => { endTtsGuard(guardToken); if (version === lessonVersion && callback) callback(); };
+            utterance.onerror = () => { endTtsGuard(guardToken); if (version === lessonVersion && callback) callback(); };
 
             speechSynthesis.speak(utterance);
         }
 
         // Politely speak: wait briefly for TTS to be idle, then speak without cancelling others
-        function speakPhrasePolitely(phrase, callback, maxWaitMs) {
+        function speakPhrasePolitely(phrase, callback, maxWaitMs, allowDialog = false) {
             const start = Date.now();
+            const version = lessonVersion;
+            const dialog = activeDialog;
             const cap = typeof maxWaitMs === 'number' ? maxWaitMs : 1500;
             const attempt = () => {
+                if (version !== lessonVersion || (lessonPaused && !allowDialog) || (allowDialog && activeDialog !== dialog)) return;
                 if (!speechSupported || !isTtsBusy()) {
-                    speakPhrase(phrase, callback, { skipCancel: true });
+                    speakPhrase(phrase, () => { if (version === lessonVersion && callback) callback(); }, { skipCancel: true });
                 } else if (Date.now() - start > cap) {
-                    speakPhrase(phrase, callback, { skipCancel: true });
+                    speakPhrase(phrase, () => { if (version === lessonVersion && callback) callback(); }, { skipCancel: true });
                 } else {
-                    setTimeout(attempt, 180);
+                    scheduleLesson(attempt, 180, version, !allowDialog);
                 }
             };
             attempt();
@@ -7750,6 +7896,7 @@
 
         function speakTracePrompt(letter) {
             if (!speechSupported || !soundEnabled) return;
+            const version = lessonVersion;
             // Speak as two utterances to avoid stutter/duplication on some TTS engines
             cancelSpeech();
             const selectedVoice = getBestVoice();
@@ -7762,12 +7909,13 @@
             lead.onend = () => {
                 // brief pause between sentences for clarity; skip if user just manually triggered
                 const now = Date.now();
-                if (now - lastManualSpeakAt < 500) return;
-                setTimeout(() => speakLetter(letter, null, { skipCancel: true }), 120);
+                if (version !== lessonVersion || lessonPaused || now - lastManualSpeakAt < 500) return;
+                scheduleLesson(() => speakLetter(letter, null, { skipCancel: true }), 120, version);
             };
             speechSynthesis.speak(lead);
         }
         function speakPhonetics(letter, callback) {
+            const version = lessonVersion;
             if (!speechSupported || !soundEnabled) { if (callback) callback(); return; }
             const lower = letter.toLowerCase();
             const phonetic = phoneticSounds[lower];
@@ -7795,9 +7943,10 @@
                 if (finished) return;
                 finished = true;
                 try { if (fallback) clearTimeout(fallback); } catch (e) { }
-                if (callback) callback();
+                if (version === lessonVersion && callback) callback();
             };
             const speakNext = () => {
+                if (version !== lessonVersion || lessonPaused) return;
                 if (idx >= parts.length) { finish(); return; }
                 const u = new SpeechSynthesisUtterance(parts[idx]);
                 u.rate = 0.8;
@@ -7809,14 +7958,14 @@
                     try { showAnchorEmojiForWord(anchor); } catch (e) { }
                 }
                 let advanced = false;
-                const advance = () => { if (advanced) return; advanced = true; idx++; setTimeout(speakNext, 60); };
+                const advance = () => { if (advanced || version !== lessonVersion) return; advanced = true; idx++; scheduleLesson(speakNext, 60, version); };
                 u.onend = advance;
                 u.onerror = finish;
                 speechSynthesis.speak(u);
             };
             // Total-duration fallback in case onend never fires
             const totalMs = parts.length * 1100 + (anchor ? 500 : 0);
-            fallback = setTimeout(() => { finish(); }, totalMs);
+            fallback = scheduleLesson(finish, totalMs, version);
             // Start sequence
             speakNext();
         }
@@ -7829,7 +7978,7 @@
             if (!emoji) return;
 
             // Respect reduced motion/focus mode by showing a brief, gentle display
-            const minimal = !!(typeof reduceMotionEnabled !== 'undefined' && reduceMotionEnabled) ||
+            const minimal = motionReduced() ||
                 !!(typeof focusModeEnabled !== 'undefined' && focusModeEnabled);
 
             const target = document.querySelector('.phonics-letter');
@@ -7886,10 +8035,10 @@
             }
         }
         function updateScoreDisplay() {
-            const displayScore = currentPlayer ? currentPlayer.score : score;
-            const displayCorrect = currentPlayer ? currentPlayer.roundCorrect : roundCorrect;
-            const displayWrong = currentPlayer ? currentPlayer.roundWrong : roundWrong;
-            const displayRound = currentPlayer ? currentPlayer.currentRound : currentRound;
+            const displayScore = score;
+            const displayCorrect = roundResolved;
+            const displayWrong = roundWrong;
+            const displayRound = currentRound;
 
             document.getElementById('scoreDisplay').textContent = Math.max(0, displayScore);
             document.getElementById('correctCount').textContent = displayCorrect;
@@ -7934,7 +8083,7 @@
         }
 
         function startTimer() {
-            if (!timerEnabled) return;
+            if (!timerEnabled || focusModeEnabled || currentMode !== 'identify' || questionResolved) return;
 
             clearTimer();
 
@@ -7953,11 +8102,11 @@
             timerDisplay.innerHTML = `⏱️ <span>${timeLeft}</span>`;
             timerDisplay.className = 'timer-display';
 
-            let startTime = Date.now();
+            timerDeadline = Date.now() + duration * 1000;
 
             currentTimer = setInterval(() => {
-                if (isProcessing) return; // lock prevents overlapping actions
-                const elapsed = (Date.now() - startTime) / 1000;
+                if (lessonPaused || isProcessing) return;
+                const elapsed = duration - (timerDeadline - Date.now()) / 1000;
                 timeLeft = Math.max(0, Math.ceil(duration - elapsed));
 
                 const percentage = ((duration - elapsed) / duration) * 100;
@@ -7988,7 +8137,7 @@
                     speakPhrasePolitely("Time's up!");
                     if (!isProcessing) {
                         isProcessing = true;
-                        setTimeout(() => {
+                        scheduleLesson(() => {
                             isProcessing = false;
                             handleTimeUp();
                         }, 1000);
@@ -8011,6 +8160,18 @@
             document.getElementById('timerBar').style.display = 'none';
         }
         function clearAllTimers() {
+            window.wbPendingLevelAnimation = null;
+            drawRetryClearTimeout = null;
+            document.querySelectorAll('.minigame-announcement, #wb-level-overlay, #wordExamplesOverlay, .wb-flight, .wb-prompt-emoji').forEach(element => element.remove());
+            lessonTimeouts.forEach(id => clearTimeout(id));
+            lessonTimeouts.clear();
+            detachActivePhonicsSkipHandler();
+            if (phonicsEchoCleanup) { phonicsEchoCleanup(true); phonicsEchoCleanup = null; }
+            stopVoiceResources();
+            const bank = document.getElementById('wbBank');
+            if (bank) bank.querySelectorAll('.wb-tile').forEach(tile => {
+                if (tile._wbFloatTl) tile._wbFloatTl.kill();
+            });
             clearTimer();
             if (phonicsTimer) { window.clearTimeout(phonicsTimer); phonicsTimer = null; }
             if (phonicsPhaseTimeout) { window.clearTimeout(phonicsPhaseTimeout); phonicsPhaseTimeout = null; }
@@ -8027,19 +8188,16 @@
         }
 
         function handleTimeUp() {
-            if (waitingForPhonics || isProcessing) return;
+            if (currentMode !== 'identify' || waitingForPhonics || isProcessing || questionResolved || lessonPaused) return;
             isProcessing = true;
 
-            roundWrong++;
-            wrongAnswers++;
-            totalQuestions++;
             score = Math.max(0, score - 10);
-            trackLetterError(currentLetter);
+            recordOutcome(false, 0, true, currentLetter.toLowerCase());
             // Treat timeout as an incorrect attempt for SRS scheduling and per-letter scoring
             try { updateLetterPerformance(currentLetter, false, 0, -10); } catch (e) { }
             showFeedback('Too slow! ⏰', 'error');
             createWrongEffect();
-            setTimeout(() => { isProcessing = false; startIdentifyGame(); }, 2000);
+            scheduleLesson(advanceLesson, 2000);
         }
 
         function trackLetterError(letter) {
@@ -8051,7 +8209,7 @@
         }
         let lastCelebrationTime = 0;
         function createConfetti(element) {
-            if (focusModeEnabled || reduceMotionEnabled) {
+            if (focusModeEnabled || motionReduced()) {
                 showFeedback('Great job! ✓', 'success');
                 return;
             }
@@ -8092,6 +8250,7 @@
                     const start = performance.now();
                     const duration = 1000 + Math.random() * 400;
                     function step(t) {
+                        if (motionReduced()) { el.remove(); return; }
                         const p = Math.min(1, (t - start) / duration);
                         const ease = 1 - Math.pow(1 - p, 2);
                         el.style.transform = `translate(${dx * ease}px, ${dy * ease}px) rotate(${rot * ease}deg) scale(${0.6 + 0.5 * ease})`;
@@ -8115,7 +8274,7 @@
         // Letter-specific celebrations
         function createLetterCelebration(letter, element) {
             try {
-                if (focusModeEnabled || reduceMotionEnabled) {
+                if (focusModeEnabled || motionReduced()) {
                     showFeedback('Great job! ✓', 'success');
                     return;
                 }
@@ -8185,6 +8344,7 @@
 
         function createCelebrationLayer() {
             const layer = document.createElement('div');
+            layer.className = 'letter-celebration-layer';
             layer.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:visible;';
             document.body.appendChild(layer);
             return layer;
@@ -8193,6 +8353,7 @@
         function animateWithRAF(durationMs, onUpdate, onComplete) {
             const start = performance.now();
             function step(t) {
+                if (motionReduced()) { onUpdate(1); if (onComplete) onComplete(); return; }
                 const p = Math.min(1, (t - start) / durationMs);
                 // easeOutCubic
                 const e = 1 - Math.pow(1 - p, 3);
@@ -8203,6 +8364,7 @@
         }
         // Helper: brief screen shake for impactful moments
         function screenShake(intensity = 6, duration = 300) {
+            if (motionReduced()) return;
             try {
                 const target = document.body;
                 if (typeof gsap !== 'undefined') {
@@ -8212,7 +8374,7 @@
                     const start = performance.now();
                     const step = (t) => {
                         const elapsed = t - start;
-                        if (elapsed >= duration) {
+                        if (elapsed >= duration || motionReduced()) {
                             target.style.transform = '';
                             return;
                         }
@@ -9308,6 +9470,7 @@
         }
 
         function createWrongEffect() {
+            if (motionReduced()) return;
             // Create a red flash effect
             const flash = document.createElement('div');
             flash.style.position = 'fixed';
@@ -9328,13 +9491,22 @@
             }, 300);
         }
         function setMode(mode, buttonEl) {
-            if (currentMode === mode) return;
+            if (currentMode === mode || (mode === 'wordBuilder' && !wordBuilderEnabled)) return;
+            saveGameData();
+            lessonVersion++;
+            identifyPromptId++;
             currentMode = mode;
+            currentMinigame = null;
+            wbTransitioning = false;
+            isProcessing = false;
+            isAnswering = false;
+            resetRoundState();
 
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
                 btn.setAttribute('aria-pressed', 'false');
             });
+            buttonEl = buttonEl || document.querySelector(`.mode-btn[onclick*="'${mode}'"]`);
             if (buttonEl) {
                 buttonEl.classList.add('active');
                 buttonEl.setAttribute('aria-pressed', 'true');
@@ -9347,7 +9519,7 @@
             // Reduced-motion-safe transition for game area (no layout shift)
             try {
                 const ga = document.getElementById('gameArea');
-                if (ga && !reduceMotionEnabled) {
+                if (ga && !motionReduced()) {
                     ga.style.willChange = 'opacity, transform';
                     if (typeof gsap !== 'undefined') {
                         gsap.fromTo(ga, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out' });
@@ -9367,8 +9539,10 @@
             } else if (mode === 'wordBuilder') {
                 startWordBuilderGame(true);
             }
+            saveGameData();
         }
         function startIdentifyGame(resetRound = false) {
+            if (currentMode !== 'identify') return;
             // In multiplayer mode, require a player to be selected
             if (multiplayerMode && !currentPlayer) {
                 const gameArea = document.getElementById('gameArea');
@@ -9387,19 +9561,12 @@
                 return;
             }
             // Only reset counters when explicitly starting a new round/mode
-            if (resetRound) {
-                roundCorrect = 0;
-                roundWrong = 0;
-                responseTimes = [];
-                scoreAtRoundStart = currentPlayer ? currentPlayer.score : score;
-            }
+            if (resetRound) resetRoundState();
             if (waitingForPhonics) return;
-            isAnswering = false;
+            beginQuestion();
 
             const promptToken = ++identifyPromptId;
             const questionId = identifyPromptId;
-            clearAllTimers();
-            cancelSpeech();
 
             currentLetter = getRandomLetter();
             const letters = (currentLetter === currentLetter.toLowerCase()) ? lowerLetters : upperLetters; // distractors in same case as target
@@ -9450,11 +9617,12 @@
             gameArea.innerHTML = `
                 <div class="options">${optionsHTML}</div>
                 <button class="sound-btn" id="soundBtn" data-qid="${questionId}" onclick="playCurrentLetter(${questionId})" aria-label="Play the current letter sound">🔊</button>
-                <div class="instruction">Tap the speaker, then find the letter!</div>
+                <div class="instruction" id="targetPrompt" aria-live="polite">Tap the speaker, then find the letter!</div>
                 ${voiceRecordingEnabled ? getVoiceRecorderHTML() : ''}
             `;
             // Reserve space so the floating sound button doesn't overlap content
             gameArea.classList.add('with-sound');
+            updatePromptAlternative();
 
             document.getElementById('scorePanel').style.display = 'flex';
             updateScoreDisplay();
@@ -9465,12 +9633,12 @@
             // Automatically play the letter sound with natural pacing
             const thisQuestionLetter = currentLetter;
             const letterNameSpoken = letterNamePronunciations[thisQuestionLetter.toLowerCase()] || thisQuestionLetter;
-            speakPromptTimeout = setTimeout(() => {
+            speakPromptTimeout = scheduleLesson(() => {
                 speakPromptTimeout = null;
                 if (promptToken !== identifyPromptId) return;
                 const afterPrompt = () => {
                     if (promptToken !== identifyPromptId) return;
-                    speakLetterTimeout = setTimeout(() => {
+                    speakLetterTimeout = scheduleLesson(() => {
                         speakLetterTimeout = null;
                         if (promptToken !== identifyPromptId) return;
                         speakLetter(thisQuestionLetter, null, { skipCancel: true });
@@ -9509,7 +9677,7 @@
             const soundBtn = document.getElementById('soundBtn');
             soundBtn.classList.add('playing');
             // Subtle press animation
-            if (typeof gsap !== 'undefined') {
+            if (!motionReduced() && typeof gsap !== 'undefined') {
                 gsap.fromTo(soundBtn, { scale: 1 }, { scale: 0.95, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.inOut' });
             }
             // Clear any scheduled auto prompt/letter to avoid duplication
@@ -9538,30 +9706,18 @@
             if (letter === currentLetter) {
                 clickedButton.classList.add('correct');
                 createLetterCelebration(currentLetter, clickedButton);
-                roundCorrect++;
-                correctAnswers++;
                 const responseTime = (Date.now() - questionStartTime) / 1000;
-                responseTimes.push(responseTime);
-                totalQuestions++;
-
-                // Update correct answer streak
-                correctStreak++;
-                if (correctStreak > bestStreak) {
-                    bestStreak = correctStreak;
-                }
-
-                // Check streak achievements
-                checkAchievement('streak', correctStreak);
 
                 // Dynamic scoring: base and time bonus with per-round cap
                 const base = 10 + (difficultyLevel * 5);
                 const bonus = Math.max(0, 30 - responseTime * 3);
                 let points = Math.floor(base + bonus);
-                const gainedThisRound = Math.max(0, (currentPlayer ? currentPlayer.score : score) - scoreAtRoundStart);
+                const gainedThisRound = Math.max(0, score - scoreAtRoundStart);
                 if (gainedThisRound + points > 50) {
                     points = Math.max(0, 50 - gainedThisRound);
                 }
                 score += points;
+                recordOutcome(true, responseTime, true, currentLetter.toLowerCase());
 
                 // Check score achievements
                 checkAchievement('score', score);
@@ -9573,7 +9729,7 @@
                 showFeedback(`Excellent! +${points} 🎉`, 'success');
 
                 // Use GSAP for celebration animation if available
-                if (typeof gsap !== 'undefined') {
+                if (!motionReduced() && typeof gsap !== 'undefined') {
                     gsap.from(clickedButton, {
                         scale: 0.8,
                         duration: 0.5,
@@ -9583,41 +9739,27 @@
 
                 let advanceFallback = null;
                 let showedExamples = false; // declared early so TTS callback can reference it
+                let advanceScheduled = false;
                 const scheduleAdvance = () => {
-                    if (identifyPromptId !== questionIdAtClick) return; // stale, do nothing
+                    if (identifyPromptId !== questionIdAtClick || advanceScheduled) return;
+                    advanceScheduled = true;
                     // Clear fallback if it was set (e.g., in case TTS onend fires)
                     if (advanceFallback) { try { clearTimeout(advanceFallback); } catch (e) { } advanceFallback = null; }
                     const baseDelay = phonicsEnabled ? 1500 : 1200;
                     const extraDelay = (!phonicsEnabled && showedExamples) ? 300 : 0;
                     if (phonicsEnabled) {
                         if (phonicsPhaseTimeout) { clearTimeout(phonicsPhaseTimeout); phonicsPhaseTimeout = null; }
-                        phonicsPhaseTimeout = setTimeout(() => {
-                            if (identifyPromptId !== questionIdAtClick) { isProcessing = false; return; }
+                        phonicsPhaseTimeout = scheduleLesson(() => {
+                            if (identifyPromptId !== questionIdAtClick) return;
                             isProcessing = false;
                             startPhonicsPhase(questionIdAtClick);
                         }, baseDelay + extraDelay);
                     } else {
-                        setTimeout(() => { if (identifyPromptId !== questionIdAtClick) { isProcessing = false; return; } isProcessing = false; startIdentifyGame(); }, baseDelay + extraDelay);
-                        // Re-enable buttons only if not transitioning into phonics
-                        setTimeout(() => {
-                            document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
-                        }, 1500);
+                        scheduleLesson(advanceLesson, baseDelay + extraDelay);
                     }
                 };
+                advanceFallback = scheduleLesson(scheduleAdvance, 2500);
                 speakPhrase('Excellent! That\'s correct!', () => { if (identifyPromptId !== questionIdAtClick) return; scheduleAdvance(); }, { skipCancel: true });
-                // Fallback in case speech is cancelled or onend never fires
-                advanceFallback = setTimeout(() => {
-                    if (identifyPromptId !== questionIdAtClick) { isProcessing = false; return; }
-                    isProcessing = false;
-                    if (phonicsEnabled) {
-                        startPhonicsPhase(questionIdAtClick);
-                    } else {
-                        startIdentifyGame();
-                        setTimeout(() => {
-                            document.querySelectorAll('.option-btn').forEach(btn => btn.style.pointerEvents = 'auto');
-                        }, 1500);
-                    }
-                }, 2500);
 
                 // Occasionally show brief word examples once the child is doing well
                 if (roundCorrect > 10 && Math.random() < 0.3) {
@@ -9631,11 +9773,8 @@
 
             } else {
                 clickedButton.classList.add('wrong');
-                roundWrong++;
-                wrongAnswers++;
-                totalQuestions++;
                 score = Math.max(0, score - 10);
-                trackLetterError(currentLetter);
+                recordOutcome(false, 0, false, currentLetter.toLowerCase());
 
                 // Log confusion for Identify mode only
                 try {
@@ -9674,7 +9813,7 @@
                         correctButton.style.transition = 'transform 0.2s, background-color 0.2s';
                         correctButton.style.backgroundColor = '#a7f3d0';
                         correctButton.style.transform = 'scale(1.05)';
-                        setTimeout(() => {
+                        scheduleLesson(() => {
                             correctButton.style.backgroundColor = '';
                             correctButton.style.transform = '';
                             clickedButton.classList.remove('wrong');
@@ -9694,7 +9833,7 @@
                     }
                 };
 
-                const ttsGuard = setTimeout(() => {
+                const ttsGuard = scheduleLesson(() => {
                     if (identifyPromptId !== questionIdAtClick) return;
                     if (wrongTtsHandled) return;
                     wrongTtsHandled = true;
@@ -9730,12 +9869,12 @@
                 waitingForPhonics = false;
                 activePhonicsGuardId = null;
                 if (guardId === identifyPromptId) {
-                    setTimeout(() => startIdentifyGame(), 300);
+                    scheduleLesson(advanceLesson, 300);
                 }
                 return;
             }
 
-            if (guardId !== identifyPromptId) {
+            if (guardId !== identifyPromptId || currentMode !== 'identify' || waitingForPhonics) {
                 return;
             }
 
@@ -9774,9 +9913,9 @@
                 activePhonicsGuardId = null;
                 if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
                 if (typeof delayMs !== 'number' || delayMs < 0) delayMs = 0;
-                setTimeout(() => {
+                scheduleLesson(() => {
                     if (guardId === identifyPromptId) {
-                        startIdentifyGame();
+                        advanceLesson();
                     }
                 }, delayMs);
             };
@@ -9823,7 +9962,7 @@
                     }
                 };
 
-                setTimeout(() => {
+                scheduleLesson(() => {
                     if (phonicsEchoCleanup) { try { phonicsEchoCleanup(); } catch (e) { } }
                     finishPhase(0);
                 }, 3500);
@@ -9834,7 +9973,7 @@
                 timeLeft--;
                 if (timeLeft > 0) {
                     if (timerElement) timerElement.textContent = timeLeft;
-                    phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
+                    phonicsTimer = scheduleLesson(updatePhonicsTimer, 1000);
                 } else {
                     if (timerElement) timerElement.innerHTML = '🗣️';
                     if (phonicsTimer) { clearTimeout(phonicsTimer); phonicsTimer = null; }
@@ -9859,8 +9998,11 @@
                             let stopped = false;
 
                             navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                                if (!guardActive() || lessonPaused) { stream.getTracks().forEach(track => track.stop()); return; }
                                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                                const audioCtx = new AudioCtx();
+                                let audioCtx;
+                                try { audioCtx = new AudioCtx(); }
+                                catch (error) { stream.getTracks().forEach(track => track.stop()); finishEcho(800); return; }
                                 const source = audioCtx.createMediaStreamSource(stream);
                                 const analyser = audioCtx.createAnalyser();
                                 analyser.fftSize = 2048;
@@ -9927,7 +10069,7 @@
 
             speakPhrase(`What sound does ${promptName} make?`, () => {
                 if (!guardActive()) return;
-                phonicsTimer = setTimeout(updatePhonicsTimer, 1000);
+                phonicsTimer = scheduleLesson(updatePhonicsTimer, 1000);
             }, { priority: true });
         }
 
@@ -9942,14 +10084,14 @@
             activePhonicsGuardId = null;
             detachActivePhonicsSkipHandler();
             if (guardId === identifyPromptId) {
-                startIdentifyGame();
+                advanceLesson();
             }
         }
 
         // Settings controls
         function setPhonicsMode(mode) {
             phonicsEnabled = mode === 'on';
-            try { localStorage.setItem('letterLearningPhonics', phonicsEnabled ? 'on' : 'off'); } catch (e) { }
+            writeStorage('letterLearningPhonics', phonicsEnabled ? 'on' : 'off');
             const onBtn = document.getElementById('phonicsOn');
             const offBtn = document.getElementById('phonicsOff');
             if (onBtn && offBtn) {
@@ -9958,16 +10100,23 @@
                 offBtn.classList.toggle('active', !phonicsEnabled);
                 offBtn.setAttribute('aria-pressed', String(!phonicsEnabled));
             }
+            if (!phonicsEnabled && waitingForPhonics) skipPhonics();
+            saveGameData();
         }
 
         function checkRoundCompletion() {
-            if (waitingForPhonics || isProcessing) return;
-            // Check if it's time for a mini-game break
-            if (roundCorrect > 0 && roundCorrect % 10 === 0 && Math.random() < 0.5) {
-                showMinigameAnnouncement();
-            } else if (roundCorrect >= QUESTIONS_PER_ROUND) {
+            if (waitingForPhonics || isProcessing || currentMinigame || lessonPaused) return false;
+            if (roundSummaryShown) return true;
+            if (roundResolved >= QUESTIONS_PER_ROUND) {
                 showRoundCompletion();
+                return true;
             }
+            // Check if it's time for a mini-game break
+            if (currentMode !== 'draw' && !focusModeEnabled && roundResolved > 0 && roundResolved % 10 === 0 && lastBreakQuestion !== roundResolved) {
+                lastBreakQuestion = roundResolved;
+                if (Math.random() < 0.5) { showMinigameAnnouncement(); return true; }
+            }
+            return false;
         }
 
         // Mini-game Functions
@@ -10005,7 +10154,8 @@
 
             speakPhrasePolitely(`Time for a fun break! Let's play ${info.title}`);
 
-            setTimeout(() => {
+            currentMinigame = 'announcement';
+            scheduleLesson(() => {
                 announcement.remove();
                 if (selectedGame === 'letterRain') {
                     startLetterRain();
@@ -10015,6 +10165,7 @@
             }, 3000);
         }
         function startLetterRain() {
+            beginQuestion();
             currentMinigame = 'letterRain';
             minigameScore = 0;
             const targetLetter = getRandomLetter();
@@ -10030,6 +10181,7 @@
                         </div>
                     </div>
                     <div class="rain-target-letter">Catch: ${targetLetter}</div>
+                    <button class="lesson-return" onclick="endLetterRain()">Return to lesson</button>
                     <div class="rain-game-area" id="rainGameArea">
                         <div class="rain-basket" id="rainBasket" style="left: 50%;">${targetLetter}</div>
                     </div>
@@ -10040,6 +10192,17 @@
             const gameAreaEl = document.getElementById('rainGameArea');
             gameAreaEl.addEventListener('mousemove', moveBasket);
             gameAreaEl.addEventListener('touchmove', moveBasket, { passive: false });
+            gameAreaEl.tabIndex = 0;
+            gameAreaEl.setAttribute('role', 'region');
+            gameAreaEl.setAttribute('aria-label', `Catch ${targetLetter}. Use left and right arrow keys to move the basket.`);
+            basketPosition = 50;
+            gameAreaEl.addEventListener('keydown', event => {
+                if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+                event.preventDefault();
+                basketPosition = Math.max(5, Math.min(85, basketPosition + (event.key === 'ArrowLeft' ? -8 : 8)));
+                const basket = document.getElementById('rainBasket');
+                if (basket) basket.style.left = basketPosition + '%';
+            });
 
             // Start spawning letters
             startRainGame(targetLetter);
@@ -10065,6 +10228,7 @@
         }
         function startRainGame(targetLetter) {
             rainGameInterval = setInterval(() => {
+                if (lessonPaused || currentMinigame !== 'letterRain') return;
                 const gameArea = document.getElementById('rainGameArea');
                 if (!gameArea) return;
 
@@ -10084,10 +10248,11 @@
 
                 // Check for collision
                 const checkCollision = setInterval(() => {
-                    if (!letter.parentElement) {
+                    if (!letter.isConnected || currentMinigame !== 'letterRain') {
                         clearInterval(checkCollision);
                         return;
                     }
+                    if (lessonPaused) return;
 
                     const basket = document.getElementById('rainBasket');
                     const letterRect = letter.getBoundingClientRect();
@@ -10118,16 +10283,18 @@
         }
 
         function endLetterRain() {
-            clearInterval(rainGameInterval);
+            if (currentMinigame !== 'letterRain') return;
+            clearAllTimers();
             currentMinigame = null;
 
             showFeedback(`Great job! Score: ${minigameScore}`, 'success');
             speakPhrasePolitely(`Nice work! You scored ${minigameScore} points!`);
 
-            setTimeout(() => startIdentifyGame(), 3000);
+            scheduleLesson(advanceLesson, 1200);
         }
 
         function startMemoryMatch() {
+            beginQuestion();
             currentMinigame = 'memoryMatch';
             minigameScore = 0;
             matchedPairs = 0;
@@ -10153,12 +10320,13 @@
                     </div>
                     <div class="memory-grid" id="memoryGrid">
                         ${letters.map((letter, index) => `
-                            <div class="memory-card" data-letter="${letter}" data-index="${index}" onclick="flipCard(this)">
+                            <button class="memory-card" data-letter="${letter}" data-index="${index}" onclick="flipCard(this)" aria-label="Reveal card ${index + 1}" aria-pressed="false">
                                 <div class="memory-card-front">?</div>
                                 <div class="memory-card-back">${letter}</div>
-                            </div>
+                            </button>
                         `).join('')}
                     </div>
+                    <button class="lesson-return" onclick="endMemoryMatch()">Return to lesson</button>
                 </div>
             `;
 
@@ -10166,11 +10334,14 @@
         }
 
         function flipCard(card) {
+            if (currentMinigame !== 'memoryMatch' || lessonPaused) return;
             if (flippedCards.length >= 2) return;
             if (card.classList.contains('flipped')) return;
             if (card.classList.contains('matched')) return;
 
             card.classList.add('flipped');
+            card.setAttribute('aria-pressed', 'true');
+            card.setAttribute('aria-label', `Letter ${card.dataset.letter}`);
             flippedCards.push(card);
 
             if (flippedCards.length === 2) {
@@ -10178,9 +10349,10 @@
 
                 if (card1.dataset.letter === card2.dataset.letter) {
                     // Match!
-                    setTimeout(() => {
+                    scheduleLesson(() => {
                         card1.classList.add('matched');
                         card2.classList.add('matched');
+                        card1.disabled = true; card2.disabled = true;
                         matchedPairs++;
                         minigameScore = matchedPairs;
                         document.getElementById('minigameScore').textContent = minigameScore;
@@ -10193,33 +10365,40 @@
                     }, 500);
                 } else {
                     // No match
-                    setTimeout(() => {
+                    scheduleLesson(() => {
                         card1.classList.remove('flipped');
                         card2.classList.remove('flipped');
+                        [card1, card2].forEach(item => { item.setAttribute('aria-pressed', 'false'); item.setAttribute('aria-label', `Reveal card ${Number(item.dataset.index) + 1}`); });
                     }, 1000);
                 }
 
-                setTimeout(() => {
+                scheduleLesson(() => {
                     flippedCards = [];
                 }, 1000);
             }
         }
 
         function endMemoryMatch() {
-            clearInterval(minigameTimer);
+            if (currentMinigame !== 'memoryMatch') return;
+            clearAllTimers();
             currentMinigame = null;
 
             showFeedback(`Excellent! ${matchedPairs} matches!`, 'success');
             speakPhrasePolitely(`Great memory! You found ${matchedPairs} pairs!`);
 
-            setTimeout(() => startIdentifyGame(), 3000);
+            scheduleLesson(advanceLesson, 1200);
         }
         function startMinigameTimer(duration, callback) {
+            const timerContainer = document.getElementById('minigameTimer');
+            timerContainer.classList.remove('warning');
+            if (!timerEnabled || focusModeEnabled) { timerContainer.textContent = 'No time limit'; return; }
+            timerContainer.innerHTML = '<span>⏱️</span> <span id="minigameTime"></span>s';
             let timeLeft = duration;
             const timerEl = document.getElementById('minigameTime');
-            const timerContainer = document.getElementById('minigameTimer');
+            timerEl.textContent = timeLeft;
 
             minigameTimer = setInterval(() => {
+                if (lessonPaused) return;
                 timeLeft--;
                 timerEl.textContent = timeLeft;
 
@@ -10234,6 +10413,8 @@
             }, 1000);
         }
         function showRoundCompletion() {
+            if (roundSummaryShown) return;
+            roundSummaryShown = true;
             clearAllTimers();
             cancelSpeech();
 
@@ -10252,6 +10433,7 @@
             if (roundWrong === 0 && roundCorrect >= QUESTIONS_PER_ROUND) {
                 checkAchievement('perfect', 1);
             }
+            saveGameData();
 
             // Identify problem letters (those with 2+ errors)
             problemLetters = Object.entries(letterErrors)
@@ -10277,13 +10459,12 @@
                 }).join(' ');
                 problemList.textContent = formattedLetters;
             } else {
-                problemList.innerHTML = 'None - Perfect! 🌟';
+                problemList.textContent = roundWrong ? 'No repeated problem letters this round.' : 'None - Perfect! 🌟';
             }
 
             // Show modal with animation
             const modal = document.getElementById('roundModal');
-            modal.style.display = 'flex';
-            previouslyFocusedElement = document.activeElement;
+            openDialog('roundModal');
             setTimeout(() => trapFocus(modal.querySelector('.round-content')), 50);
             // Close when tapping outside content
             modal.onclick = function (e) {
@@ -10295,29 +10476,23 @@
             document.body.classList.add('modal-open');
 
             // Play celebration sound politely to avoid stomping active guidance
-            speakPhrasePolitely(`Congratulations! You completed round ${currentRound}!`);
+            speakPhrasePolitely(`Congratulations! You completed round ${currentRound}!`, null, 1500, true);
         }
 
         function startNextRound() {
+            if (!roundSummaryShown) return;
             currentRound++;
-            roundCorrect = 0;
-            roundWrong = 0;
-            responseTimes = [];
-            letterErrors = {};
-            scoreAtRoundStart = score;
+            resetRoundState();
 
-            document.getElementById('roundModal').style.display = 'none';
-            document.body.classList.remove('modal-open');
-            startIdentifyGame();
+            closeDialog('roundModal');
+            startCurrentMode();
+            saveGameData();
         }
 
-        function startDrawGame() {
-            // Reset round-specific state when (re)starting this mode
-            roundCorrect = 0;
-            roundWrong = 0;
-            scoreAtRoundStart = currentPlayer ? currentPlayer.score : score;
-            clearAllTimers();
-            cancelSpeech();
+        function startDrawGame(reset = false) {
+            if (currentMode !== 'draw') return;
+            if (reset) resetRoundState();
+            beginQuestion();
             // Clear any pending auto-advance from prior round
             if (drawAdvanceTimeout) { try { clearTimeout(drawAdvanceTimeout); } catch (e) { } drawAdvanceTimeout = null; }
             drawHasAdvanced = false;
@@ -10377,7 +10552,6 @@
             startIdleHintTimer();
             // Start timing and warm up deep model (optional)
             drawQuestionStartTime = Date.now();
-            try { if (typeof mobilenet !== 'undefined' && typeof tf !== 'undefined') { /* warm */ } } catch (e) { }
         }
         function resizeDrawLayout() {
             const gameArea = document.getElementById('gameArea');
@@ -10412,11 +10586,26 @@
 
             const availableWidth = Math.max(160, gameArea.clientWidth - 32);
             // Prefer large square while keeping controls visible; minimum significantly larger than before
-            const size = Math.floor(Math.max(260, Math.min(availableWidth, availableHeight)));
+            const size = Math.floor(Math.max(200, Math.min(560, availableWidth, availableHeight)));
 
             // Apply size to canvas, guide and container
-            canvas.width = size;
-            canvas.height = size;
+            const ratio = window.devicePixelRatio || 1;
+            const oldSize = parseFloat(canvas.style.width) || canvas.width;
+            if (canvas.width !== Math.round(size * ratio) || canvas.height !== Math.round(size * ratio)) {
+                const copy = document.createElement('canvas');
+                copy.width = canvas.width; copy.height = canvas.height;
+                copy.getContext('2d').drawImage(canvas, 0, 0);
+                canvas.width = Math.round(size * ratio); canvas.height = Math.round(size * ratio);
+                ctx = canvas.getContext('2d');
+                ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+                if (drawingPoints.length) {
+                    ctx.drawImage(copy, 0, 0, copy.width, copy.height, 0, 0, size, size);
+                    drawingPoints = drawingPoints.map(p => ({ ...p, x: p.x * size / oldSize, y: p.y * size / oldSize }));
+                }
+                isDrawing = false;
+            }
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#764ba2';
             canvas.style.width = size + 'px';
             canvas.style.height = size + 'px';
             guide.setAttribute('width', String(size));
@@ -10438,10 +10627,10 @@
 
         function showFormationGuide() {
             const guide = document.getElementById('formationGuide');
-            // Prefer exact-case data; fall back to lower-case, then upper-case
-            const letterData = letterFormations[currentLetter] || letterFormations[currentLetter.toLowerCase()] || letterFormations[currentLetter.toUpperCase()];
+            hideFormationGuide();
+            const letterData = letterFormations[currentLetter] || [];
 
-            if (!letterData) {
+            if (!letterData.length) {
                 // Fallback for letters without formation data
                 const size = Math.min(guide.clientWidth || 300, guide.clientHeight || 300);
                 guide.setAttribute('viewBox', '0 0 100 100');
@@ -10510,6 +10699,7 @@
             canvas.addEventListener('touchstart', startDrawing, { passive: false });
             canvas.addEventListener('touchmove', draw, { passive: false });
             canvas.addEventListener('touchend', stopDrawing, { passive: false });
+            canvas.addEventListener('touchcancel', stopDrawing, { passive: false });
 
             // Mouse events
             canvas.addEventListener('mousedown', startDrawing);
@@ -10519,7 +10709,9 @@
         }
 
         function startDrawing(e) {
+            if (currentMode !== 'draw' || lessonPaused || isProcessing || questionResolved) return;
             e.preventDefault();
+            clearTimeout(drawRetryClearTimeout); drawRetryClearTimeout = null;
             isDrawing = true;
             hasStartedTrace = true; // stop any idle hint
             clearIdleHintTimers();
@@ -10527,6 +10719,8 @@
             const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
             const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
 
+            ctx.beginPath();
+            ctx.fillStyle = ctx.strokeStyle; ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2); ctx.fill();
             ctx.beginPath();
             ctx.moveTo(x, y);
             // Keep existing points for multi-stroke drawing
@@ -10560,6 +10754,7 @@
         }
         function clearCanvas() {
             const canvas = document.getElementById('drawCanvas');
+            if (!canvas || currentMode !== 'draw') return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawingPoints = [];
             hasStartedTrace = false;
@@ -10568,7 +10763,7 @@
 
             // Add clear animation
             const container = document.querySelector('.canvas-container');
-            container.style.animation = 'shake 0.3s';
+            if (!motionReduced()) container.style.animation = 'shake 0.3s';
             setTimeout(() => {
                 container.style.animation = '';
             }, 300);
@@ -10634,11 +10829,12 @@
 
         function showFeedback(message, type) {
             const feedback = document.getElementById('feedback');
+            clearTimeout(feedbackHideTimeout);
             feedback.textContent = message;
             feedback.className = 'feedback ' + type;
             feedback.style.display = 'block';
 
-            setTimeout(() => {
+            feedbackHideTimeout = setTimeout(() => {
                 feedback.style.display = 'none';
             }, 2000);
         }
@@ -10714,7 +10910,7 @@
             document.body.appendChild(overlay);
 
             // Gentle entrance animation
-            if (typeof gsap !== 'undefined') {
+            if (!motionReduced() && typeof gsap !== 'undefined') {
                 gsap.fromTo(card, { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.25, ease: 'power2.out' });
             }
 
@@ -10723,7 +10919,7 @@
             try { speakPhrasePolitely(say); } catch (e) { }
             // Auto-dismiss quickly to avoid disrupting flow
             setTimeout(() => {
-                if (typeof gsap !== 'undefined') {
+                if (!motionReduced() && typeof gsap !== 'undefined') {
                     gsap.to(card, { scale: 0.96, opacity: 0, duration: 0.18, ease: 'power2.in', onComplete: () => overlay.remove() });
                 } else {
                     overlay.remove();
@@ -10763,12 +10959,10 @@
 
         function openSettings() {
             const modal = document.getElementById('settingsModal');
-            previouslyFocusedElement = document.activeElement;
-            modal.style.display = 'flex';
-            document.body.classList.add('modal-open');
+            openDialog('settingsModal');
             // Sync advanced settings checkboxes if present
             try {
-                const savedPhonics = localStorage.getItem('letterLearningPhonics');
+                const savedPhonics = readStorage('letterLearningPhonics');
                 if (savedPhonics) {
                     phonicsEnabled = savedPhonics === 'on';
                 }
@@ -10795,19 +10989,13 @@
         }
 
         function closeSettings() {
-            const modal = document.getElementById('settingsModal');
-            modal.style.animation = 'fadeOut 0.3s';
-            setTimeout(() => {
-                modal.style.display = 'none';
-                modal.style.animation = '';
-                if (previouslyFocusedElement) previouslyFocusedElement.focus();
-                document.body.classList.remove('modal-open');
-            }, 300);
+            closeDialog('settingsModal');
         }
 
         function setTimerMode(mode) {
-            timerEnabled = mode === 'on';
-            try { localStorage.setItem('letterLearningTimer', timerEnabled ? 'on' : 'off'); } catch (e) { }
+            previousTimerState = mode === 'on';
+            timerEnabled = previousTimerState && !focusModeEnabled;
+            writeStorage('letterLearningTimer', previousTimerState ? 'on' : 'off');
             const activeBtn = document.getElementById('timer' + (mode === 'on' ? 'On' : 'Off'));
             const inactiveBtn = document.getElementById('timer' + (mode === 'on' ? 'Off' : 'On'));
             if (activeBtn && inactiveBtn) {
@@ -10816,10 +11004,14 @@
                 inactiveBtn.classList.remove('active');
                 inactiveBtn.setAttribute('aria-pressed', 'false');
             }
+            if (!timerEnabled) clearTimer();
+            else if (!lessonPaused && document.querySelector('.option-btn') && !isProcessing && !waitingForPhonics) startTimer();
+            applyGameSettings();
+            saveGameData();
         }
         function setCaseMode(mode) {
             currentCase = mode;
-            try { localStorage.setItem('letterLearningCase', mode); } catch (e) { }
+            writeStorage('letterLearningCase', mode);
             const btnId = mode === 'lower' ? 'caseLower' : mode === 'upper' ? 'caseUpper' : 'caseMixed';
             const activeBtn = document.getElementById(btnId);
             const all = ['caseLower','caseUpper','caseMixed'];
@@ -10830,10 +11022,11 @@
                 el.classList.toggle('active', on);
                 el.setAttribute('aria-pressed', String(on));
             });
+            saveGameData();
         }
         function setSoundMode(mode) {
             soundEnabled = mode === 'on';
-            try { localStorage.setItem('letterLearningSound', soundEnabled ? 'on' : 'off'); } catch (e) { }
+            writeStorage('letterLearningSound', soundEnabled ? 'on' : 'off');
             const activeBtn = document.getElementById('sound' + (mode === 'on' ? 'On' : 'Off'));
             const inactiveBtn = document.getElementById('sound' + (mode === 'on' ? 'Off' : 'On'));
             if (activeBtn && inactiveBtn) {
@@ -10849,10 +11042,13 @@
                     try { playbackAudio.pause(); } catch (e) { }
                 }
             }
+            updatePromptAlternative();
+            saveGameData();
         }
 
         function toggleVoiceRecording(enabled) {
             voiceRecordingEnabled = !!enabled;
+            if (!voiceRecordingEnabled) stopVoiceResources();
             saveGameData();
         }
         // Visual Theme Functions
@@ -10867,7 +11063,8 @@
             });
 
             // Save preference
-            localStorage.setItem('letterLearningTheme', theme);
+            writeStorage('letterLearningTheme', theme);
+            saveGameData();
 
             // If in game, refresh with new theme
             if (document.getElementById('gameArea').innerHTML.includes('option-btn')) {
@@ -10885,6 +11082,9 @@
         }
 
         function startRecording() {
+            if (recordingPending || isRecording) return;
+            const version = lessonVersion;
+            const recordedLetter = currentLetter;
             // iOS Safari requires HTTPS for microphone access
             if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
                 alert('Voice recording requires HTTPS');
@@ -10895,25 +11095,35 @@
                 return;
             }
 
+            recordingPending = true;
+            const request = ++recordingRequest;
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
+                    if (request !== recordingRequest || version !== lessonVersion || lessonPaused || !voiceRecordingEnabled || !document.getElementById('recordBtn')) {
+                        stream.getTracks().forEach(track => track.stop()); return;
+                    }
+                    let recorder;
+                    try { recorder = new MediaRecorder(stream); }
+                    catch (error) { stream.getTracks().forEach(track => track.stop()); throw error; }
+                    mediaRecorder = recorder;
+                    const chunks = [];
 
-                    mediaRecorder.ondataavailable = event => {
+                    recorder.ondataavailable = event => {
                         if (event && event.data) {
                             try { recordingMimeType = event.data.type || mediaRecorder.mimeType || recordingMimeType; } catch (e) { }
-                            audioChunks.push(event.data);
+                            chunks.push(event.data);
                         }
                     };
 
-                    mediaRecorder.onstop = () => {
-                        const mime = recordingMimeType || (mediaRecorder && mediaRecorder.mimeType) || 'audio/webm';
-                        const audioBlob = new Blob(audioChunks, { type: mime });
+                    recorder.onstop = () => {
+                        stream.getTracks().forEach(track => track.stop());
+                        if (version !== lessonVersion) return;
+                        const mime = recordingMimeType || recorder.mimeType || 'audio/webm';
+                        const audioBlob = new Blob(chunks, { type: mime });
                         const audioUrl = URL.createObjectURL(audioBlob);
 
                         recordings.push({
-                            letter: currentLetter,
+                            letter: recordedLetter,
                             url: audioUrl,
                             timestamp: Date.now()
                         });
@@ -10925,14 +11135,13 @@
                         }
 
                         // Enable playback buttons
-                        document.getElementById('playBtn').disabled = false;
-                        document.getElementById('compareBtn').disabled = false;
-
-                        // Stop all tracks
-                        stream.getTracks().forEach(track => track.stop());
+                        const play = document.getElementById('playBtn'), compare = document.getElementById('compareBtn');
+                        if (play) play.disabled = false;
+                        if (compare) compare.disabled = false;
                     };
 
-                    mediaRecorder.start();
+                    try { mediaRecorder.start(); }
+                    catch (error) { stream.getTracks().forEach(track => track.stop()); throw error; }
                     isRecording = true;
 
                     const recordBtn = document.getElementById('recordBtn');
@@ -10943,9 +11152,8 @@
                     speakPhrasePolitely('Recording started. Say the letter!');
                 })
                 .catch(err => {
-                    console.error('Error accessing microphone:', err);
-                    alert('Could not access microphone. Please check permissions.');
-                });
+                    if (request === recordingRequest && version === lessonVersion) showFeedback('Microphone unavailable. You can still practice without recording.', 'info');
+                }).finally(() => { if (request === recordingRequest) recordingPending = false; });
         }
 
         function stopRecording() {
@@ -10954,42 +11162,66 @@
                 isRecording = false;
 
                 const recordBtn = document.getElementById('recordBtn');
-                recordBtn.classList.remove('recording');
-                recordBtn.innerHTML = '<span id="recordIcon">🎤</span>';
-                recordBtn.setAttribute('aria-label', 'Start recording');
+                if (recordBtn) {
+                    recordBtn.classList.remove('recording');
+                    recordBtn.innerHTML = '<span id="recordIcon">🎤</span>';
+                    recordBtn.setAttribute('aria-label', 'Start recording');
+                }
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
 
                 speakPhrasePolitely('Recording saved!');
             }
         }
 
+        function stopVoiceResources() {
+            recordingRequest++; recordingPending = false;
+            if (mediaRecorder) {
+                try { if (mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch (error) { }
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+            isRecording = false;
+            const button = document.getElementById('recordBtn');
+            if (button) { button.classList.remove('recording'); button.innerHTML = '<span id="recordIcon">🎤</span>'; button.setAttribute('aria-label', 'Start recording'); }
+            if (playbackAudio) { playbackAudio.pause(); playbackAudio = null; }
+        }
+
         function playLastRecording() {
+            if (!soundEnabled) { showFeedback('Turn Sound on to listen to recordings.', 'info'); return; }
+            if (lessonPaused) return;
             if (recordings.length > 0) {
+                const version = lessonVersion;
                 const lastRecording = recordings[recordings.length - 1];
                 // stop any current playback
                 if (playbackAudio && typeof playbackAudio.pause === 'function') {
                     try { playbackAudio.pause(); } catch (e) { }
                 }
-                playbackAudio = new Audio(lastRecording.url);
-                playbackAudio.onended = () => { playbackAudio = null; };
-                playbackAudio.play();
+                const audio = new Audio(lastRecording.url);
+                playbackAudio = audio;
+                audio.onended = () => { if (playbackAudio === audio) playbackAudio = null; };
+                audio.play().catch(() => { if (version === lessonVersion && playbackAudio === audio) { playbackAudio = null; showFeedback('Could not play this recording. Try recording again.', 'info'); } });
             }
         }
 
         function compareWithCorrect() {
+            if (!soundEnabled) { showFeedback('Turn Sound on to compare recordings.', 'info'); return; }
             if (recordings.length > 0) {
+                const version = lessonVersion;
+                const recordedLetter = recordings[recordings.length - 1].letter;
                 // Pause TTS while playing recording
                 cancelSpeech();
                 playLastRecording();
                 const waitThenSpeak = () => {
+                    if (version !== lessonVersion) return;
                     speakPhrasePolitely('Now listen to the correct pronunciation', () => {
-                        setTimeout(() => speakLetter(currentLetter, null, { skipCancel: true }), 800);
+                        scheduleLesson(() => speakLetter(recordedLetter, null, { skipCancel: true }), 800, version);
                     }, 1800);
                 };
                 if (playbackAudio) {
-                    playbackAudio.onended = () => { playbackAudio = null; waitThenSpeak(); };
+                    const audio = playbackAudio;
+                    audio.onended = () => { if (playbackAudio !== audio) return; playbackAudio = null; waitThenSpeak(); };
                 } else {
                     // Fallback if no audio handle
-                    setTimeout(waitThenSpeak, 1500);
+                    scheduleLesson(waitThenSpeak, 1500, version);
                 }
             }
         }
@@ -10997,7 +11229,9 @@
         // Initialize speech synthesis with better voice loading
         let voices = [];
         function loadVoices() {
-            voices = speechSynthesis.getVoices().filter(v => v.lang && v.lang.startsWith('en'));
+            try { voices = speechSynthesis.getVoices().filter(v => v.lang && v.lang.startsWith('en')); }
+            catch (error) { voices = []; }
+            updatePromptAlternative();
             if (voices.length > 0) {
                 console.log('Speech voices loaded:', voices.length, 'English voices available');
             }
@@ -11018,11 +11252,12 @@
             const nonEastAsian = voices.find(v => !v.lang || (!v.lang.includes('zh') && !v.lang.includes('ja') && !v.lang.includes('ko')));
             return nonEastAsian || voices[0] || null;
         }
-        if (speechSupported) {
+        function initializeSpeech() {
+            if (!speechSupported) return;
             speechSynthesis.onvoiceschanged = loadVoices;
             loadVoices();
             // Nudge some browsers to populate voices without cancelling legitimate utterances
-            if (voices.length === 0) {
+            if (voices.length === 0 && soundEnabled) {
                 const silent = new SpeechSynthesisUtterance('');
                 silent.volume = 0;
                 const nudgeToken = beginTtsGuard(800);
@@ -11102,9 +11337,7 @@
                 grid.appendChild(badge);
             });
 
-            previouslyFocusedElement = document.activeElement;
-            modal.style.display = 'flex';
-            document.body.classList.add('modal-open');
+            openDialog('achievementModal');
             // Trap focus inside the modal content
             setTimeout(() => trapFocus(modal.querySelector('.achievement-content')), 50);
             // Close when tapping/clicking outside of the content
@@ -11116,10 +11349,7 @@
         }
 
         function closeAchievements() {
-            const modal = document.getElementById('achievementModal');
-            modal.style.display = 'none';
-            if (previouslyFocusedElement) previouslyFocusedElement.focus();
-            document.body.classList.remove('modal-open');
+            closeDialog('achievementModal');
         }
         function createBadgeElement(achievement) {
             const isUnlocked = unlockedAchievements.has(achievement.id);
@@ -11159,7 +11389,7 @@
 
             // Add hover effect
             badge.addEventListener('mouseenter', () => {
-                if (isUnlocked && typeof gsap !== 'undefined') {
+                if (isUnlocked && !motionReduced() && typeof gsap !== 'undefined') {
                     gsap.to(badge, {
                         scale: 1.05,
                         duration: 0.3,
@@ -11169,7 +11399,7 @@
             });
 
             badge.addEventListener('mouseleave', () => {
-                if (isUnlocked && typeof gsap !== 'undefined') {
+                if (isUnlocked && !motionReduced() && typeof gsap !== 'undefined') {
                     gsap.to(badge, {
                         scale: 1,
                         duration: 0.3,
@@ -11184,7 +11414,7 @@
         function updateAchievementStats() {
             // Calculate total play time
             const currentSessionTime = Math.floor((Date.now() - sessionStartTime) / 60000);
-            const totalTime = totalPlayTime + currentSessionTime;
+            const totalTime = getTotalPlayMinutes();
 
             // Check time achievements
             checkAchievement('time', totalTime);
@@ -11308,35 +11538,42 @@
         // Multiplayer Functions
         function initializeMultiplayer() {
             loadPlayers();
+            document.getElementById('playerSelector').style.display = 'flex';
             if (players.length > 0) {
                 multiplayerMode = true;
-                document.getElementById('playerSelector').style.display = 'flex';
-                updatePlayerDisplay();
+                currentPlayerIndex = Math.max(0, players.findIndex(player => player.id === selectedPlayerId));
+                currentPlayer = players[currentPlayerIndex];
+                loadPlayerState(currentPlayer);
             }
+            updatePlayerDisplay();
         }
 
         function loadPlayers() {
-            const saved = localStorage.getItem('letterLearningPlayers');
+            const saved = readStorage('letterLearningPlayers');
             if (saved) {
                 try {
-                    players = JSON.parse(saved);
+                    const parsed = JSON.parse(saved);
+                    players = Array.isArray(parsed) ? parsed.filter(player => player && typeof player === 'object' && !Array.isArray(player) && typeof player.name === 'string') : [];
                     players.forEach(player => {
                         // Ensure all player objects have required properties
-                        player.letterPerformance = player.letterPerformance || {};
-                        player.unlockedAchievements = new Set(player.unlockedAchievements || []);
-                        player.lettersMastered = new Set(player.lettersMastered || []);
+                        player.id = typeof player.id === 'string' || typeof player.id === 'number' ? player.id : `legacy-${players.indexOf(player)}`;
+                        player.name = player.name.slice(0, 50);
+                        if (!['🦁', '🐻', '🐼', '🦊', '🐸', '🦄', '🐙', '🦋', '🌟', '🚀'].includes(player.avatar)) player.avatar = '🌟';
+                        for (const key of ['score', 'correctAnswers', 'wrongAnswers', 'bestStreak', 'totalPlayTime']) player[key] = nonnegative(player[key]);
+                        player.letterPerformance = normalizePerformance(player.letterPerformance);
+                        player.unlockedAchievements = new Set(Array.isArray(player.unlockedAchievements) ? player.unlockedAchievements.filter(id => ACHIEVEMENTS.some(a => a.id === id)) : []);
+                        player.lettersMastered = new Set(Array.isArray(player.lettersMastered) ? player.lettersMastered.filter(letter => /^[a-z]$/.test(letter)) : []);
                         // Backfill confusion matrix per player
                         const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
-                        if (!player.confusionMatrix) player.confusionMatrix = createEmptyConfusionMatrix();
+                        if (!player.confusionMatrix || typeof player.confusionMatrix !== 'object' || Array.isArray(player.confusionMatrix)) player.confusionMatrix = createEmptyConfusionMatrix();
                         letters.forEach(c => {
-                            player.confusionMatrix[c] = player.confusionMatrix[c] || {};
+                            if (!player.confusionMatrix[c] || typeof player.confusionMatrix[c] !== 'object' || Array.isArray(player.confusionMatrix[c])) player.confusionMatrix[c] = {};
                             letters.forEach(w => {
-                                if (typeof player.confusionMatrix[c][w] !== 'number') player.confusionMatrix[c][w] = 0;
+                                player.confusionMatrix[c][w] = nonnegative(player.confusionMatrix[c][w]);
                             });
                         });
                     });
                 } catch (e) {
-                    console.error('Error loading players:', e);
                     players = [];
                 }
             }
@@ -11350,15 +11587,13 @@
                 // Store confusion matrix as a plain object
                 confusionMatrix: player.confusionMatrix || createEmptyConfusionMatrix()
             }));
-            localStorage.setItem('letterLearningPlayers', JSON.stringify(playersToSave));
+            writeStorage('letterLearningPlayers', JSON.stringify(playersToSave));
         }
 
         function showAddPlayer() {
             selectedAvatar = '🦁';
             document.getElementById('playerNameInput').value = '';
-            document.getElementById('playerModal').style.display = 'flex';
-            document.body.classList.add('modal-open');
-            previouslyFocusedElement = document.activeElement;
+            openDialog('playerModal');
             setTimeout(() => trapFocus(document.getElementById('playerModal').querySelector('.player-modal-content')), 50);
             // Close when tapping outside modal content
             const modal = document.getElementById('playerModal');
@@ -11374,17 +11609,18 @@
                 if (option.dataset.avatar === selectedAvatar) {
                     option.classList.add('selected');
                 }
+                option.setAttribute('aria-pressed', String(option.dataset.avatar === selectedAvatar));
                 option.onclick = function () {
-                    document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+                    document.querySelectorAll('.avatar-option').forEach(o => { o.classList.remove('selected'); o.setAttribute('aria-pressed', 'false'); });
                     this.classList.add('selected');
+                    this.setAttribute('aria-pressed', 'true');
                     selectedAvatar = this.dataset.avatar;
                 };
             });
         }
 
         function closePlayerModal() {
-            document.getElementById('playerModal').style.display = 'none';
-            document.body.classList.remove('modal-open');
+            closeDialog('playerModal');
         }
 
         function saveNewPlayer() {
@@ -11395,7 +11631,7 @@
             }
 
             const newPlayer = {
-                id: Date.now(),
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
                 name: name,
                 avatar: selectedAvatar,
                 score: 0,
@@ -11417,6 +11653,13 @@
                 confusionMatrix: createEmptyConfusionMatrix()
             };
 
+            // Preserve the existing child's anonymous progress when creating the first profile.
+            if (!players.length && (correctAnswers + wrongAnswers > 0 || score > 0 || getTotalPlayMilliseconds() > 0)) {
+                currentPlayer = newPlayer;
+                saveCurrentPlayerState();
+                currentPlayer = null;
+            }
+
             players.push(newPlayer);
             savePlayers();
 
@@ -11436,7 +11679,8 @@
             playerList.innerHTML = '';
 
             players.forEach((player, index) => {
-                const chip = document.createElement('div');
+                const chip = document.createElement('button');
+                chip.type = 'button';
                 chip.className = 'player-chip';
                 if (index === currentPlayerIndex) {
                     chip.classList.add('active');
@@ -11445,11 +11689,14 @@
                 chip.innerHTML = `
                     <div class="player-avatar">${player.avatar}</div>
                     <div>
-                        <div class="player-name">${player.name}</div>
+                        <div class="player-name"></div>
                         <div class="player-score">Score: ${player.score}</div>
                     </div>
                     ${index === currentPlayerIndex ? '<div class="player-turn-indicator"></div>' : ''}
                 `;
+                chip.querySelector('.player-name').textContent = player.name;
+                chip.setAttribute('aria-label', `Play as ${player.name}, score ${player.score}`);
+                chip.setAttribute('aria-pressed', String(index === currentPlayerIndex));
 
                 chip.onclick = () => switchToPlayer(index);
                 playerList.appendChild(chip);
@@ -11458,6 +11705,8 @@
 
         function switchToPlayer(index) {
             if (index >= 0 && index < players.length) {
+                const wasPlaying = !!document.querySelector('#gameArea .option-btn, #drawCanvas, #wbSlots, .minigame-container');
+                stopPlayClock();
                 // Save current player's state
                 if (currentPlayer) {
                     saveCurrentPlayerState();
@@ -11466,6 +11715,11 @@
                 // Switch to new player
                 currentPlayerIndex = index;
                 currentPlayer = players[index];
+                selectedPlayerId = currentPlayer.id;
+                lessonVersion++; identifyPromptId++;
+                clearAllTimers(); cancelSpeech();
+                currentMinigame = null;
+                waitingForPhonics = false; isProcessing = false; isAnswering = false; wbTransitioning = false;
                 sessionStartTime = Date.now(); // Reset session timer for the new player
 
                 // Load new player's state
@@ -11483,9 +11737,8 @@
                 }
 
                 // If in game, restart for new player
-                if (document.getElementById('gameArea').innerHTML.includes('option-btn')) {
-                    startIdentifyGame();
-                }
+                if (wasPlaying) startCurrentMode();
+                saveGameData();
             }
         }
 
@@ -11498,6 +11751,7 @@
             currentPlayer.currentRound = currentRound;
             currentPlayer.roundCorrect = roundCorrect;
             currentPlayer.roundWrong = roundWrong;
+            currentPlayer.scoreAtRoundStart = scoreAtRoundStart;
             currentPlayer.letterPerformance = letterPerformance;
             currentPlayer.unlockedAchievements = unlockedAchievements;
             currentPlayer.achievementProgress = achievementProgress;
@@ -11507,17 +11761,57 @@
             currentPlayer.roundsCompleted = roundsCompleted;
             currentPlayer.celebrationType = celebrationType;
             currentPlayer.confusionMatrix = confusionMatrix;
+            currentPlayer.totalQuestions = totalQuestions;
+            currentPlayer.correctStreak = correctStreak;
+            currentPlayer.totalPlayTime = getTotalPlayMinutes();
+            currentPlayer.totalActivePlayMs = getTotalPlayMilliseconds();
+            currentPlayer.currentMode = currentMode;
+            currentPlayer.roundResolved = roundResolved;
+            currentPlayer.roundSummaryShown = roundSummaryShown;
+            currentPlayer.lastBreakQuestion = lastBreakQuestion;
+            currentPlayer.responseTimes = responseTimes;
+            currentPlayer.letterErrors = letterErrors;
+            currentPlayer.modePerformance = modePerformance;
+            currentPlayer.wbDifficulty = wbDifficulty;
+            currentPlayer.wbConsecutiveCorrect = wbConsecutiveCorrect;
+            currentPlayer.wbConsecutiveWrong = wbConsecutiveWrong;
+            currentPlayer.currentStreak = currentStreak;
+            currentPlayer.lastPlayDate = lastPlayDate;
+            currentPlayer.streakHistory = streakHistory;
 
             savePlayers();
         }
         function loadPlayerState(player) {
-            score = player.score || 0;
-            correctAnswers = player.correctAnswers || 0;
-            wrongAnswers = player.wrongAnswers || 0;
-            currentRound = player.currentRound || 1;
-            roundCorrect = player.roundCorrect || 0;
-            roundWrong = player.roundWrong || 0;
-            letterPerformance = player.letterPerformance || {};
+            score = nonnegative(player.score);
+            correctAnswers = nonnegative(player.correctAnswers);
+            wrongAnswers = nonnegative(player.wrongAnswers);
+            currentRound = Math.max(1, nonnegative(player.currentRound, 1));
+            roundCorrect = nonnegative(player.roundCorrect);
+            roundWrong = nonnegative(player.roundWrong);
+            roundResolved = nonnegative(player.roundResolved, roundCorrect);
+            roundSummaryShown = player.roundSummaryShown === true;
+            lastBreakQuestion = typeof player.lastBreakQuestion === 'number' ? player.lastBreakQuestion : -1;
+            scoreAtRoundStart = nonnegative(player.scoreAtRoundStart, score);
+            responseTimes = Array.isArray(player.responseTimes) ? player.responseTimes.filter(time => typeof time === 'number' && Number.isFinite(time) && time >= 0) : [];
+            letterErrors = normalizeLetterErrors(player.letterErrors);
+            totalQuestions = nonnegative(player.totalQuestions, correctAnswers + wrongAnswers);
+            correctStreak = nonnegative(player.correctStreak);
+            totalPlayTime = nonnegative(player.totalActivePlayMs, nonnegative(player.totalPlayTime) * 60000) / 60000;
+            sessionPlayMs = 0; playClockStartedAt = 0;
+            currentStreak = nonnegative(player.currentStreak);
+            lastPlayDate = typeof player.lastPlayDate === 'string' ? player.lastPlayDate : null;
+            streakHistory = Array.isArray(player.streakHistory) ? player.streakHistory.filter(day => typeof day === 'string') : [];
+            modePerformance = Object.fromEntries(['identify', 'draw', 'wordBuilder'].map(mode => [mode, normalizePerformance(player.modePerformance?.[mode])]));
+            wbDifficulty = ['easy', 'medium', 'hard'].includes(player.wbDifficulty) ? player.wbDifficulty : 'easy';
+            wbConsecutiveCorrect = nonnegative(player.wbConsecutiveCorrect);
+            wbConsecutiveWrong = nonnegative(player.wbConsecutiveWrong);
+            wbRecentWords = [];
+            currentMode = ['identify', 'draw', 'wordBuilder'].includes(player.currentMode) && (player.currentMode !== 'wordBuilder' || wordBuilderEnabled) ? player.currentMode : 'identify';
+            document.querySelectorAll('.mode-btn').forEach(button => {
+                const active = button.getAttribute('onclick').includes(`'${currentMode}'`);
+                button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+            });
+            letterPerformance = normalizePerformance(player.letterPerformance);
             // Backfill SRS fields for per-player state
             const nowTs = Date.now();
             Object.keys(letterPerformance).forEach(k => {
@@ -11529,11 +11823,11 @@
                 letterPerformance[k] = perf;
             });
             unlockedAchievements = player.unlockedAchievements || new Set();
-            achievementProgress = player.achievementProgress || {};
+            achievementProgress = Object.fromEntries(Object.entries(parseStoredObject(JSON.stringify(player.achievementProgress))).map(([key, value]) => [key, nonnegative(value)]));
             lettersMastered = player.lettersMastered || new Set();
-            bestStreak = player.bestStreak || 0;
-            speedAnswers = player.speedAnswers || 0;
-            roundsCompleted = player.roundsCompleted || 0;
+            bestStreak = nonnegative(player.bestStreak);
+            speedAnswers = nonnegative(player.speedAnswers);
+            roundsCompleted = nonnegative(player.roundsCompleted);
             celebrationType = player.celebrationType || 'fireworks';
             // Confusion matrix per player
             if (player.confusionMatrix) {
@@ -11545,9 +11839,9 @@
 
         // Parent Dashboard Functions
         function openParentDashboard() {
+            if (currentPlayer) saveCurrentPlayerState();
             updateDashboard();
-            document.getElementById('parentDashboard').style.display = 'block';
-            previouslyFocusedElement = document.activeElement;
+            openDialog('parentDashboard', 'block');
             setTimeout(() => trapFocus(document.getElementById('parentDashboard')), 50);
             // Close when tapping outside dashboard content
             const modal = document.getElementById('parentDashboard');
@@ -11560,8 +11854,7 @@
         }
 
         function closeParentDashboard() {
-            document.getElementById('parentDashboard').style.display = 'none';
-            document.body.classList.remove('modal-open');
+            closeDialog('parentDashboard');
         }
 
         function updateDashboard() {
@@ -11573,16 +11866,11 @@
 
         function resetAllStatistics() {
             // Clear overall saved game data and players
-            try { localStorage.removeItem('letterLearningGameData'); } catch (e) { }
-            try { localStorage.removeItem('letterLearningPlayers'); } catch (e) { }
-            // Reset in-memory state for current session
-            score = 0; correctAnswers = 0; wrongAnswers = 0; totalQuestions = 0; currentRound = 1;
-            roundCorrect = 0; roundWrong = 0; scoreAtRoundStart = 0;
-            letterPerformance = {}; lettersMastered = new Set(); unlockedAchievements = new Set();
-            confusionMatrix = createEmptyConfusionMatrix();
-            achievementProgress = {}; bestStreak = 0; speedAnswers = 0; totalPlayTime = 0; roundsCompleted = 0;
-            currentStreak = 0; lastPlayDate = null; streakHistory = [];
+            removeStorage('letterLearningGameData'); removeStorage('letterLearningPlayers');
+            resetLearnedProgress(); resetDrawAnalytics();
             players = []; currentPlayer = null; currentPlayerIndex = 0; multiplayerMode = false;
+            selectedPlayerId = null;
+            saveGameData();
             updateBadgeCount();
             updateAchievementStats();
             initializeMultiplayer();
@@ -11590,40 +11878,26 @@
             showFeedback('All statistics have been reset.', 'info');
         }
         function resetCurrentPlayerStatistics() {
-            if (!multiplayerMode || !currentPlayer) {
-                // Reset single-player state only
-                score = 0; correctAnswers = 0; wrongAnswers = 0; totalQuestions = 0; currentRound = 1;
-                roundCorrect = 0; roundWrong = 0; scoreAtRoundStart = 0;
-                letterPerformance = {}; lettersMastered = new Set(); unlockedAchievements = new Set();
-                achievementProgress = {}; bestStreak = 0; speedAnswers = 0; roundsCompleted = 0;
-                confusionMatrix = createEmptyConfusionMatrix();
-                updateBadgeCount();
-                updateAchievementStats();
-                saveGameData();
-            } else {
-                // Reset only the selected player's stats
-                currentPlayer.score = 0;
-                currentPlayer.correctAnswers = 0;
-                currentPlayer.wrongAnswers = 0;
-                currentPlayer.currentRound = 1;
-                currentPlayer.roundCorrect = 0;
-                currentPlayer.roundWrong = 0;
-                currentPlayer.letterPerformance = {};
-                currentPlayer.unlockedAchievements = new Set();
-                currentPlayer.achievementProgress = {};
-                currentPlayer.lettersMastered = new Set();
-                currentPlayer.bestStreak = 0;
-                currentPlayer.speedAnswers = 0;
-                currentPlayer.roundsCompleted = 0;
-                currentPlayer.confusionMatrix = createEmptyConfusionMatrix();
-                savePlayers();
-                // Reload into memory
-                loadPlayerState(currentPlayer);
-            }
+            resetLearnedProgress();
+            updateBadgeCount(); updateAchievementStats(); saveGameData();
             updatePlayerDisplay();
             updateScoreDisplay();
             updateDashboard();
             showFeedback('Player statistics have been reset.', 'info');
+        }
+        function resetLearnedProgress() {
+            lessonVersion++; clearAllTimers(); stopPlayClock();
+            score = 0; correctAnswers = 0; wrongAnswers = 0; totalQuestions = 0; currentRound = 1;
+            resetRoundState(); correctStreak = 0;
+            letterPerformance = {}; lettersMastered = new Set(); unlockedAchievements = new Set();
+            modePerformance = { identify: {}, draw: {}, wordBuilder: {} };
+            confusionMatrix = createEmptyConfusionMatrix(); achievementProgress = {};
+            bestStreak = 0; speedAnswers = 0; totalPlayTime = 0; sessionPlayMs = 0; roundsCompleted = 0;
+            currentStreak = 0; lastPlayDate = null; streakHistory = [];
+            wbDifficulty = 'easy'; wbConsecutiveCorrect = 0; wbConsecutiveWrong = 0; wbRecentWords = [];
+            currentMinigame = null; waitingForPhonics = false;
+            isProcessing = false; isAnswering = false; wbTransitioning = false;
+            startCurrentMode();
         }
         function updatePlayerStats() {
             const grid = document.getElementById('playerStatsGrid');
@@ -11637,7 +11911,7 @@
                 wrongAnswers,
                 lettersMastered,
                 bestStreak,
-                totalPlayTime
+                totalPlayTime: getTotalPlayMinutes()
             }];
 
             allPlayers.forEach(player => {
@@ -11650,7 +11924,7 @@
                 card.innerHTML = `
                     <div class="player-stat-header">
                         <div class="player-stat-avatar">${player.avatar || '🌟'}</div>
-                        <div class="player-stat-name">${player.name}</div>
+                        <div class="player-stat-name">${escapeText(player.name)}</div>
                     </div>
                     <div class="stat-grid">
                         <div class="stat-item">
@@ -11671,7 +11945,7 @@
                         </div>
                     </div>
                 `;
-
+                card.querySelector('.player-stat-name').textContent = player.name;
                 grid.appendChild(card);
             });
         }
@@ -11777,16 +12051,18 @@
             } catch (e) { }
 
             // Speed analysis
-            const avgResponseTime = responseTimes.length > 0 ?
-                responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
+            const recognitionHistory = Object.keys(modePerformance.identify).length ? modePerformance.identify : letterPerformance;
+            const recognitionTimes = Object.values(recognitionHistory).flatMap(item => item.times || []);
+            const avgResponseTime = recognitionTimes.length > 0 ?
+                recognitionTimes.reduce((a, b) => a + b, 0) / recognitionTimes.length : 0;
 
-            if (avgResponseTime > 5) {
+            if (recognitionTimes.length >= 3 && avgResponseTime > 5) {
                 insights.push({
                     icon: '⏱️',
                     title: 'Response Time',
                     description: 'Taking time to think is good! Consider practicing letter recognition with flashcards for faster recall.'
                 });
-            } else if (avgResponseTime < 2) {
+            } else if (recognitionTimes.length >= 3 && avgResponseTime < 2) {
                 insights.push({
                     icon: '⚡',
                     title: 'Quick Recognition',
@@ -11807,8 +12083,8 @@
             if (insights.length === 0) {
                 insights.push({
                     icon: '👍',
-                    title: 'Keep Going!',
-                    description: 'Regular practice is key. Try to play for at least 10 minutes each day.'
+                    title: Object.keys(letterPerformance).length ? 'Keep Going!' : 'Getting Started',
+                    description: Object.keys(letterPerformance).length ? 'Regular practice is key. Try a few letters each day.' : 'No letter recognition history yet. Play Find Letters to build a progress picture.'
                 });
             }
 
@@ -11886,7 +12162,7 @@
 
         // Save/Load Functions
         function saveGameData() {
-            const today = new Date().toDateString();
+            if (currentPlayer) saveCurrentPlayerState();
 
             const gameData = {
                 score,
@@ -11899,12 +12175,13 @@
                 achievementProgress,
                 bestStreak,
                 speedAnswers,
-                totalPlayTime: totalPlayTime + Math.floor((Date.now() - sessionStartTime) / 60000),
+                totalPlayTime: getTotalPlayMinutes(),
+                totalActivePlayMs: getTotalPlayMilliseconds(),
                 roundsCompleted,
                 lastPlayed: Date.now(),
                 // Streak data
                 currentStreak,
-                lastPlayDate: today,
+                lastPlayDate,
                 streakHistory,
                 // Settings
                 focusModeEnabled,
@@ -11913,24 +12190,30 @@
                 celebrationType,
                 currentTheme,
                 voiceRecordingEnabled,
-                confusionMatrix
+                confusionMatrix,
+                schemaVersion: 2,
+                selectedPlayerId: currentPlayer ? currentPlayer.id : null,
+                currentMode, roundCorrect, roundWrong, roundResolved, roundSummaryShown, lastBreakQuestion,
+                scoreAtRoundStart, responseTimes, letterErrors, totalQuestions, correctStreak, modePerformance,
+                wbDifficulty, wbConsecutiveCorrect, wbConsecutiveWrong,
+                timerEnabled, timerPreference: previousTimerState, soundEnabled, currentCase, phonicsEnabled, wordBuilderEnabled
             };
 
-            localStorage.setItem('letterLearningGameData', JSON.stringify(gameData));
+            writeStorage('letterLearningGameData', JSON.stringify(gameData));
         }
 
         function loadGameData() {
-            const saved = localStorage.getItem('letterLearningGameData');
+            const saved = readStorage('letterLearningGameData');
             if (saved) {
                 try {
-                    const gameData = JSON.parse(saved);
+                    const gameData = parseStoredObject(saved);
 
                     // Restore game state
-                    score = gameData.score || 0;
-                    correctAnswers = gameData.correctAnswers || 0;
-                    wrongAnswers = gameData.wrongAnswers || 0;
-                    currentRound = gameData.currentRound || 1;
-                    letterPerformance = gameData.letterPerformance || {};
+                    score = nonnegative(gameData.score);
+                    correctAnswers = nonnegative(gameData.correctAnswers);
+                    wrongAnswers = nonnegative(gameData.wrongAnswers);
+                    currentRound = Math.max(1, nonnegative(gameData.currentRound, 1));
+                    letterPerformance = normalizePerformance(gameData.letterPerformance);
                     // Backfill SRS fields for existing saves
                     const nowTs = Date.now();
                     Object.keys(letterPerformance).forEach(k => {
@@ -11941,22 +12224,22 @@
                         if (!Array.isArray(perf.times)) perf.times = perf.times ? [perf.times] : [];
                         letterPerformance[k] = perf;
                     });
-                    lettersMastered = new Set(gameData.lettersMastered || []);
-                    unlockedAchievements = new Set(gameData.unlockedAchievements || []);
-                    achievementProgress = gameData.achievementProgress || {};
-                    bestStreak = gameData.bestStreak || 0;
-                    speedAnswers = gameData.speedAnswers || 0;
-                    totalPlayTime = gameData.totalPlayTime || 0;
-                    roundsCompleted = gameData.roundsCompleted || 0;
+                    lettersMastered = new Set(Array.isArray(gameData.lettersMastered) ? gameData.lettersMastered.filter(letter => /^[a-z]$/.test(letter)) : []);
+                    unlockedAchievements = new Set(Array.isArray(gameData.unlockedAchievements) ? gameData.unlockedAchievements.filter(id => ACHIEVEMENTS.some(a => a.id === id)) : []);
+                    achievementProgress = Object.fromEntries(Object.entries(parseStoredObject(JSON.stringify(gameData.achievementProgress))).map(([key, value]) => [key, nonnegative(value)]));
+                    bestStreak = nonnegative(gameData.bestStreak);
+                    speedAnswers = nonnegative(gameData.speedAnswers);
+                    totalPlayTime = nonnegative(gameData.totalActivePlayMs, nonnegative(gameData.totalPlayTime) * 60000) / 60000;
+                    roundsCompleted = nonnegative(gameData.roundsCompleted);
                     // Restore confusion matrix, with backfill if missing
-                    if (gameData.confusionMatrix) {
+                    if (gameData.confusionMatrix && typeof gameData.confusionMatrix === 'object' && !Array.isArray(gameData.confusionMatrix)) {
                         confusionMatrix = gameData.confusionMatrix;
                         // Ensure full domain for future letters
                         const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
                         letters.forEach(c => {
-                            confusionMatrix[c] = confusionMatrix[c] || {};
+                            if (!confusionMatrix[c] || typeof confusionMatrix[c] !== 'object' || Array.isArray(confusionMatrix[c])) confusionMatrix[c] = {};
                             letters.forEach(w => {
-                                if (typeof confusionMatrix[c][w] !== 'number') confusionMatrix[c][w] = 0;
+                                confusionMatrix[c][w] = nonnegative(confusionMatrix[c][w]);
                             });
                         });
                     } else {
@@ -11964,20 +12247,41 @@
                     }
 
                     // Restore streak data
-                    lastPlayDate = gameData.lastPlayDate;
-                    streakHistory = gameData.streakHistory || [];
-                    currentStreak = gameData.currentStreak || 0;
+                    lastPlayDate = typeof gameData.lastPlayDate === 'string' ? gameData.lastPlayDate : null;
+                    streakHistory = Array.isArray(gameData.streakHistory) ? gameData.streakHistory.filter(day => typeof day === 'string') : [];
+                    currentStreak = nonnegative(gameData.currentStreak);
 
                     // Restore settings
-                    focusModeEnabled = gameData.focusModeEnabled || false;
-                    highContrastEnabled = gameData.highContrastEnabled || false;
-                    reduceMotionEnabled = gameData.reduceMotionEnabled || false;
-                    celebrationType = gameData.celebrationType || 'fireworks';
-                    currentTheme = gameData.currentTheme || 'classic';
-                    voiceRecordingEnabled = !!gameData.voiceRecordingEnabled;
+                    focusModeEnabled = gameData.focusModeEnabled === true;
+                    highContrastEnabled = gameData.highContrastEnabled === true;
+                    reduceMotionEnabled = gameData.reduceMotionEnabled === true;
+                    celebrationType = ['fireworks', 'stars', 'hearts', 'confetti'].includes(gameData.celebrationType) ? gameData.celebrationType : 'fireworks';
+                    currentTheme = ['classic', 'animals', 'colors'].includes(gameData.currentTheme) ? gameData.currentTheme : 'classic';
+                    voiceRecordingEnabled = gameData.voiceRecordingEnabled === true;
+                    selectedPlayerId = gameData.selectedPlayerId ?? null;
+                    roundCorrect = nonnegative(gameData.roundCorrect);
+                    roundWrong = nonnegative(gameData.roundWrong);
+                    roundResolved = nonnegative(gameData.roundResolved, roundCorrect);
+                    roundSummaryShown = gameData.roundSummaryShown === true;
+                    lastBreakQuestion = typeof gameData.lastBreakQuestion === 'number' ? gameData.lastBreakQuestion : -1;
+                    scoreAtRoundStart = nonnegative(gameData.scoreAtRoundStart, score);
+                    responseTimes = Array.isArray(gameData.responseTimes) ? gameData.responseTimes.filter(time => typeof time === 'number' && Number.isFinite(time) && time >= 0) : [];
+                    letterErrors = normalizeLetterErrors(gameData.letterErrors);
+                    totalQuestions = nonnegative(gameData.totalQuestions, correctAnswers + wrongAnswers);
+                    correctStreak = nonnegative(gameData.correctStreak);
+                    modePerformance = Object.fromEntries(['identify', 'draw', 'wordBuilder'].map(mode => [mode, normalizePerformance(gameData.modePerformance?.[mode])]));
+                    wbDifficulty = ['easy', 'medium', 'hard'].includes(gameData.wbDifficulty) ? gameData.wbDifficulty : 'easy';
+                    wbConsecutiveCorrect = nonnegative(gameData.wbConsecutiveCorrect); wbConsecutiveWrong = nonnegative(gameData.wbConsecutiveWrong);
+                    wordBuilderEnabled = gameData.wordBuilderEnabled !== false;
+                    currentMode = ['identify', 'draw', 'wordBuilder'].includes(gameData.currentMode) && (gameData.currentMode !== 'wordBuilder' || wordBuilderEnabled) ? gameData.currentMode : 'identify';
+                    const savedCase = gameData.currentCase || readStorage('letterLearningCase');
+                    currentCase = ['lower', 'upper', 'mixed'].includes(savedCase) ? savedCase : 'mixed';
+                    soundEnabled = typeof gameData.soundEnabled === 'boolean' ? gameData.soundEnabled : readStorage('letterLearningSound') !== 'off';
+                    phonicsEnabled = typeof gameData.phonicsEnabled === 'boolean' ? gameData.phonicsEnabled : readStorage('letterLearningPhonics') !== 'off';
+                    previousTimerState = typeof gameData.timerPreference === 'boolean' ? gameData.timerPreference : (typeof gameData.timerEnabled === 'boolean' ? gameData.timerEnabled : readStorage('letterLearningTimer') !== 'off');
+                    timerEnabled = previousTimerState && !focusModeEnabled;
 
-                    // Check streak continuity
-                    checkStreakContinuity();
+                    // Streaks advance only when the child plays, not when settings are loaded.
 
                     // Apply saved settings
                     if (focusModeEnabled) {
@@ -12006,13 +12310,13 @@
                     if (gameData.lastPlayed) {
                         const hoursSinceLastPlay = (Date.now() - gameData.lastPlayed) / (1000 * 60 * 60);
                         if (hoursSinceLastPlay > 24) {
-                            setTimeout(() => {
+                            scheduleLesson(() => {
                                 speakPhrasePolitely('Welcome back! Ready to learn more letters?');
                             }, 1000);
                         }
                     }
                 } catch (e) {
-                    console.error('Error loading game data:', e);
+                    showStorageStatus();
                 }
             }
         }
@@ -12032,10 +12336,9 @@
                 document.body.classList.add('focus-mode');
                 if (switchEl) { switchEl.checked = true; }
                 // Store current timer state and disable timer in focus mode
-                previousTimerState = timerEnabled;
                 timerEnabled = false;
                 // Remove distractions while enabling focus mode
-                clearAllTimers();
+                clearTimer();
                 cancelSpeech();
                 speakPhrase('Focus mode enabled. Simplified interface activated.', null, { priority: true });
             } else {
@@ -12045,22 +12348,13 @@
                 timerEnabled = previousTimerState;
                 speakPhrasePolitely('Focus mode disabled.');
             }
-
+            applyGameSettings();
             saveGameData();
         }
 
         function toggleHighContrast() {
             highContrastEnabled = !highContrastEnabled;
-            const switchEl = document.getElementById('highContrastCheck');
-
-            if (highContrastEnabled) {
-                document.body.style.filter = 'contrast(1.5)';
-                if (switchEl) { switchEl.checked = true; }
-            } else {
-                document.body.style.filter = 'none';
-                if (switchEl) { switchEl.checked = false; }
-            }
-
+            applyGameSettings();
             saveGameData();
         }
 
@@ -12084,13 +12378,68 @@
                 document.body.classList.remove('reduce-motion');
                 if (switchEl) { switchEl.checked = false; }
             }
-
+            applyGameSettings();
             saveGameData();
+        }
+
+        function motionReduced() {
+            return reduceMotionEnabled || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        }
+        function updatePromptAlternative() {
+            const target = document.getElementById('targetPrompt');
+            if (target) target.textContent = !soundEnabled || !speechSupported || !voices.length ? `Find the letter: ${currentLetter}` : 'Tap the speaker, then find the letter!';
+            const word = document.getElementById('wordTargetPrompt');
+            if (word) { word.textContent = `Build: ${wbTargetWord}`; word.hidden = soundEnabled && speechSupported && voices.length > 0; }
+        }
+        function setWordBuilderMode(mode) {
+            wordBuilderEnabled = mode === 'on';
+            if (!wordBuilderEnabled && currentMode === 'wordBuilder') setMode('identify');
+            applyGameSettings();
+            saveGameData();
+        }
+        function applyGameSettings() {
+            timerEnabled = previousTimerState && !focusModeEnabled;
+            document.body.classList.toggle('focus-mode', focusModeEnabled);
+            document.body.classList.toggle('reduce-motion', motionReduced());
+            document.body.classList.toggle('high-contrast', highContrastEnabled);
+            document.body.style.filter = 'none';
+            document.querySelectorAll('.mode-btn').forEach(button => {
+                const active = button.getAttribute('onclick').includes(`'${currentMode}'`);
+                button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+            });
+            for (const [name, enabled] of [['timer', timerEnabled], ['sound', soundEnabled], ['phonics', phonicsEnabled], ['wordBuilder', wordBuilderEnabled]]) {
+                for (const suffix of ['On', 'Off']) {
+                    const element = document.getElementById(name + suffix);
+                    if (element) { const active = (suffix === 'On') === enabled; element.classList.toggle('active', active); element.setAttribute('aria-pressed', String(active)); }
+                }
+            }
+            for (const [id, active] of [['caseLower', currentCase === 'lower'], ['caseUpper', currentCase === 'upper'], ['caseMixed', currentCase === 'mixed']]) {
+                const element = document.getElementById(id); element.classList.toggle('active', active); element.setAttribute('aria-pressed', String(active));
+            }
+            for (const [id, checked] of [['voiceToggle', voiceRecordingEnabled], ['focusModeCheck', focusModeEnabled], ['highContrastCheck', highContrastEnabled], ['reduceMotionCheck', reduceMotionEnabled]]) document.getElementById(id).checked = checked;
+            document.getElementById('wordBuilderBtn').hidden = !wordBuilderEnabled;
+            document.querySelectorAll('.theme-button').forEach(button => { const active = button.getAttribute('onclick').includes(`'${currentTheme}'`); button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); });
+            if (!timerEnabled) clearTimer();
+            const minigameClock = document.getElementById('minigameTimer');
+            if (minigameClock && (!timerEnabled || focusModeEnabled)) {
+                clearInterval(minigameTimer); minigameTimer = null; minigameClock.classList.remove('warning'); minigameClock.textContent = 'No time limit';
+            } else if (minigameClock && !minigameTimer) {
+                if (currentMinigame === 'letterRain') startMinigameTimer(30, endLetterRain);
+                else if (currentMinigame === 'memoryMatch') startMinigameTimer(60, endMemoryMatch);
+            }
+            if (motionReduced()) document.querySelectorAll('.wb-tile').forEach(tile => { if (tile._wbFloatTl) tile._wbFloatTl.kill(); });
+            if (motionReduced()) {
+                if (typeof gsap !== 'undefined') gsap.globalTimeline.getChildren(true, true, true).forEach(animation => { animation.totalProgress(1, true); animation.kill(); });
+                document.querySelectorAll('.letter-celebration-layer, .wb-emoji-celebration, .wb-emoji-orbit, .wb-particle, .wb-flight, .wb-prompt-emoji').forEach(element => element.remove());
+            }
+            updatePromptAlternative();
         }
         // Streak System Functions
         function checkStreakContinuity() {
             const today = new Date().toDateString();
-            const yesterday = new Date(Date.now() - 86400000).toDateString();
+            const yesterdayDate = new Date();
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            const yesterday = yesterdayDate.toDateString();
 
             if (lastPlayDate === today) {
                 // Already played today
@@ -12189,8 +12538,7 @@
                 generateStreakCalendar();
 
                 // Show modal
-                modal.style.display = 'flex';
-                previouslyFocusedElement = document.activeElement;
+                openDialog('streakModal');
                 setTimeout(() => trapFocus(modal.querySelector('.streak-modal-content')), 50);
                 // Close when tapping outside content
                 modal.onclick = function (e) {
@@ -12208,7 +12556,7 @@
                 }, 500);
 
                 // Announce achievement
-                speakPhrasePolitely(`Wow! ${data.title} ${data.subtitle}`);
+                speakPhrasePolitely(`Wow! ${data.title} ${data.subtitle}`, null, 1500, true);
             }
         }
 
@@ -12220,7 +12568,8 @@
             const daysToShow = 28; // Show 4 weeks
 
             for (let i = daysToShow - 1; i >= 0; i--) {
-                const date = new Date(today.getTime() - (i * 86400000));
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
                 const dateStr = date.toDateString();
                 const day = document.createElement('div');
                 day.className = 'calendar-day';
@@ -12241,8 +12590,7 @@
         }
 
         function closeStreakModal() {
-            document.getElementById('streakModal').style.display = 'none';
-            document.body.classList.remove('modal-open');
+            closeDialog('streakModal');
         }
 
         // Celebration Customization Functions
@@ -12262,36 +12610,6 @@
             // Save preference
             saveGameData();
         }
-
-        // Initialize
-        initializeMultiplayer();
-        updateScoreDisplay();
-        updateBadgeCount();
-        updateDifficultyLevel();
-        updateStreakDisplay();
-
-        // Load saved theme
-        const savedTheme = localStorage.getItem('letterLearningTheme');
-        const savedPhonics = localStorage.getItem('letterLearningPhonics');
-        if (savedPhonics) {
-            phonicsEnabled = savedPhonics === 'on';
-            setPhonicsMode(phonicsEnabled ? 'on' : 'off');
-        }
-
-        // Set saved celebration type in UI
-        if (celebrationType !== 'fireworks') {
-            setCelebration(celebrationType);
-        }
-
-        // Sync advanced settings UI to saved values at load
-        const voiceToggleAtLoad = document.getElementById('voiceToggle');
-        if (voiceToggleAtLoad) voiceToggleAtLoad.checked = !!voiceRecordingEnabled;
-        const fmCheckAtLoad = document.getElementById('focusModeCheck');
-        if (fmCheckAtLoad) fmCheckAtLoad.checked = !!focusModeEnabled;
-        const hcCheckAtLoad = document.getElementById('highContrastCheck');
-        if (hcCheckAtLoad) hcCheckAtLoad.checked = !!highContrastEnabled;
-        const rmCheckAtLoad = document.getElementById('reduceMotionCheck');
-        if (rmCheckAtLoad) rmCheckAtLoad.checked = !!reduceMotionEnabled;
 
         // Long press for parent dashboard
         let longPressTimer;
@@ -12327,16 +12645,14 @@
 
         // Convenience: open Parent Dashboard directly from Settings
         function openParentDashboardViaSettings() {
-            closeSettings();
-            setTimeout(() => openParentDashboard(), 150);
+            openParentDashboard();
         }
 
         // Add keyboard support for debugging
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                closeSettings();
-                closeAchievements();
-                document.getElementById('roundModal').style.display = 'none';
+                if (activeDialog === 'roundModal') startNextRound();
+                else if (activeDialog) closeDialog(activeDialog);
             }
         });
 
@@ -12360,14 +12676,18 @@
 
         // Focus trap helper
         function trapFocus(modal) {
-            if (!modal) return;
-            const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-            if (!focusable || focusable.length === 0) return;
-            const first = focusable[0];
-            const last = focusable[focusable.length - 1];
-            first.focus();
-            modal.addEventListener('keydown', function onKeyDown(e) {
+            if (!modal || !modal.getClientRects().length || modal.closest('[inert]')) return;
+            const getFocusable = () => [...modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+                .filter(element => !element.disabled && element.tabIndex >= 0 && element.getClientRects().length && getComputedStyle(element).visibility !== 'hidden');
+            const focusable = getFocusable();
+            if (!focusable.length) { modal.focus(); return; }
+            focusable[0].focus();
+            if (modal.__focusTrap) modal.removeEventListener('keydown', modal.__focusTrap);
+            modal.__focusTrap = e => {
                 if (e.key !== 'Tab') return;
+                const items = getFocusable();
+                if (!items.length) { e.preventDefault(); modal.focus(); return; }
+                const first = items[0], last = items[items.length - 1];
                 if (e.shiftKey) {
                     if (document.activeElement === first) {
                         e.preventDefault();
@@ -12379,44 +12699,163 @@
                         first.focus();
                     }
                 }
-            });
+            };
+            modal.addEventListener('keydown', modal.__focusTrap);
+        }
+
+        function openDialog(id, display = 'flex') {
+            const modal = document.getElementById(id);
+            if (activeDialog === id) return;
+            if (!activeDialog) {
+                dialogReturnFocus = document.activeElement;
+                lessonPaused = true; pauseStartedAt = Date.now();
+                stopPlayClock(); stopVoiceResources(); cancelSpeech();
+                document.body.classList.add('lesson-paused');
+                if (waitingForPhonics) skipPhonics();
+            } else document.getElementById(activeDialog).style.display = 'none';
+            activeDialog = id;
+            modal.style.display = display;
+            modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.tabIndex = -1;
+            const heading = modal.querySelector('[class*="title"], .settings-header');
+            modal.setAttribute('aria-label', heading ? heading.textContent.trim() : 'Learning options');
+            for (const child of document.querySelector('.container').children) child.inert = child !== modal;
+            document.body.classList.add('modal-open');
+            trapFocus(modal);
+        }
+        function closeDialog(id) {
+            if (activeDialog !== id) return;
+            document.getElementById(id).style.display = 'none';
+            cancelSpeech();
+            activeDialog = null;
+            for (const child of document.querySelector('.container').children) child.inert = false;
+            document.body.classList.remove('modal-open', 'lesson-paused');
+            const pausedFor = Date.now() - pauseStartedAt;
+            if (timerDeadline) timerDeadline += pausedFor;
+            if (questionStartTime) questionStartTime += pausedFor;
+            if (drawQuestionStartTime) drawQuestionStartTime += pausedFor;
+            lessonPaused = false;
+            if (document.querySelector('#gameArea .option-btn, #drawCanvas, #wbSlots, .minigame-container')) {
+                startPlayClock();
+                if (currentMode === 'identify' && timerEnabled && !currentTimer && !isProcessing && !questionResolved) startTimer();
+            }
+            if (dialogReturnFocus && dialogReturnFocus.isConnected) dialogReturnFocus.focus();
+            dialogReturnFocus = null;
         }
 
         // Prevent pull-to-refresh on mobile
         document.addEventListener('touchmove', function (e) {
-            if (e.touches.length > 1) {
+            if (e.touches.length > 1 && e.target.closest('#drawCanvas, #rainGameArea')) {
                 e.preventDefault();
             }
         }, { passive: false });
-        // New tracing recognizer (hybrid classical + optional deep) — overrides old checkDrawing
+        // Arc-length sampling never inserts into or extrapolates beyond the input path.
+        function resampleStroke(points, count = 48) {
+            if (!Number.isInteger(count) || count < 1 || count > 4096) throw new RangeError('Invalid sample count');
+            const pts = points.filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+            if (!pts.length) return [];
+            const copy = p => ({ x: p.x, y: p.y });
+            if (count === 1) return [copy(pts[0])];
+            const cumulative = [0];
+            for (let i = 1; i < pts.length; i++) {
+                cumulative.push(cumulative[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+            }
+            const length = cumulative[cumulative.length - 1];
+            if (!length) return Array.from({ length: count }, () => copy(pts[0]));
+            const out = [];
+            let segment = 1;
+            for (let i = 0; i < count; i++) {
+                const distance = length * i / (count - 1);
+                while (segment < pts.length - 1 && cumulative[segment] < distance) segment++;
+                const start = pts[segment - 1], end = pts[segment];
+                const span = cumulative[segment] - cumulative[segment - 1];
+                const t = span ? Math.max(0, Math.min(1, (distance - cumulative[segment - 1]) / span)) : 0;
+                out.push({ x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t });
+            }
+            return out;
+        }
+
+        // Each pen-down stroke contributes samples; pen-up travel is never a segment.
+        function createTraceCloud(strokes, count = 48) {
+            const paths = strokes.filter(stroke => stroke.length).slice(0, count);
+            if (!paths.length) return [];
+            const lengths = paths.map(stroke => stroke.slice(1).reduce((total, p, i) =>
+                total + Math.hypot(p.x - stroke[i].x, p.y - stroke[i].y), 0));
+            const total = lengths.reduce((sum, value) => sum + value, 0);
+            const remaining = count - paths.length;
+            const shares = lengths.map(length => remaining * (total ? length / total : 1 / paths.length));
+            const counts = shares.map(share => 1 + Math.floor(share));
+            const order = shares.map((share, index) => ({ index, fraction: share - Math.floor(share) }))
+                .sort((a, b) => b.fraction - a.fraction);
+            let spare = count - counts.reduce((sum, value) => sum + value, 0);
+            for (let i = 0; i < spare; i++) counts[order[i].index]++;
+            return paths.flatMap((stroke, i) => resampleStroke(stroke, counts[i]));
+        }
+
+        // Tracing recognizer: classical geometry with optional deep similarity.
+        let deepLibrariesPromise;
+        function ensureDeepLibraries() {
+            if (!deepLibrariesPromise) {
+                const load = src => new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = src; script.async = true;
+                    script.onload = resolve; script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+                deepLibrariesPromise = (window.tf ? Promise.resolve() : load('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.19.0/dist/tf.min.js'))
+                    .then(() => window.mobilenet ? undefined : load('https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1'));
+            }
+            return deepLibrariesPromise;
+        }
         function checkDrawingNew() {
+            if (currentMode !== 'draw' || isProcessing || questionResolved || lessonPaused) return;
             const ALL_LETTERS = Object.keys(LETTER_CHECKPOINTS);
 
             // Local helpers (scoped to avoid polluting global)
             const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
             const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-            const lerp = (a, b, t) => a + (b - a) * t;
             const bboxOfStrokes = (strokes) => {
                 let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
                 for (const s of strokes) for (const p of s) { if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x; if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y; }
                 if (!isFinite(minX)) return { minX: 0, minY: 0, maxX: 1, maxY: 1, width: 1, height: 1 };
                 return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
             };
-            const joinStrokes = (strokes) => { const out = []; for (const s of strokes) for (const p of s) out.push(p); return out; };
             const pathLength = (pts) => { let d = 0; for (let i = 1; i < pts.length; i++) d += dist(pts[i - 1], pts[i]); return d; };
             const smoothStroke = (s) => { if (s.length < 3) return s.slice(); const out = [s[0]]; for (let i = 1; i < s.length - 1; i++) out.push({ x: (s[i - 1].x + s[i].x + s[i + 1].x) / 3, y: (s[i - 1].y + s[i].y + s[i + 1].y) / 3 }); out.push(s[s.length - 1]); return out; };
             const normalizeStrokesToBox = (strokes) => { const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = 100 / Math.max(w, h), ox = bb.minX, oy = bb.minY; return strokes.map(s => s.map(p => ({ x: (p.x - ox) * scale, y: (p.y - oy) * scale }))); };
             const N_RESAMPLE = 48, ROT_MAX_DEG = 60, ROT_STEP_DEG = 4, CLOUD_NORM = 40;
-            const resampleStroke = (pts, n) => { if (pts.length === 0) return []; const I = pathLength(pts) / (n - 1); let D = 0, out = [{ ...pts[0] }]; for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], L = dist(a, b); if (!L) continue; while (D + L >= I) { const t = (I - D) / L; const q = { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) }; out.push(q); pts.splice(i, 0, q); D = 0; break; } D += L; } if (out.length < n) out.push({ ...pts[pts.length - 1] }); return out.length === n ? out : (out.length > n ? out.slice(0, n) : out); };
             const centroid = (pts) => { let cx = 0, cy = 0; for (const p of pts) { cx += p.x; cy += p.y; } return { x: cx / pts.length, y: cy / pts.length }; };
             const rotatePoints = (pts, rad) => { const c = centroid(pts), cs = Math.cos(rad), sn = Math.sin(rad); return pts.map(p => ({ x: (p.x - c.x) * cs - (p.y - c.y) * sn + c.x, y: (p.x - c.x) * sn + (p.y - c.y) * cs + c.y })); };
-            const cloudDistance = (pts1, pts2) => { const n = pts1.length, matched = new Array(n).fill(false); let sum = 0; for (let i = 0; i < n; i++) { let md = Infinity, mi = -1; for (let j = 0; j < n; j++) { if (matched[j]) continue; const d = dist(pts1[i], pts2[j]); if (d < md) { md = d; mi = j; } } matched[mi] = true; sum += md; } return sum / n; };
+            const cloudDistance = (pts1, pts2) => {
+                const n = pts1.length, matched = new Array(n).fill(false); let sum = 0;
+                for (let i = 0; i < n; i++) {
+                    let minimumSquared = Infinity, closest = -1;
+                    for (let j = 0; j < n; j++) {
+                        if (matched[j]) continue;
+                        const dx = pts1[i].x - pts2[j].x, dy = pts1[i].y - pts2[j].y, squared = dx * dx + dy * dy;
+                        if (squared < minimumSquared) { minimumSquared = squared; closest = j; }
+                    }
+                    matched[closest] = true; sum += Math.sqrt(minimumSquared);
+                }
+                return sum / n;
+            };
             const greedyCloudMatch = (userPts, tmplPts) => { let best = Infinity; for (let a = -ROT_MAX_DEG; a <= ROT_MAX_DEG; a += ROT_STEP_DEG) best = Math.min(best, cloudDistance(rotatePoints(userPts, a * Math.PI / 180), tmplPts)); return best; };
             const rasterize = (strokes, size = 64, lw = 12) => { const c = document.createElement('canvas'); c.width = size; c.height = size; const g = c.getContext('2d'); g.clearRect(0, 0, size, size); g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#000'; g.lineWidth = lw; g.fillStyle = '#000'; const bb = bboxOfStrokes(strokes); const w = Math.max(1, bb.width), h = Math.max(1, bb.height); const scale = (size * 0.84) / Math.max(w, h), pad = size * 0.08; for (const s of strokes) { if (s.length < 2) { const p = s[0]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; g.beginPath(); g.arc(x, y, lw * 0.45, 0, Math.PI * 2); g.fill(); continue; } g.beginPath(); for (let i = 0; i < s.length; i++) { const p = s[i]; const x = (p.x - bb.minX) * scale + pad, y = (p.y - bb.minY) * scale + pad; if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); } g.stroke(); } return g.getImageData(0, 0, size, size).data; };
             const iou = (strokesA, strokesB, size = 64, lw = 12) => { const A = rasterize(strokesA, size, lw), B = rasterize(strokesB, size, lw); let inter = 0, uni = 0; for (let i = 3; i < A.length; i += 4) { const a = A[i] > 0, b = B[i] > 0; if (a && b) inter++; if (a || b) uni++; } return uni === 0 ? 0 : inter / uni; };
             const analyzeStrokesRaw = (strokes) => { const bb = bboxOfStrokes(strokes); const area = bb.width * bb.height; let totalLen = 0; const boxes = []; for (const s of strokes) { if (s.length < 1) continue; totalLen += pathLength(s); const b = bboxOfStrokes([s]); b.area = b.width * b.height; boxes.push(b); } return { bb, area, totalLen, boxes }; };
-            const hasDotAboveMain = (strokesNorm) => { const { boxes } = analyzeStrokesRaw(strokesNorm); if (boxes.length < 2) return false; const main = boxes.reduce((a, b) => a.area > b.area ? a : b); const dots = boxes.filter(b => b.area < main.area * 0.12); const mainTop = main.minY + main.height * 0.2; return dots.some(d => d.maxY < mainTop); };
-            const hasMidCrossbar = (strokesNorm) => { const bb = bboxOfStrokes(strokesNorm); const y1 = bb.minY + bb.height * 0.35, y2 = bb.minY + bb.height * 0.65; let horiz = 0, total = 0; for (const s of strokesNorm) { for (let i = 1; i < s.length; i++) { total++; const a = s[i - 1], b = s[i]; const dy = Math.abs(b.y - a.y), dx = Math.abs(b.x - a.x); const ymid = (a.y + b.y) / 2; if (dx > dy * 2 && ymid >= y1 && ymid <= y2) horiz++; } } return horiz >= Math.max(2, Math.floor(total * 0.06)); };
+            const hasDotAboveMain = strokes => {
+                if (strokes.length < 2) return false;
+                const ordered = strokes.map(s => ({ box: bboxOfStrokes([s]), length: pathLength(s) })).sort((a, b) => b.length - a.length);
+                const main = ordered[0];
+                return ordered.slice(1).some(dot => dot.length < main.length * 0.25 && dot.box.maxY < main.box.minY && dot.box.minX >= main.box.minX - 20 && dot.box.maxX <= main.box.maxX + 20);
+            };
+            const hasMidCrossbar = strokes => {
+                const bb = bboxOfStrokes(strokes); let horizontalLength = 0;
+                for (const s of strokes) for (let i = 1; i < s.length; i++) {
+                    const a = s[i - 1], b = s[i], dx = Math.abs(b.x - a.x), dy = Math.abs(b.y - a.y), y = (a.y + b.y) / 2;
+                    if (dx > dy * 2 && y >= bb.minY + bb.height * 0.3 && y <= bb.minY + bb.height * 0.7) horizontalLength += dx;
+                }
+                return horizontalLength >= Math.max(15, bb.width * 0.4);
+            };
             const looksLikeScribble = (strokes, canvas) => { const { bb, totalLen } = analyzeStrokesRaw(strokes); const lenRatio = totalLen / (Math.max(1, Math.max(bb.width, bb.height))); const tiny = false; return (lenRatio > 28); };
             // Simple cross (X-like) detector to stop X from passing for many letters
             const looksLikeCross = (strokesNorm) => {
@@ -12424,6 +12863,14 @@
                 const strokeWithLen = strokesNorm.map(s => ({ s, L: pathLength(s) })).sort((a,b)=>b.L-a.L);
                 const a = strokeWithLen[0], b = strokeWithLen[1];
                 if (!a || !b || a.L < 20 || b.L < 20) return false;
+                // A cross intersects inside both strokes; a Y only joins at an endpoint.
+                const a0 = a.s[0], a1p = a.s[a.s.length - 1], b0 = b.s[0], b1p = b.s[b.s.length - 1];
+                const ax = a1p.x - a0.x, ay = a1p.y - a0.y, bx = b1p.x - b0.x, by = b1p.y - b0.y;
+                const determinant = ax * by - ay * bx;
+                if (Math.abs(determinant) < 1e-6) return false;
+                const qx = b0.x - a0.x, qy = b0.y - a0.y;
+                const alongA = (qx * by - qy * bx) / determinant, alongB = (qx * ay - qy * ax) / determinant;
+                if (alongA < 0.15 || alongA > 0.85 || alongB < 0.15 || alongB > 0.85) return false;
                 const endAng = (st) => { const p0 = st[0], p1 = st[st.length-1]; let deg = Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180/Math.PI; deg = (deg % 180 + 180) % 180; return deg; };
                 const a1 = endAng(a.s), a2 = endAng(b.s);
                 const diff = Math.abs(Math.abs(a1 - a2) - 90);
@@ -12444,34 +12891,35 @@
                 C.tmplCache = {};
                 for (const L of ALL_LETTERS) {
                     const t = LETTER_CHECKPOINTS[L]; if (!t || !t.strokes) continue;
-                    const sm = t.strokes.map(s => smoothStroke(s));
+                    const sm = t.strokes.map(s => smoothStroke(resampleStroke(s, N_RESAMPLE)));
                     const norm = normalizeStrokesToBox(sm);
-                    const joined = joinStrokes(norm);
-                    const cloud = resampleStroke(joined, N_RESAMPLE);
+                    const cloud = createTraceCloud(norm, N_RESAMPLE);
                     C.tmplCache[L] = { strokesNorm: norm, cloud, feedback: t.feedback || {} };
                 }
             }
 
             // Warm-up deep embeddings lazily
-            if (!C.deepInit && window.mobilenet && window.tf) {
+            if (!C.deepInit) {
                 C.deepInit = true;
                 C.deepEmb = new Map();
-                mobilenet.load({ version: 2, alpha: 0.5 }).then(model => {
-                    C.mbnet = model;
+                ensureDeepLibraries().then(() => mobilenet.load({ version: 2, alpha: 0.5 })).then(async model => {
                     const size = 224, lw = Math.round(size * 0.11);
                     for (const L of ALL_LETTERS) {
                         const s = C.tmplCache[L]?.strokesNorm; if (!s) continue;
                         const c = renderStrokesToCanvas(s, size, lw);
                         const vec = tf.tidy(() => { const e = model.infer(c, true); const flat = e.dataSync(); return Float32Array.from(flat); });
                         C.deepEmb.set(L, l2norm(vec));
+                        // Yield between templates so controls remain responsive during model setup.
+                        await new Promise(resolve => setTimeout(resolve, 0));
                     }
+                    C.mbnet = model;
                 }).catch(() => { /* fallback to classical only */ });
             }
 
             // Quick checks
             const canvas = document.getElementById('drawCanvas');
             if (!canvas) return;
-            if (drawingPoints.length < 12) {
+            if (drawingPoints.length < 2) {
                 showFeedback('Keep drawing! Try to complete the letter. ✏️', 'info');
                 speakPhrasePolitely('Add a little more to your drawing!');
                 return;
@@ -12479,23 +12927,29 @@
 
             // Normalize user strokes to 100x100 box
             const pointsToStrokes = (points) => { const strokes = []; let cur = []; for (const p of points) { if (p.newStroke && cur.length > 0) { strokes.push(cur); cur = []; } cur.push({ x: p.x, y: p.y }); } if (cur.length > 0) strokes.push(cur); return strokes; };
-            const raw = pointsToStrokes(drawingPoints).map(s => smoothStroke(s));
+            const inputStrokes = pointsToStrokes(drawingPoints);
+            const raw = inputStrokes.map(s => smoothStroke(resampleStroke(s, N_RESAMPLE)));
             const bb = bboxOfStrokes(raw); const w = Math.max(1, bb.width), h = Math.max(1, bb.height);
             const scale = 100 / Math.max(w, h);
             const userNorm = raw.map(s => s.map(p => ({ x: (p.x - bb.minX) * scale, y: (p.y - bb.minY) * scale })));
 
             // Do not reject based on size; kids may draw smaller and still be correct
-            // Skip scribble rejection entirely for now (temporary ultra-permissive mode)
+            if (looksLikeScribble(inputStrokes) || Math.max(bb.width, bb.height) < 2 || inputStrokes.reduce((sum, stroke) => sum + pathLength(stroke), 0) < 2) {
+                showFeedback('Try a clear letter shape. You can use the guide to help.', 'info');
+                recordOutcome(false, 0, false, currentLetter);
+                recordDrawAttempt({ letter: currentLetter, accepted: false, reason: 'shapeGuard', finalScore: 0, classicalScore: 0, deepScore: null, points: 0, responseTime: (Date.now() - drawQuestionStartTime) / 1000 });
+                return;
+            }
 
             // Classical similarity (cloud + IoU)
             const tmpl = C.tmplCache[currentLetter];
             if (!tmpl) {
                 showFeedback("Great practice! Let's try another one. 👍", 'info');
                 speakPhrasePolitely('Good job practicing that letter!');
-                setTimeout(() => startDrawGame(), 2000);
+                scheduleLesson(() => startDrawGame(), 2000);
                 return;
             }
-            const userCloud = resampleStroke(joinStrokes(userNorm), N_RESAMPLE);
+            const userCloud = createTraceCloud(userNorm, N_RESAMPLE);
             const meCloudD = greedyCloudMatch(userCloud, tmpl.cloud);
             const cloudSim = 1 - clamp(meCloudD / CLOUD_NORM, 0, 1);
             const visual = iou(userNorm, tmpl.strokesNorm, 54, 26);
@@ -12573,6 +13027,7 @@
             const classicalTopOk = (classicalScore + nearTopEpsilon) >= bestOtherClassical && classicalScore >= Math.max(0.22, floor - 0.10);
             const deepTopOk = deepOk && deepMargin >= -0.02 && deepScore >= 0.52;
             let passed = classicalTopOk || deepTopOk || (finalScore >= acceptThresh);
+            if ((needDot && !dotOK) || (needCrossbar && !crossbarOK)) passed = false;
             // Generic guard: if another letter dominates the target by a clear margin, reject
             const wrongDomClassicalMargin = 0.22;
             const wrongDomDeepMargin = -0.22;
@@ -12621,10 +13076,11 @@
                 const deepMarginPenalty = deepOk ? Math.max(0, 0.02 - deepMargin) : 0;
                 const adjQuality = clamp(qualityBase - (0.25 * marginPenalty) - (0.10 * deepMarginPenalty), 0, 1);
                 let points = Math.max(0, Math.floor((base + bonus) * (0.15 + 0.85 * adjQuality)) - hintPenalty);
-                const gainedThisRound = Math.max(0, (currentPlayer ? currentPlayer.score : score) - scoreAtRoundStart);
+                const gainedThisRound = Math.max(0, score - scoreAtRoundStart);
                 if (gainedThisRound + points > 50) points = Math.max(0, 50 - gainedThisRound);
-                score += points; roundCorrect++; correctAnswers++; totalQuestions++; updateScoreDisplay();
-                updateLetterPerformance(currentLetter, true, responseTime, points);
+                isProcessing = true;
+                score += points;
+                recordOutcome(true, responseTime, true, currentLetter);
                 // Record analytics for acceptance
                 recordDrawAttempt({
                     letter: currentLetter,
@@ -12632,20 +13088,21 @@
                     reason,
                     finalScore,
                     classicalScore,
-                    deepScore: deepOk ? deepScore : 0,
+                    deepScore: deepOk ? deepScore : null,
                     responseTime,
                     points
                 });
                 showFeedback(`That's a great "${currentLetter}"! +${points} ✨`, 'success');
-                cancelSpeech(); speakPhrase(`Great ${currentLetter}!`, () => { advanceToNextDrawLetterOnce(); }, { skipCancel: true });
+                drawAdvanceTimeout = scheduleLesson(advanceToNextDrawLetterOnce, 2200);
+                cancelSpeech(); speakPhrase(`Great ${currentLetter}!`, () => { scheduleLesson(advanceToNextDrawLetterOnce, 1000); }, { skipCancel: true });
                 const container = document.querySelector('.canvas-container');
-                if (container) { container.style.boxShadow = '0 10px 30px rgba(74, 222, 128, 0.5)'; container.style.transform = 'scale(1.03)'; setTimeout(() => { container.style.boxShadow = ''; container.style.transform = ''; }, 1000); }
-                drawAdvanceTimeout = setTimeout(() => { advanceToNextDrawLetterOnce(); }, 2200);
+                if (container && !motionReduced()) { container.style.boxShadow = '0 10px 30px rgba(74, 222, 128, 0.5)'; container.style.transform = 'scale(1.03)'; scheduleLesson(() => { container.style.boxShadow = ''; container.style.transform = ''; }, 1000); }
             } else {
+                recordOutcome(false, responseTime, false, currentLetter);
                 const msg = (finalScore >= (acceptThresh - 0.06)) ? (tmpl.feedback.incomplete || 'So close! A little more will do it.') : (tmpl.feedback.wrong || "Let's try again with this letter shape.");
                 showFeedback(msg, 'error'); speakPhrasePolitely(msg);
                 const container = document.querySelector('.canvas-container');
-                if (container) { container.classList.add('animate__animated', 'animate__shakeX'); setTimeout(() => container.classList.remove('animate__animated', 'animate__shakeX'), 800); }
+                if (container && !motionReduced()) { container.classList.add('animate__animated', 'animate__shakeX'); scheduleLesson(() => container.classList.remove('animate__animated', 'animate__shakeX'), 800); }
                 // Record analytics for rejection
                 recordDrawAttempt({
                     letter: currentLetter,
@@ -12653,11 +13110,11 @@
                     reason,
                     finalScore,
                     classicalScore,
-                    deepScore: deepOk ? deepScore : 0,
+                    deepScore: deepOk ? deepScore : null,
                     responseTime,
                     points: 0
                 });
-                setTimeout(() => clearCanvas(), 2000);
+                drawRetryClearTimeout = scheduleLesson(() => { drawRetryClearTimeout = null; clearCanvas(); }, 2000);
             }
         }
 
@@ -12688,8 +13145,10 @@
         let wbTransitioning = false;
 
         function startWordBuilderGame(reset = false) {
+            if (currentMode !== 'wordBuilder' || !wordBuilderEnabled) return;
             // Prevent rapid re-calls during transition
             if (wbTransitioning) return;
+            beginQuestion();
 
             // Set flag to prevent interruption during setup
             wbTransitioning = true;
@@ -12721,6 +13180,7 @@
             }
 
             wbTargetWord = word;
+            questionStartTime = Date.now();
             wbSlots = new Array(word.length).fill(null);
             wbFilledCount = 0;
             wbUsedTiles = [];
@@ -12780,6 +13240,7 @@
                             ${difficultyEmojis[wbDifficulty]} ${wbDifficulty.toUpperCase()}
                         </div>
                     </div>
+                    <div class="instruction" id="wordTargetPrompt" aria-live="polite"></div>
                     <div class="wb-slots" id="wbSlots">${slotsHTML}</div>
                     <div class="wb-bank" id="wbBank">${bankHTML}</div>
                     <div class="wb-controls">
@@ -12787,15 +13248,17 @@
                     </div>
                 </div>
             `;
+            gameArea.classList.remove('with-sound');
+            updatePromptAlternative();
 
             // Subtle entry animation for the container
             const cont = document.querySelector('.wb-container');
-            if (cont && typeof gsap !== 'undefined') {
+            if (cont && !motionReduced() && typeof gsap !== 'undefined') {
                 gsap.fromTo(cont, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' });
             }
 
             // Gentle floating animations for bank tiles (disable CSS pulse to avoid conflicts)
-            if (typeof gsap !== 'undefined') {
+            if (!motionReduced() && typeof gsap !== 'undefined') {
                 const bankEl = document.getElementById('wbBank');
                 if (bankEl) {
                     const tiles = bankEl.querySelectorAll('.wb-tile');
@@ -12826,7 +13289,7 @@
 
             // Show any pending level animation after game is ready
             if (window.wbPendingLevelAnimation) {
-                setTimeout(() => {
+                scheduleLesson(() => {
                     if (window.wbPendingLevelAnimation) {
                         window.wbPendingLevelAnimation();
                         window.wbPendingLevelAnimation = null;
@@ -12837,6 +13300,7 @@
             // Auto speak the target word and show an anchor emoji burst
             const speakLetters = word.split('').join(', ');
             const after = () => {
+                if (motionReduced()) return;
                 // anchor emoji near slots area
                 try {
                     const key = word.toLowerCase();
@@ -12848,6 +13312,7 @@
                             const x = rect.left + rect.width / 2;
                             const y = rect.top - 12;
                             const el = document.createElement('div');
+                            el.className = 'wb-prompt-emoji';
                             el.textContent = emoji;
                             el.style.cssText = `position:fixed; left:${x}px; top:${y}px; transform:translate(-50%,-50%) scale(0.7); font-size:56px; z-index:10010; pointer-events:none; opacity:0;`;
                             document.body.appendChild(el);
@@ -12875,7 +13340,7 @@
                     // soft preempt after timeout
                     doSpeak();
                 } else {
-                    setTimeout(speakWhenIdle, 180);
+                    scheduleLesson(speakWhenIdle, 180);
                 }
             };
             speakWhenIdle();
@@ -12992,7 +13457,9 @@
         }
 
         function wbPick(letter, bankIdx) {
-            if (currentMode !== 'wordBuilder' || isProcessing) return;
+            if (currentMode !== 'wordBuilder' || isProcessing || lessonPaused || questionResolved || wbTransitioning) return;
+            const available = document.querySelector(`.wb-tile[data-bank-idx="${bankIdx}"]`);
+            if (!available || available.disabled || wbBank[bankIdx] !== letter) return;
             const idx = wbSlots.findIndex(v => v === null);
             if (idx === -1) return;
             wbSlots[idx] = letter;
@@ -13019,13 +13486,13 @@
             if (slot) {
                 slot.textContent = letter;
                 slot.classList.add('filled');
-                if (typeof gsap !== 'undefined') {
+                if (!motionReduced() && typeof gsap !== 'undefined') {
                     gsap.fromTo(slot, { scale: 0.9 }, { scale: 1.0, duration: 0.18, ease: 'back.out(2)' });
                 }
             }
             if (btn) {
                 btn.disabled = true;
-                if (typeof gsap !== 'undefined') {
+                if (!motionReduced() && typeof gsap !== 'undefined') {
                     gsap.to(btn, { opacity: 0.5, duration: 0.2, ease: 'power1.out' });
                 }
             }
@@ -13035,13 +13502,15 @@
             }
         }
         function wbCheckWord() {
+            if (currentMode !== 'wordBuilder' || questionResolved || isProcessing || wbFilledCount !== wbSlots.length) return;
+            isProcessing = true;
             const attempt = wbSlots.join('');
             if (attempt === wbTargetWord) {
                 score += 20;
-                roundCorrect++;
-                totalQuestions++;
+                recordOutcome(true, (Date.now() - questionStartTime) / 1000, true, wbTargetWord.toLowerCase());
                 wbConsecutiveCorrect++;
                 wbConsecutiveWrong = 0; // Reset wrong streak
+                saveGameData();
                 updateScoreDisplay();
                 markWordResult(true);
 
@@ -13049,7 +13518,7 @@
                 try {
                     const bankEl = document.getElementById('wbBank');
                     const slotsEl = document.getElementById('wbSlots');
-                    if (bankEl && slotsEl && typeof gsap !== 'undefined') {
+                    if (bankEl && slotsEl && !motionReduced() && typeof gsap !== 'undefined') {
                         // Unused tiles (not disabled) fly off-screen
                         bankEl.querySelectorAll('.wb-tile:not([disabled])').forEach((tile) => {
                             if (tile._wbFloatTl && typeof tile._wbFloatTl.kill === 'function') {
@@ -13076,6 +13545,7 @@
                             const tr = tile.getBoundingClientRect();
                             const sr = slot.getBoundingClientRect();
                             const clone = tile.cloneNode(true);
+                            clone.classList.add('wb-flight');
                             clone.removeAttribute('onclick');
                             clone.setAttribute('aria-hidden', 'true');
                             clone.style.position = 'fixed';
@@ -13136,7 +13606,7 @@
                         if (cont && cont.style) cont.style.animation = '';
                     }, 1100);
 
-                    if (typeof gsap !== 'undefined') {
+                    if (!motionReduced() && typeof gsap !== 'undefined') {
                         // Complex success animation sequence
                         const tl = gsap.timeline();
                         tl.to(cont, { scale: 1.1, duration: 0.2, ease: 'power2.out' })
@@ -13166,20 +13636,19 @@
 
                 // Delay before next word
                 wbTransitioning = true; // Prevent interruption during celebration
-                setTimeout(() => {
+                scheduleLesson(() => {
                     // Clean up any lingering celebration elements
                     document.querySelectorAll('.wb-emoji-celebration, .wb-emoji-orbit, .wb-particle').forEach(el => {
                         if (el && el.parentNode) el.remove();
                     });
                     wbTransitioning = false; // Allow new game
-                    startWordBuilderGame(false);
+                    advanceLesson();
                 }, 2500);
             } else {
-                roundWrong++;
-                totalQuestions++;
                 wbConsecutiveWrong++;
                 wbConsecutiveCorrect = 0; // Reset correct streak
                 score = Math.max(0, score - 5);
+                recordOutcome(false, 0, true, wbTargetWord.toLowerCase());
                 updateScoreDisplay();
                 markWordResult(false);
 
@@ -13200,18 +13669,19 @@
                     setTimeout(() => cont.classList.remove('animate__animated', 'animate__shakeX'), 600);
                 }
                 wbTransitioning = true; // Prevent interruption during transition
-                setTimeout(() => {
+                scheduleLesson(() => {
                     // Clean up any elements from failed attempt
                     document.querySelectorAll('.wb-particle').forEach(el => {
                         if (el && el.parentNode) el.remove();
                     });
                     wbTransitioning = false; // Allow new game
-                    startWordBuilderGame(false);
+                    advanceLesson();
                 }, 1500);
             }
         }
         // Show giant emoji celebration for completed words
         function showWordEmojiCelebration(emoji) {
+            if (motionReduced() || focusModeEnabled) return;
             const container = document.querySelector('.wb-container');
             if (!container) return;
 
@@ -13305,6 +13775,7 @@
         }
         // Create enhanced particle effects
         function createWordBuilderParticles() {
+            if (motionReduced() || focusModeEnabled) return;
             const colors = ['#fbbf24', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#ef4444'];
             const shapes = ['⭐', '✨', '💫', '🌟', '⚡', '💥', '🎊', '🎉'];
             const container = document.querySelector('.wb-container');
@@ -13347,6 +13818,7 @@
 
         // Create enhanced confetti
         function createEnhancedConfetti() {
+            if (motionReduced() || focusModeEnabled) return;
             const confettiColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080'];
             const container = document.querySelector('.wb-container');
             if (!container) return;
@@ -13482,7 +13954,7 @@
             // Avoid interrupting active speech if a prompt is currently playing
             if (isTtsBusy()) {
                 // Try again shortly after current speech
-                setTimeout(() => speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`, null, { skipCancel: true }), 400);
+                scheduleLesson(() => speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`, null, { skipCancel: true }), 400);
             } else {
                 speakPhrase(`The word is ${wbTargetWord}. Letters: ${speakLetters}.`, null, { skipCancel: true });
             }
@@ -13585,6 +14057,17 @@
 
             showFeedback(`Let's practice ${levelNames[newLevel]} words! ${levelEmojis[newLevel]}`, 'info');
         }
+
+        // Hydrate only after every state variable and function is initialized.
+        loadGameData();
+        applyGameSettings();
+        initializeMultiplayer();
+        initializeSpeech();
+        updateScoreDisplay();
+        updateBadgeCount();
+        updateDifficultyLevel();
+        updateStreakDisplay();
+        window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', applyGameSettings);
 
     </script>
 </body>

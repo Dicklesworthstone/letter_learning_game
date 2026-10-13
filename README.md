@@ -2,7 +2,7 @@
 
 An accessible, single‑file educational game that helps young children learn the alphabet through sound, visuals, and drawing. The entire app lives in one `index.html` and runs in any modern browser.
 
-This README reflects the current code precisely. If something is listed here, it exists in `index.html`; if it is not in the code, it is not claimed here.
+The features below describe the implementation. The verification section separates browser regressions from real-device and educational quality checks that still need evidence.
 
 ## What It Is
 - Single‑file app: everything is implemented in `index.html`.
@@ -23,22 +23,23 @@ This README reflects the current code precisely. If something is listed here, it
   - Presents a target word with empty slots and a small bank of letter tiles.
   - Speaker button plays the target word (via SpeechSynthesis API).
   - Build the word by tapping/clicking letter tiles to fill slots left‑to‑right.
-  - Adaptive difficulty with easy/medium/hard word pools: 3‑letter CVC → 4‑letter → 4–5‑letter words; shows a difficulty badge and adjusts up/down based on consecutive correct/incorrect attempts. Letter case follows the Letters setting (lowercase/uppercase/mixed).
+  - Adaptive difficulty with easy/medium/hard word pools: 3-letter words (including non-CVC words such as `owl` and `sky`) → 4-letter words → 5–6-letter words (including `cheese`). Four consecutive correct words raise difficulty; three incorrect words lower it. Letter case follows the Letters setting (lowercase/uppercase/mixed).
   - Letter bank includes decoy letters and matches the word’s case; bank size is at least 5 or `word length + 3`.
   - Scoring: +20 for a correct word; −5 for an incorrect attempt; advances to the next word automatically.
   - Controls: Hear Word, New Word.
 - Tracing Practice
-  - Responsive canvas sized to fit the screen (typically 260–560px square).
-  - Optional letter formation overlay (Show/Hide How to Write).
-  - Recognition: classical similarity (cloud matching + IoU checks) with optional deep similarity (MobileNet via TensorFlow.js if available).
+  - Responsive canvas (200–560px square); the lesson scrolls on short screens. Resizing preserves ink and stroke coordinates at the device's pixel ratio.
+  - Numbered formation overlays for all 26 lowercase and 26 uppercase targets, using the recognizer's guide paths.
+  - Recognition: bounded arc-length sampling, point-cloud matching and raster overlap. TensorFlow.js/MobileNet load asynchronously on the first drawing check; classical recognition works immediately when those assets fail or are still loading.
   - Letter‑specific helpers (dot detection for i/j, crossbar detection for t/f/E/F/H).
+  - Taps leave visible dots; sparse straight strokes can be checked. Starting a new stroke cancels a pending clear from the previous rejected attempt.
   - Idle hint: after a short delay, a faint letter guide fades in (disabled as soon as the child starts tracing).
 
 ### Adaptive Difficulty
-- Tracks per‑letter performance: correct, total attempts, response times, and a small spaced‑review state.
-- Builds an adaptive selection pool that up‑weights letters with low success rates and down‑weights recent letters.
+- Tracks recognition performance per letter: correct, total attempts, response times, and a small spaced-review state. Handwriting and spelling have separate mode histories; spelling a word does not award recognition mastery.
+- Builds an adaptive selection pool that up‑weights letters with low success rates and down‑weights recent letters. Tracing uses handwriting history; Identify uses recognition history.
 - Temporary “shape similarity” bias after an error (e.g., b/d/p/q) to reinforce tricky distinctions.
-- Difficulty indicator (1–5 bars) reflects overall performance; it is a visual indicator only (timing is not directly tied to the indicator).
+- Difficulty indicator (1–5 bars) reflects recognition performance; it is a visual indicator only (timing is not directly tied to the indicator).
 
 ### Timing and Feedback
 - Timer On/Off (per setting). When on, a countdown bar and verbal countdown for the last 3 seconds.
@@ -64,14 +65,16 @@ This README reflects the current code precisely. If something is listed here, it
 
 ### Mini‑games (automatic short breaks)
 - Letter Rain: move the basket to catch the target letter; score feedback.
-- Memory Match: flip pairs of matching letters in a 4×4 grid with a timer.
+- Memory Match: flip pairs of matching letters in a 4×4 grid with a timer; cards support native keyboard activation.
 - Mini‑games are occasionally offered between questions in Find Letters and Word Builder modes.
+- Both breaks offer a Return to Lesson button and resume the originating mode. Letter Rain also supports the left/right arrow keys.
+- Timer Off makes the breaks untimed. Turning it on starts a fresh countdown. Focus Mode suppresses automatic breaks and disables their timers.
 
 ### Achievements
 Defined achievements (unlocked/persisted locally):
 - First Steps: first correct answer.
 - Streak 5, Streak 10: consecutive correct answers.
-- Speed Demon: 10 answers under 2 seconds (defined but not currently incremented in code).
+- Speed Demon: 10 correct answers under 2 seconds.
 - Perfect Round: complete a round with no mistakes.
 - Letter Master: master all 26 letters.
 - Score milestones: 100, 500, 1000 points.
@@ -81,18 +84,19 @@ Defined achievements (unlocked/persisted locally):
 Badge counter appears on the trophy button and is visible once you earn at least one achievement.
 
 ### Round System
-- 15 questions per round.
+- 15 resolved questions per round in all three modes. Incorrect recognition/tracing attempts allow a retry and remain in accuracy statistics; timeouts and completed spelling attempts resolve a question.
 - Round summary modal shows: average time, accuracy, points gained, and “problem letters” (letters with 2+ errors this round).
 
 ### Streaks
-- Tracks daily play streaks (based on calendar days).
+- Tracks daily play streaks on local calendar days, beginning with an actual lesson outcome. Opening or reloading settings does not count as a practice day.
 - Milestone modal for common streak thresholds (3, 7, 14, 30, 50, 100) with a 4‑week calendar view.
 - Shows a compact streak banner (hidden until the streak is at least 2 days).
 
 ### Multiplayer (Profiles)
 - Add players with an emoji avatar and a name.
 - Per‑player: scores, rounds, best streak, letter performance, achievements, mastered letters, and celebration type.
-- Player data is saved to `localStorage` and can be switched from the top player selector.
+- Add Player is visible on the first visit. Outcomes save immediately; the selected player, mode, and partial round survive reload. Play time counts active lesson time, preserves partial minutes, and pauses for dialogs; dialog pauses also stay out of response-time statistics.
+- Settings are shared by profiles on the same browser; lesson progress belongs to the selected player.
 
 ### Parent/Teacher Dashboard
 - Open by long‑pressing (about 2s) or double‑clicking the gear button.
@@ -119,22 +123,29 @@ Badge counter appears on the trophy button and is visible once you earn at least
   - Quick entry to Parent Dashboard
 
 ## Scoring (as implemented)
-- Correct answer: `base + timeBonus`, then capped so total points gained in a round do not exceed 50.
+- Find Letters: `base + timeBonus`, then capped at 50 net points gained in the current round.
   - Base = `10 + (difficultyLevel * 5)`
   - Time bonus decreases with response time, up to about +30 for very fast answers
 - Wrong answer: −10 points and resets correct streak; briefly highlights the correct tile.
 - Timeout: −10 points and counts as an incorrect attempt.
+- Tracing uses the same cap, with points scaled by similarity and a penalty after an idle hint; an accepted trace can earn zero points once the cap is reached and still counts as a correct outcome.
+- Word Builder awards +20/−5 per completed word and has no 50-point round cap. Mini-games and successful phonics echo can award extra points.
 
 ## Persistence
 Saved in `localStorage`:
 - Overall game data: `letterLearningGameData` (score, rounds, achievements, per‑letter performance, streaks, settings, etc.).
 - Players list (for multiplayer): `letterLearningPlayers` (per‑player state; Sets are serialized as arrays).
+- Tracing diagnostic counters: `llg_draw_analytics_v1`. Missing deep-model scores are reported as unavailable, not zero-quality judgments.
+- Invalid saved fields are normalized before use. If storage reads or writes are denied/full, a visible notice explains that progress lasts only for the current visit; lessons remain usable.
+- Clearing browser/site data removes progress. No server backup or cross-device synchronization is provided.
 
 ## Accessibility
 - Big touch targets and large typography.
 - Focus Mode that reduces UI complexity and disables timers.
 - High Contrast and Reduce Motion toggles.
 - ARIA attributes on interactive elements and focus traps for modals.
+- Native buttons for players, avatars, and Memory Match; dialogs pause lessons, exclude the background from focus, and return focus when closed with Escape.
+- Visible target prompts when sound is off or no English speech voice is available. The operating system's reduced-motion preference is also respected.
 
 ## Technology
 - Single HTML file: `index.html` (HTML, CSS, and vanilla JS).
@@ -142,11 +153,11 @@ Saved in `localStorage`:
   - TailwindCSS (utilities)
   - GSAP 3.12.x (animations; with requestAnimationFrame fallback)
   - Animate.css 4.x (occasional effects)
-  - TensorFlow.js and MobileNet (optional; used only when available for deeper tracing similarity)
+  - TensorFlow.js 4.19.0 and MobileNet 2.1.1 (optional; requested on the first drawing check)
 - SpeechSynthesis API for voice prompts with an English‑voice priority list.
 - Optional Google Analytics tag is included in the HTML head (basic usage analytics).
 
-Note: Because libraries are loaded from CDNs, an internet connection is required on first load. Microphone features require HTTPS (or `localhost`).
+Core lessons use inline code and styles and can run when CDN assets are blocked. CDN animations and deep-model recognition need network access. Microphone features require HTTPS (or `localhost`), permission, and browser support. Phonics echo detects sound energy; it does not judge pronunciation accuracy.
 
 ## Design Tokens (excerpt)
 Core CSS variables used in the app:
@@ -179,23 +190,42 @@ Core CSS variables used in the app:
 
 ## Device Support
 - Modern desktop and mobile browsers with ES6, Flexbox/Grid, and SpeechSynthesis support.
-- Touch input is fully supported; mouse and keyboard interactions also work.
+- Touch and mouse drawing handlers and keyboard lesson controls are implemented. Physical phone/Safari qualification remains pending; automated WebKit results do not establish physical Safari behavior.
 
 ## Privacy
 - No backend or account system; all progress and settings stay in the browser (`localStorage`).
 - A Google Analytics tag is present for basic usage analytics. If you prefer not to use analytics, remove the GA `<script>` tag block at the top of `index.html` before deploying.
 
-## Known Notes
-- The “Speed Demon” achievement is defined but is not currently incremented by gameplay logic.
+## Verification and Known Limits
+
+Install the development-only browser test dependency, then run:
+
+```sh
+npm ci
+npx playwright install --with-deps chromium firefox webkit
+npm test
+LLG_BROWSER=firefox npm test
+LLG_BROWSER=webkit npm test
+npm run build
+```
+
+`LLG_CHROME_PATH=/path/to/chrome npm test` uses an existing Chromium browser. Static deployment still needs only `index.html`, with no build step or Node runtime.
+
+Optional live-library checks can be run separately with `LLG_LIVE_MODELS=1 LLG_LIVE_ANIMATIONS=1 npm test`. Ordinary CI blocks external assets to verify fallback behavior; Chromium-only synthetic microphone/touch checks are explicitly skipped on other engines. Full-session tests check outcomes and retain bounded per-action waits; they are not performance benchmarks.
+
+The suite serves the actual HTML and uses native browser controls. It covers geometry termination, scores, rounds, profile isolation, storage failures, stale callbacks, settings, dialogs, guides, and small viewports. Failed browser tests save console errors, a screenshot, and a Playwright trace under `test-results/`. CI runs Chromium, Firefox, and WebKit separately.
+
+Synthetic trace tests reuse the app's guide geometry. The synthetic microphone test checks native track cleanup and does not test a child's voice. Neither proves handwriting accuracy, pronunciation, screen-reader usability, or learning benefit. Those acceptance gates remain open in Beads under `llg-ova`, along with physical phone/Safari checks.
+
 - Celebration type is saved/restored, but there is no Settings UI to change it yet (default is fireworks).
-- Optional deep similarity for tracing (TensorFlow.js + MobileNet) is used only when those libraries are available.
+- Recognition thresholds have not been validated on a held-out corpus of children's handwriting. MobileNet supplies generic visual similarity, not a trained alphabet classifier.
+- Speech quality depends on the browser and installed English voices. Recording stays in memory for this visit (up to ten clips); it is not saved as part of a profile. Clip playback and comparison respect Sound Off and stop when leaving the lesson or opening a dialog.
 
 ## Contributing
 Issues and pull requests are welcome. Useful areas include:
-- Hooking up the speed‑based achievement tracking.
-- Exposing celebration theme selection in Settings.
-- Additional mini‑games or letter formation guides.
-- Accessibility refinements and performance tuning.
+- Real handwriting samples and independent recognition evaluation.
+- Physical device speech/microphone and human screen-reader testing.
+- Accessibility refinements and evidence of educational usefulness.
 
 ## Credits
 Created by Jeffrey Emanuel. Made freely available for families and classrooms.
