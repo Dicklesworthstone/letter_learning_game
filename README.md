@@ -33,6 +33,7 @@ The features below describe the implementation. The verification section separat
   - Recognition: bounded arc-length sampling, point-cloud matching and raster overlap. TensorFlow.js/MobileNet load asynchronously on the first drawing check; classical recognition works immediately when those assets fail or are still loading.
   - Letter‑specific helpers (dot detection for i/j, crossbar detection for t/f/E/F/H).
   - Taps leave visible dots; sparse straight strokes can be checked. Starting a new stroke cancels a pending clear from the previous rejected attempt.
+  - Fast strokes retain every distinct pointer sample delivered by the browser, including the release position. Ink is painted one new segment at a time.
   - Idle hint: after a short delay, a faint letter guide fades in (disabled as soon as the child starts tracing).
 
 ### Adaptive Difficulty
@@ -198,7 +199,7 @@ Core CSS variables used in the app:
 
 ## Verification and Known Limits
 
-Use Node 22 for development checks, matching CI. Install the development-only browser test dependency, then run:
+Use Node 22 for development checks, matching CI. The browser jobs use Ubuntu 24.04. Install the development-only browser test dependency, then run:
 
 ```sh
 npm ci
@@ -213,7 +214,7 @@ npm run build
 
 Optional live-library checks can be run separately with `LLG_LIVE_MODELS=1 LLG_LIVE_ANIMATIONS=1 npm test`. Ordinary CI blocks external assets to verify fallback behavior; Chromium-only synthetic microphone/touch checks are explicitly skipped on other engines. Full-session tests check outcomes and retain bounded per-action waits; they are not performance benchmarks.
 
-The suite serves the actual HTML and uses native browser controls. It covers geometry termination, scores, rounds, profile isolation, storage failures, stale callbacks, settings, dialogs, guides, and small viewports. Failed browser tests save console errors, a screenshot, and a Playwright trace under `test-results/`. CI runs Chromium, Firefox, and WebKit separately.
+The suite serves the actual HTML and uses native browser controls. It covers geometry termination, scores, rounds, profile isolation, storage failures, stale callbacks, settings, dialogs, guides, and small viewports. Failed browser tests save console errors, a screenshot, and a Playwright trace under `test-results/`. CI runs Chromium, Firefox, and WebKit separately. Chromium checks use the bundled full browser in headless mode so native microphone capture is supported.
 
 Synthetic trace tests reuse the app's guide geometry. The synthetic microphone test checks native track cleanup and does not test a child's voice. Neither proves handwriting accuracy, pronunciation, screen-reader usability, or learning benefit. Those acceptance gates remain open in Beads under `llg-ova`, along with physical phone/Safari checks.
 

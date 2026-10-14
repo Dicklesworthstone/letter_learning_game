@@ -25,6 +25,9 @@ before(async () => {
     const type = { chromium, firefox, webkit }[engine];
     assert.ok(type, `unsupported browser: ${engine}`);
     browser = await type.launch({
+        // The standalone headless shell rejects native audio capture. Use the
+        // bundled full Chromium in headless mode; keep real streams/recorders.
+        ...(engine === 'chromium' ? { channel: 'chromium' } : {}),
         ...(process.env.LLG_CHROME_PATH && engine === 'chromium' ? { executablePath: process.env.LLG_CHROME_PATH } : {}),
         ...(engine === 'chromium' ? { args: ['--no-sandbox', '--use-fake-device-for-media-stream'] } : {})
     });
@@ -140,6 +143,8 @@ test('first profile is visible, earns points immediately, and survives reload', 
     await identify(page); await correctLetter(page);
     const result = await page.evaluate(() => ({ score, shown: Number(document.getElementById('scoreDisplay').textContent), profile: currentPlayer.score, saved: JSON.parse(localStorage.getItem('letterLearningPlayers'))[0].score }));
     assert.ok(result.score > 0); assert.equal(result.shown, result.score); assert.equal(result.profile, result.score); assert.equal(result.saved, result.score);
+    assert.equal(await page.locator('.player-chip.active .player-score').textContent(), `Score: ${result.score}`);
+    assert.equal(await page.locator('.player-chip.active').getAttribute('aria-label'), `Play as Alice, score ${result.score}`);
     await page.reload();
     assert.equal(await page.evaluate(() => score), result.score);
 }));
@@ -226,6 +231,17 @@ test('Alice and Bob retain isolated scores and selected-player identity', t => r
     assert.equal(await page.evaluate(() => players.find(player => player.name === 'Alice').score), aliceScore);
 }));
 
+test('opening a dialog never steals focus back from its native save button', t => run(t, async page => {
+    // Open and focus in one turn to expose the former 50ms focus-reset race.
+    await page.evaluate(() => { showAddPlayer(); document.querySelector('.player-modal-save').focus(); });
+    await page.waitForTimeout(100);
+    assert.equal(await page.evaluate(() => document.activeElement === document.querySelector('.player-modal-save')), true);
+    await page.locator('#playerNameInput').fill('Bob');
+    await page.locator('.player-modal-save').press('Enter');
+    assert.equal(await page.evaluate(() => currentPlayer?.name), 'Bob');
+    assert.equal(await page.evaluate(() => activeDialog), null);
+}));
+
 test('timeout resolves the last question once and resets the correct streak', t => run(t, async page => {
     await identify(page);
     // Seed only the preceding fourteen outcomes to exercise the timeout boundary.
@@ -307,6 +323,8 @@ test('all 52 formation guides exist and resize preserves ink and pen style', t =
     await page.mouse.up();
     const before = await page.evaluate(() => drawingPoints.length);
     assert.ok(before > 5);
+    assert.equal(before, 16, 'every distinct native move must survive even when events arrive within 16ms');
+    assert.deepEqual(await page.evaluate(() => ({ x: drawingPoints.at(-1).x, y: drawingPoints.at(-1).y })), { x: 125, y: 125 });
     await page.setViewportSize({ width: 390, height: 844 });
     await waitForState(page, () => parseFloat(document.getElementById('drawCanvas').style.width) <= 390);
     const result = await page.evaluate(() => ({ width: ctx.lineWidth, color: ctx.strokeStyle, points: drawingPoints.length, ink: [...ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data].some((value, i) => i % 4 === 3 && value > 0) }));
@@ -723,8 +741,11 @@ test('high contrast paints the heading and primary controls in dark text on whit
 
 test('a new native tracing stroke cancels an old rejection clear and taps leave visible ink', t => run(t, async page => {
     await page.locator('[aria-label="Tracing practice mode"]').press('Enter');
-    await page.locator('#drawCanvas').scrollIntoViewIfNeeded();
+    // This case checks pen ownership, not scroll animation. Use immediate DOM
+    // scrolling and require an actual pointer hit instead of waiting for RAF.
+    await page.locator('#drawCanvas').evaluate(canvas => canvas.scrollIntoView({ block: 'center', behavior: 'instant' }));
     const box = await page.locator('#drawCanvas').boundingBox();
+    assert.equal(await page.evaluate(({ x, y }) => document.elementFromPoint(x + 70, y + 70)?.id, box), 'drawCanvas');
     await page.clock.install({ time: new Date() });
     await page.clock.pauseAt(new Date(Date.now() + 1000));
     // A controlled undotted i supplies the discriminating rejection, then input is native.

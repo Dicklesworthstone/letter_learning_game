@@ -13,6 +13,9 @@ Every commit link below resolves to
 
 ## Lesson Reliability Work (2026-10-13)
 
+- **Fix** Keep fast pointer samples and stroke release positions without repainting the entire growing path; remove delayed dialog focus resets that could interrupt profile saves.
+- **Fix** Use bundled full Chromium headless for native microphone regressions; the standalone headless shell rejects audio capture.
+- **Chore** Pin browser CI to Ubuntu 24.04, matching the supported verification container.
 - **Fix** Bounded tracing resampling; consistent template/input geometry; ink and pen attributes preserved during resizing; all 52 formation guides.
 - **Fix** Scoped lesson callbacks, complete round transitions, mini-game returns, immediate profile saves, settings hydration, outcome and achievement producers.
 - **Fix** Microphone cleanup before UI removal; guarded storage and normalized saved metrics; neutral empty-history insights and retained small-pool weights.

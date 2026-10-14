@@ -5765,7 +5765,6 @@
         let soundEnabled = true;
         let timerDuration = 10;
         let currentTimer = null;
-        let lastDrawTime = 0;
         let timerBarInterval = null;
         let questionStartTime = 0;
         let drawQuestionStartTime = 0;
@@ -8045,6 +8044,12 @@
             document.getElementById('totalCount').textContent = QUESTIONS_PER_ROUND;
             document.getElementById('wrongCount').textContent = displayWrong;
             document.getElementById('roundNumber').textContent = displayRound;
+
+            const playerChip = document.querySelector('.player-chip.active');
+            if (playerChip && currentPlayer) {
+                playerChip.querySelector('.player-score').textContent = `Score: ${Math.max(0, displayScore)}`;
+                playerChip.setAttribute('aria-label', `Play as ${currentPlayer.name}, score ${Math.max(0, displayScore)}`);
+            }
 
             // Update stars with animation
             const starCount = Math.min(5, Math.floor(displayScore / 100));
@@ -10465,7 +10470,6 @@
             // Show modal with animation
             const modal = document.getElementById('roundModal');
             openDialog('roundModal');
-            setTimeout(() => trapFocus(modal.querySelector('.round-content')), 50);
             // Close when tapping outside content
             modal.onclick = function (e) {
                 if (e.target === modal) {
@@ -10693,7 +10697,6 @@
             ctx.lineCap = 'round';
             ctx.strokeStyle = '#764ba2';
             drawingPoints = [];
-            lastDrawTime = 0;
 
             // Touch events
             canvas.addEventListener('touchstart', startDrawing, { passive: false });
@@ -10730,15 +10733,16 @@
         function draw(e) {
             if (!isDrawing) return;
             e.preventDefault();
-            // throttle to ~60fps to reduce lag on older devices
-            const now = Date.now();
-            if (now - lastDrawTime < 16) return;
-            lastDrawTime = now;
-
             const rect = e.target.getBoundingClientRect();
-            const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-            const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-
+            const contact = e.touches?.[0] || e.changedTouches?.[0] || e;
+            const x = contact.clientX - rect.left;
+            const y = contact.clientY - rect.top;
+            const previous = drawingPoints[drawingPoints.length - 1];
+            if (!previous || (previous.x === x && previous.y === y)) return;
+            // Keep every delivered sample; paint only the new segment, not the
+            // entire growing path on every event.
+            ctx.beginPath();
+            ctx.moveTo(previous.x, previous.y);
             ctx.lineTo(x, y);
             ctx.stroke();
             drawingPoints.push({ x, y });
@@ -10749,6 +10753,7 @@
 
         function stopDrawing(e) {
             e.preventDefault();
+            if (e.type === 'mouseup' || e.type === 'touchend') draw(e);
             isDrawing = false;
             // Don't clear points - allow multiple strokes
         }
@@ -10976,9 +10981,6 @@
             if (hc) hc.checked = !!highContrastEnabled;
             const rm = document.getElementById('reduceMotionCheck');
             if (rm) rm.checked = !!reduceMotionEnabled;
-
-            // Trap focus within modal content
-            setTimeout(() => trapFocus(modal.querySelector('.settings-content')), 50);
 
             // Close modal when clicking outside
             modal.onclick = function (e) {
@@ -11338,8 +11340,6 @@
             });
 
             openDialog('achievementModal');
-            // Trap focus inside the modal content
-            setTimeout(() => trapFocus(modal.querySelector('.achievement-content')), 50);
             // Close when tapping/clicking outside of the content
             modal.onclick = function (e) {
                 if (e.target === modal) {
@@ -11594,7 +11594,6 @@
             selectedAvatar = '🦁';
             document.getElementById('playerNameInput').value = '';
             openDialog('playerModal');
-            setTimeout(() => trapFocus(document.getElementById('playerModal').querySelector('.player-modal-content')), 50);
             // Close when tapping outside modal content
             const modal = document.getElementById('playerModal');
             modal.onclick = function (e) {
@@ -11847,7 +11846,6 @@
             if (currentPlayer) saveCurrentPlayerState();
             updateDashboard();
             openDialog('parentDashboard', 'block');
-            setTimeout(() => trapFocus(document.getElementById('parentDashboard')), 50);
             // Close when tapping outside dashboard content
             const modal = document.getElementById('parentDashboard');
             modal.onclick = function (e) {
@@ -12545,7 +12543,6 @@
 
                 // Show modal
                 openDialog('streakModal');
-                setTimeout(() => trapFocus(modal.querySelector('.streak-modal-content')), 50);
                 // Close when tapping outside content
                 modal.onclick = function (e) {
                     if (e.target === modal) {
