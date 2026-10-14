@@ -752,10 +752,39 @@ test('timer and focus settings control mini-game countdowns and automatic breaks
 test('dialog pauses do not inflate response time', t => run(t, async page => {
     await identify(page); await page.locator('.settings-btn').press('Enter');
     const adjustment = await page.evaluate(() => {
+        // This existing-question fixture starts five seconds before its pause.
+        questionStartTime = Date.now() - 70000;
         const before = questionStartTime; pauseStartedAt = Date.now() - 65000; closeDialog('settingsModal');
         return questionStartTime - before;
     });
     assert.ok(adjustment >= 65000 && adjustment < 66000);
+}));
+
+test('a theme refresh during a dialog cannot create negative response times or fake speed', t => run(t, async page => {
+    const time = new Date('2026-10-14T12:00:00Z');
+    await page.clock.install({ time }); await page.clock.pauseAt(new Date(time.getTime() + 60000));
+    await identify(page); await page.clock.runFor(1000);
+    await page.locator('.settings-btn').press('Enter'); await page.clock.runFor(10000);
+    await page.locator('[onclick="setVisualTheme(\'animals\')"]').press('Enter');
+    await page.clock.runFor(20000); await page.keyboard.press('Escape');
+    assert.equal(await page.evaluate(() => Date.now() - questionStartTime), 0);
+    await page.clock.runFor(3000); await correctLetter(page);
+    assert.equal(await page.evaluate(() => responseTimes.at(-1)), 3);
+    assert.equal(await page.evaluate(() => speedAnswers), 0);
+}));
+
+test('settings pauses preserve active idle-hint time and prevent an unseen hint penalty', t => run(t, async page => {
+    const time = new Date('2026-10-14T12:00:00Z');
+    await page.clock.install({ time }); await page.clock.pauseAt(new Date(time.getTime() + 60000));
+    await page.locator('[aria-label="Tracing practice mode"]').press('Enter');
+    await page.clock.runFor(1000); await page.locator('.settings-btn').press('Enter');
+    await page.clock.runFor(20000);
+    assert.equal(await page.evaluate(() => hintWasShown), false);
+    assert.equal(await page.evaluate(() => hintFadeOpacity), 0);
+    await page.keyboard.press('Escape'); await page.clock.runFor(1000);
+    assert.equal(await page.evaluate(() => hintWasShown), false);
+    await page.clock.runFor(1000);
+    assert.equal(await page.evaluate(() => hintWasShown && hintFadeOpacity > 0), true);
 }));
 
 test('high contrast paints the heading and primary controls in dark text on white', t => run(t, async page => {

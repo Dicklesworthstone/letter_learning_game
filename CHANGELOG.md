@@ -15,6 +15,7 @@ Every commit link below resolves to
 
 - **Fix** Keep fast pointer samples and stroke release positions without repainting the entire growing path; remove delayed dialog focus resets that could interrupt profile saves.
 - **Fix** Idle hints use the same 52 stroke paths as the formation guide and recognizer, including visible i/j dots, instead of different font glyphs.
+- **Fix** Questions refreshed inside Settings exclude only their own paused time; drawing hints preserve active idle time and avoid penalties for help hidden behind a dialog.
 - **Fix** Use bundled full Chromium headless for native microphone regressions; the standalone headless shell rejects audio capture.
 - **Chore** Pin browser CI to Ubuntu 24.04, matching the supported verification container.
 - **Fix** Bounded tracing resampling; consistent template/input geometry; ink and pen attributes preserved during resizing; all 52 formation guides.

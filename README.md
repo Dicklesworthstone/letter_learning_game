@@ -107,6 +107,7 @@ Badge counter appears on the trophy button and is visible once you earn at least
   - Insights (simple, rule‑based suggestions based on performance and timing).
   - Recommendations (practical activity suggestions + time‑of‑day hints).
 - Dashboard and other overlays trap keyboard focus and prevent background scrolling while open.
+- Dialog pauses preserve each question's active response time, including a question refreshed by a theme change. Drawing hint waits and fades pause too, so help hidden behind a dialog does not incur a hint penalty.
 
 ### Settings
 - Basic
