@@ -690,6 +690,42 @@ test('idle tracing hints fade in and native drawing cancels further hint work', 
     assert.equal(await page.evaluate(() => !!idleHintTimeout || !!idleHintInterval), false);
 }));
 
+test('idle hints use all 52 recognizer guides and visibly render i and j dots', t => run(t, async page => {
+    await page.locator('[aria-label="Tracing practice mode"]').press('Enter');
+    assert.equal(await page.locator('.letter-guide').evaluate(element => element.tagName.toLowerCase()), 'svg');
+    const results = await page.evaluate(async () => {
+        const paths = Object.keys(LETTER_CHECKPOINTS).map(letter => {
+            // Seed a single due review; exercise actual selection and rendering,
+            // including both cases, rather than replacing either producer.
+            currentCase = letter === letter.toUpperCase() ? 'upper' : 'lower';
+            modePerformance.draw = Object.fromEntries(getLetterCollection().map(key => [key, { total: 1, correct: 0, nextReview: Date.now() + 86400000 }]));
+            modePerformance.draw[letter].nextReview = 0; resetSelectionHistory();
+            startDrawGame();
+            const svg = document.querySelector('.letter-guide');
+            return { letter, selected: currentLetter, actual: [...svg.querySelectorAll('path')].map(path => path.getAttribute('d')), expected: letterFormations[letter].map(stroke => stroke.path), viewBox: svg.getAttribute('viewBox'), hidden: svg.getAttribute('aria-hidden') };
+        });
+        const dots = [];
+        for (const letter of ['i', 'j']) {
+            const svg = new DOMParser().parseFromString(traceHintMarkup(letter), 'image/svg+xml').documentElement;
+            svg.setAttribute('width', '100'); svg.setAttribute('height', '100');
+            const image = new Image();
+            await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = reject; image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(svg)); });
+            const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100;
+            const context = canvas.getContext('2d'); context.drawImage(image, 0, 0);
+            const dot = LETTER_CHECKPOINTS[letter].strokes.find(stroke => stroke.length === 1)[0];
+            dots.push({ letter, alpha: context.getImageData(dot.x, dot.y, 1, 1).data[3] });
+        }
+        return { paths, dots };
+    });
+    assert.equal(results.paths.length, 52);
+    for (const result of results.paths) {
+        assert.equal(result.selected, result.letter);
+        assert.deepEqual(result.actual, result.expected, `idle ${result.letter} must teach the graded stroke paths`);
+        assert.equal(result.viewBox, '0 0 100 100'); assert.equal(result.hidden, 'true');
+    }
+    assert.ok(results.dots.every(dot => dot.alpha > 0), 'both required dots must paint real SVG pixels');
+}));
+
 test('anonymous mode and partial round progress survive reload', t => run(t, async page => {
     await page.locator('#wordBuilderBtn').press('Enter'); await correctWord(page);
     await page.reload();

@@ -34,7 +34,7 @@ The features below describe the implementation. The verification section separat
   - Letter‑specific helpers (dot detection for i/j, crossbar detection for t/f/E/F/H).
   - Taps leave visible dots; sparse straight strokes can be checked. Starting a new stroke cancels a pending clear from the previous rejected attempt.
   - Fast strokes retain every distinct pointer sample delivered by the browser, including the release position. Ink is painted one new segment at a time.
-  - Idle hint: after a short delay, a faint letter guide fades in (disabled as soon as the child starts tracing).
+  - Idle hint: after a short delay, the same stroke paths used by the formation guide and recognizer fade in. The hint fades out as soon as the child starts tracing; it does not depend on a font's letter forms.
 
 ### Adaptive Difficulty
 - Tracks recognition performance per letter: correct, total attempts, response times, and a small spaced-review state. Handwriting and spelling have separate mode histories; spelling a word does not award recognition mastery.

@@ -14,6 +14,7 @@ Every commit link below resolves to
 ## Lesson Reliability Work (2026-10-13)
 
 - **Fix** Keep fast pointer samples and stroke release positions without repainting the entire growing path; remove delayed dialog focus resets that could interrupt profile saves.
+- **Fix** Idle hints use the same 52 stroke paths as the formation guide and recognizer, including visible i/j dots, instead of different font glyphs.
 - **Fix** Use bundled full Chromium headless for native microphone regressions; the standalone headless shell rejects audio capture.
 - **Chore** Pin browser CI to Ubuntu 24.04, matching the supported verification container.
 - **Fix** Bounded tracing resampling; consistent template/input geometry; ink and pen attributes preserved during resizing; all 52 formation guides.
