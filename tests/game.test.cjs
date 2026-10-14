@@ -335,7 +335,7 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 844, height: 390 }
     test(`drawing and spelling controls remain reachable at ${viewport.width}x${viewport.height}`, t => run(t, async page => {
         await page.locator('[aria-label="Tracing practice mode"]').press('Enter');
         const check = page.getByRole('button', { name: "I'm Done!", exact: true });
-        await check.scrollIntoViewIfNeeded();
+        await check.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
         const box = await check.boundingBox();
         assert.ok(box.x >= 0 && box.x + box.width <= viewport.width + 1 && box.y >= 0 && box.y + box.height <= viewport.height + 1);
         assert.equal(await check.evaluate(element => {

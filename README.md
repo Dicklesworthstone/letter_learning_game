@@ -218,6 +218,8 @@ The suite serves the actual HTML and uses native browser controls. It covers geo
 
 Synthetic trace tests reuse the app's guide geometry. The synthetic microphone test checks native track cleanup and does not test a child's voice. Neither proves handwriting accuracy, pronunciation, screen-reader usability, or learning benefit. Those acceptance gates remain open in Beads under `llg-ova`, along with physical phone/Safari checks.
 
+A classical-only pilot at revision `4030cc7` replayed 208 stylus samples from two test writers in [UJI Pen Characters v2](https://archive.ics.uci.edu/dataset/177/uji%2Bpen%2Bcharacters%2Bversion%2B2) (Prat et al., 2008; CC BY 4.0). The checker accepted 136/208 intended-letter trials and 91/208 predeclared wrong-letter confusion trials. Automatic checks can therefore misgrade freehand stylus writing. This small replay study provides no evidence about the writers' ages, children's tracing, or learning benefit.
+
 - Celebration type is saved/restored, but there is no Settings UI to change it yet (default is fireworks).
 - Recognition thresholds have not been validated on a held-out corpus of children's handwriting. MobileNet supplies generic visual similarity, not a trained alphabet classifier.
 - Speech quality depends on the browser and installed English voices. Recording stays in memory for this visit (up to ten clips); it is not saved as part of a profile. Clip playback and comparison respect Sound Off and stop when leaving the lesson or opening a dialog.
