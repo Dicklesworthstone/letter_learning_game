@@ -2923,9 +2923,51 @@
             }
         }
 
+        .stroke-path.stroke-complete {
+            stroke: #10b981;
+            opacity: 0.7;
+            stroke-dashoffset: 0;
+            animation: none;
+        }
+
+        .stroke-path.stroke-next {
+            opacity: 0.65;
+        }
+
+        .stroke-number.stroke-complete {
+            background: linear-gradient(135deg, #10b981, #059669);
+            animation: none;
+        }
+
+        .stroke-number.stroke-next {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        .player-stat-card.interactive {
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .player-stat-card.interactive.active {
+            border-color: #667eea;
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.25);
+        }
+
+        .wb-practice-word-btn {
+            background: #eef2ff;
+            color: #4338ca;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         .formation-controls {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             margin-top: 20px;
             justify-content: center;
             width: 100%;
@@ -2935,7 +2977,7 @@
         }
 
         .formation-btn {
-            padding: 10px 20px;
+            padding: 10px 14px;
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
@@ -5028,6 +5070,15 @@
         .high-contrast .mode-btn, .high-contrast .control-btn, .high-contrast .formation-btn, .high-contrast .wb-tile, .high-contrast .wb-btn, .high-contrast .feedback { background: white !important; color: #111 !important; border: 2px solid #111; }
         :focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }
         @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+        @media print {
+            body { background: #fff !important; color: #111 !important; overflow: visible !important; }
+            .container { height: auto !important; overflow: visible !important; box-shadow: none !important; }
+            .header, .player-selector, .mode-selector, .score-panel, .game-area, .settings-modal, .achievement-modal, .player-modal, .round-modal, .streak-modal, #storageStatus { display: none !important; }
+            .parent-dashboard { position: static !important; display: block !important; background: #fff !important; padding: 0 !important; overflow: visible !important; }
+            .dashboard-content { max-width: 100% !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: none !important; padding: 12px !important; }
+            .dashboard-close, .dashboard-print-hide { display: none !important; }
+            .letter-cell, .stat-card, .insight-item, .dashboard-section { break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
     </style>
 </head>
 <body>
@@ -5212,6 +5263,36 @@
                             <button class="theme-button" onclick="setVisualTheme('colors')">
                                 <div class="theme-icon">🎨</div>
                                 <div class="theme-name">Colors</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <div class="settings-section-title">Celebration Theme</div>
+                        <div class="celebration-grid">
+                            <button type="button" class="celebration-option selected" data-celebration="fireworks" onclick="setCelebration('fireworks')" aria-pressed="true" aria-label="Fireworks celebration theme">
+                                <div class="celebration-preview">🎆</div>
+                                <div class="celebration-name">Fireworks</div>
+                            </button>
+                            <button type="button" class="celebration-option" data-celebration="animals" onclick="setCelebration('animals')" aria-pressed="false" aria-label="Animals celebration theme">
+                                <div class="celebration-preview">🦁</div>
+                                <div class="celebration-name">Animals</div>
+                            </button>
+                            <button type="button" class="celebration-option" data-celebration="vehicles" onclick="setCelebration('vehicles')" aria-pressed="false" aria-label="Vehicles celebration theme">
+                                <div class="celebration-preview">🚀</div>
+                                <div class="celebration-name">Vehicles</div>
+                            </button>
+                            <button type="button" class="celebration-option" data-celebration="space" onclick="setCelebration('space')" aria-pressed="false" aria-label="Space celebration theme">
+                                <div class="celebration-preview">🪐</div>
+                                <div class="celebration-name">Space</div>
+                            </button>
+                            <button type="button" class="celebration-option" data-celebration="dinosaurs" onclick="setCelebration('dinosaurs')" aria-pressed="false" aria-label="Dinosaurs celebration theme">
+                                <div class="celebration-preview">🦖</div>
+                                <div class="celebration-name">Dinosaurs</div>
+                            </button>
+                            <button type="button" class="celebration-option" data-celebration="hearts" onclick="setCelebration('hearts')" aria-pressed="false" aria-label="Hearts celebration theme">
+                                <div class="celebration-preview">💖</div>
+                                <div class="celebration-name">Hearts</div>
                             </button>
                         </div>
                     </div>
@@ -5426,6 +5507,9 @@
                         <div class="legend-gradient"></div>
                         <span>Mastered</span>
                     </div>
+                    <div id="heatmapLetterDetail" class="stat-label" style="margin-top: 10px; min-height: 22px;" aria-live="polite">
+                        Tap any letter above to see detailed recognition, confusion, and tracing stats.
+                    </div>
                 </div>
 
                 <!-- Insights & Recommendations -->
@@ -5450,8 +5534,30 @@
                     </div>
                 </div>
 
-                <!-- Data Management -->
+                <!-- Word Builder Spelling Progress -->
                 <div class="dashboard-section">
+                    <div class="dashboard-section-title">
+                        <span>🔤</span>
+                        <span>Word Builder Spelling Progress</span>
+                    </div>
+                    <div id="wordBuilderAnalyticsSummary" class="player-stats-grid">
+                        <!-- Word Builder analytics summary will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Tracing Practice Analytics -->
+                <div class="dashboard-section">
+                    <div class="dashboard-section-title">
+                        <span>✏️</span>
+                        <span>Tracing Practice Analytics</span>
+                    </div>
+                    <div id="drawAnalyticsSummary" class="player-stats-grid">
+                        <!-- Tracing analytics summary will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Data Management -->
+                <div class="dashboard-section dashboard-print-hide">
                     <div class="dashboard-section-title">
                         <span>🧹</span>
                         <span>Data Management</span>
@@ -5461,6 +5567,16 @@
                             aria-label="Reset all statistics">Reset All Statistics</button>
                         <button class="toggle-btn" onclick="resetCurrentPlayerStatistics()"
                             aria-label="Reset current player statistics">Reset Current Player</button>
+                        <button class="toggle-btn" onclick="exportDrawAnalyticsCsv(true)"
+                            aria-label="Export tracing analytics CSV">Export Tracing CSV</button>
+                        <button class="toggle-btn" onclick="exportProgressBackup(true)"
+                            aria-label="Export progress backup JSON">Export Backup JSON</button>
+                        <button class="toggle-btn" onclick="document.getElementById('progressBackupInput').click()"
+                            aria-label="Restore progress backup JSON">Restore Backup JSON</button>
+                        <button class="toggle-btn" id="printReportBtn" onclick="printProgressReport()"
+                            aria-label="Print progress report">Print Report</button>
+                        <input type="file" id="progressBackupInput" accept="application/json,.json" hidden
+                            onchange="handleProgressBackupFile(this)">
                     </div>
                 </div>
             </div>
@@ -5771,6 +5887,7 @@
         let responseTimes = [];
         let letterErrors = {};
         let problemLetters = [];
+        let lastRoundProblemLetters = [];
         let waitingForPhonics = false;
         let phonicsEnabled = true; // default on, can be toggled in settings
         let phonicsTimer = null;
@@ -5981,20 +6098,46 @@
         // Draw Analytics (per-letter acceptance metrics with lightweight persistence)
         const DRAW_ANALYTICS_STORAGE_KEY = 'llg_draw_analytics_v1';
         let drawAnalytics = null;
-        function initDrawAnalytics() {
-            const saved = parseStoredObject(readStorage(DRAW_ANALYTICS_STORAGE_KEY));
-            drawAnalytics = { letters: {}, totals: { attempts: 0, accepts: 0, rejects: 0 } };
-            for (const [letter, value] of Object.entries(saved.letters || {})) {
+        function createEmptyDrawAnalytics() {
+            return { letters: {}, totals: { attempts: 0, accepts: 0, rejects: 0 } };
+        }
+        function normalizeDrawAnalyticsData(raw) {
+            const source = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+            const out = createEmptyDrawAnalytics();
+            const defaultReasons = () => ({ nearTop: 0, deepTop: 0, blended: 0, wrongDom: 0, loopIoU: 0, crossGuard: 0, missingDot: 0, missingCrossbar: 0, shapeGuard: 0, other: 0 });
+            for (const [letter, value] of Object.entries(source.letters || {})) {
                 if (!/^[a-zA-Z]$/.test(letter) || !value || typeof value !== 'object') continue;
-                const stats = ensureLetterAnalytics(letter);
+                const stats = {
+                    attempts: 0,
+                    accepts: 0,
+                    rejects: 0,
+                    qualitySum: 0,
+                    classicalSum: 0,
+                    deepSum: 0,
+                    deepCount: 0,
+                    responseTimeSum: 0,
+                    pointsSum: 0,
+                    frechetSum: 0,
+                    curvatureSum: 0,
+                    reasons: defaultReasons()
+                };
                 for (const key of Object.keys(stats)) if (key !== 'reasons') stats[key] = nonnegative(value[key]);
                 for (const reason of Object.keys(stats.reasons)) stats.reasons[reason] = nonnegative(value.reasons?.[reason]);
                 stats.attempts = stats.accepts + stats.rejects;
-                for (const key of ['attempts', 'accepts', 'rejects']) drawAnalytics.totals[key] += stats[key];
+                out.letters[letter] = stats;
+                for (const key of ['attempts', 'accepts', 'rejects']) out.totals[key] += stats[key];
             }
+            return out;
+        }
+        function initDrawAnalytics() {
+            const saved = parseStoredObject(readStorage(DRAW_ANALYTICS_STORAGE_KEY));
+            drawAnalytics = normalizeDrawAnalyticsData(saved);
         }
         function persistDrawAnalytics() {
             writeStorage(DRAW_ANALYTICS_STORAGE_KEY, JSON.stringify(drawAnalytics));
+            if (typeof multiplayerMode !== 'undefined' && multiplayerMode && currentPlayer) {
+                currentPlayer.drawAnalytics = normalizeDrawAnalyticsData(drawAnalytics);
+            }
         }
         function ensureLetterAnalytics(letter) {
             if (!drawAnalytics) initDrawAnalytics();
@@ -6009,19 +6152,21 @@
                     deepCount: 0,
                     responseTimeSum: 0,
                     pointsSum: 0,
-                    reasons: { nearTop: 0, deepTop: 0, blended: 0, wrongDom: 0, loopIoU: 0, crossGuard: 0, other: 0 }
+                    frechetSum: 0,
+                    curvatureSum: 0,
+                    reasons: { nearTop: 0, deepTop: 0, blended: 0, wrongDom: 0, loopIoU: 0, crossGuard: 0, missingDot: 0, missingCrossbar: 0, shapeGuard: 0, other: 0 }
                 };
             }
             return drawAnalytics.letters[letter];
         }
         function recordDrawAttempt(params) {
-            // params: { letter, accepted, reason, finalScore, classicalScore, deepScore, responseTime, points }
-            const { letter, accepted, reason, finalScore, classicalScore, deepScore, responseTime, points } = params || {};
+            // params: { letter, accepted, reason, finalScore, classicalScore, deepScore, responseTime, points, frechetSim, curvatureRad, missingDot, missingCrossbar }
+            const { letter, accepted, reason, finalScore, classicalScore, deepScore, responseTime, points, frechetSim, curvatureRad, missingDot, missingCrossbar } = params || {};
             if (!letter) return;
             const stats = ensureLetterAnalytics(letter);
             stats.attempts += 1;
             drawAnalytics.totals.attempts += 1;
-            const r = reason || 'other';
+            const r = reason || (missingDot ? 'missingDot' : (missingCrossbar ? 'missingCrossbar' : 'other'));
             if (accepted) {
                 stats.accepts += 1;
                 drawAnalytics.totals.accepts += 1;
@@ -6030,16 +6175,23 @@
                 stats.rejects += 1;
                 drawAnalytics.totals.rejects += 1;
                 if (stats.reasons[r] !== undefined) stats.reasons[r] += 1; else stats.reasons.other += 1;
+                if (missingDot && r !== 'missingDot') stats.reasons.missingDot = (stats.reasons.missingDot || 0) + 1;
+                if (missingCrossbar && r !== 'missingCrossbar') stats.reasons.missingCrossbar = (stats.reasons.missingCrossbar || 0) + 1;
             }
             if (typeof finalScore === 'number') stats.qualitySum += finalScore;
             if (typeof classicalScore === 'number') stats.classicalSum += classicalScore;
             if (typeof deepScore === 'number') { stats.deepSum += deepScore; stats.deepCount += 1; }
             if (typeof responseTime === 'number') stats.responseTimeSum += responseTime;
             if (typeof points === 'number') stats.pointsSum += Math.max(0, points);
+            if (typeof frechetSim === 'number' && Number.isFinite(frechetSim)) stats.frechetSum = (stats.frechetSum || 0) + frechetSim;
+            if (typeof curvatureRad === 'number' && Number.isFinite(curvatureRad)) stats.curvatureSum = (stats.curvatureSum || 0) + Math.max(0, curvatureRad);
             persistDrawAnalytics();
+            if (typeof multiplayerMode !== 'undefined' && multiplayerMode && currentPlayer && typeof savePlayers === 'function') {
+                savePlayers();
+            }
         }
         function resetDrawAnalytics() {
-            drawAnalytics = { letters: {}, totals: { attempts: 0, accepts: 0, rejects: 0 } };
+            drawAnalytics = createEmptyDrawAnalytics();
             persistDrawAnalytics();
         }
         function getDrawAnalytics() {
@@ -6055,21 +6207,41 @@
                 s.avgDeep = dc ? +(s.deepSum / dc).toFixed(3) : null;
                 s.avgResponseTime = +(s.responseTimeSum / a).toFixed(3);
                 s.avgPoints = +(s.pointsSum / a).toFixed(2);
+                s.avgFrechet = +((s.frechetSum || 0) / a).toFixed(3);
+                s.avgCurvature = +((s.curvatureSum || 0) / a).toFixed(3);
+                s.missingDot = (s.reasons && s.reasons.missingDot) || 0;
+                s.missingCrossbar = (s.reasons && s.reasons.missingCrossbar) || 0;
             });
             const t = out.totals, ta = t.attempts || 1;
             out.totals.acceptRate = +(t.accepts / ta).toFixed(3);
             return out;
         }
-        function exportDrawAnalyticsCsv() {
+        function exportDrawAnalyticsCsv(triggerDownload = false) {
             if (!drawAnalytics) initDrawAnalytics();
-            const rows = [['letter','attempts','accepts','rejects','accept_rate','avg_quality','avg_classical','avg_deep','avg_response_time','avg_points','nearTop','deepTop','blended','wrongDom','loopIoU','crossGuard','other']];
+            const rows = [['letter','attempts','accepts','rejects','accept_rate','avg_quality','avg_classical','avg_deep','avg_response_time','avg_points','nearTop','deepTop','blended','wrongDom','loopIoU','crossGuard','other','avg_frechet','avg_curvature','missingDot','missingCrossbar']];
             Object.entries(getDrawAnalytics().letters).forEach(([L, s]) => {
                 rows.push([
                     L, s.attempts, s.accepts, s.rejects, s.acceptRate, s.avgQuality, s.avgClassical, s.avgDeep, s.avgResponseTime, s.avgPoints,
-                    s.reasons.nearTop, s.reasons.deepTop, s.reasons.blended, s.reasons.wrongDom, s.reasons.loopIoU, s.reasons.crossGuard, s.reasons.other
+                    s.reasons.nearTop, s.reasons.deepTop, s.reasons.blended, s.reasons.wrongDom, s.reasons.loopIoU, s.reasons.crossGuard, s.reasons.other,
+                    s.avgFrechet, s.avgCurvature, s.reasons.missingDot || 0, s.reasons.missingCrossbar || 0
                 ]);
             });
-            return rows.map(r => r.join(',')).join('\n');
+            const csv = rows.map(r => r.join(',')).join('\n');
+            if (triggerDownload && typeof document !== 'undefined') {
+                try {
+                    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'tracing-analytics.csv';
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                } catch (e) {}
+                if (typeof showFeedback === 'function') showFeedback('Tracing analytics CSV exported.', 'info');
+            }
+            return csv;
         }
         // Expose minimal API for dashboard
         window.getDrawAnalytics = getDrawAnalytics;
@@ -6288,7 +6460,6 @@
             'snake': '🐍',
             'turtle': '🐢',
             'umbrella': '☂️',
-            // Extended emoji map for Word Builder words
             'sun': '☀️',
             'star': '⭐',
             'tree': '🌳',
@@ -6366,7 +6537,6 @@
             'bike': '🚴',
             'robot': '🤖',
             'doll': '🪆',
-            'kite': '🪁',
             'tent': '⛺',
             'music': '🎵',
             'dance': '💃',
@@ -6506,7 +6676,6 @@
             'sign': '🚧',
             'stop': '🛑',
             'yield': '⚠️',
-            'light': '🚦',
             'cross': '❌',
             'check': '✅',
             'mark': '✔️',
@@ -6519,7 +6688,6 @@
             'next': '⏭️',
             'play': '▶️',
             'pause': '⏸️',
-            'stop': '⏹️',
             'record': '⏺️',
             'fast': '⏩',
             'slow': '🐌',
@@ -6654,7 +6822,6 @@
             'buckle': '🔗',
             'strap': '🎒',
             'lace': '👟',
-            'ribbon': '🎀',
             'bow': '🎀',
             'knot': '🪢',
             'rope': '🪢',
@@ -6675,7 +6842,6 @@
             'soap': '🧼',
             'shampoo': '🧴',
             'towel': '🏖️',
-            'brush': '🪥',
             'comb': '🪮',
             'razor': '🪒',
             'scissors': '✂️',
@@ -6684,7 +6850,6 @@
             'ruler': '📏',
             'tape': '📏',
             'glue': '🧪',
-            'paint': '🎨',
             'crayon': '🖍️',
             'marker': '🖊️',
             'chalk': '🏫',
@@ -6693,9 +6858,7 @@
             'clip': '📎',
             'pin': '📌',
             'tack': '📌',
-            'rubber': '🧽',
             'band': '🎵',
-            'string': '🧵',
             'yarn': '🧶',
             'knit': '🧶',
             'crochet': '🧶',
@@ -6734,14 +6897,8 @@
             'dart': '🎯',
             'target': '🎯',
             'bullseye': '🎯',
-            'arrow': '🏹',
-            'bow': '🏹',
             'sling': '🪨',
             'catapult': '🏹',
-            'cannon': '💣',
-            'bomb': '💣',
-            'mine': '💣',
-            'grenade': '💣',
             'missile': '🚀',
             'rocket': '🚀',
             'jet': '✈️',
@@ -6750,7 +6907,6 @@
             'blimp': '🎈',
             'parachute': '🪂',
             'glider': '🪂',
-            'kite': '🪁',
             'sail': '⛵',
             'anchor': '⚓',
             'buoy': '🛟',
@@ -6760,13 +6916,11 @@
             'harbor': '⚓',
             'port': '🚢',
             'marina': '⛵',
-            'beach': '🏖️',
             'shore': '🏖️',
             'coast': '🏖️',
             'cliff': '🪨',
             'cave': '🕳️',
             'tunnel': '🚇',
-            'mine': '⛏️',
             'quarry': '🪨',
             'well': '🪣',
             'spring': '💧',
@@ -6795,7 +6949,6 @@
             'tsunami': '🌊',
             'flood': '🌊',
             'drought': '☀️',
-            'storm': '⛈️',
             'hurricane': '🌀',
             'tornado': '🌪️',
             'cyclone': '🌀',
@@ -6857,7 +7010,6 @@
             'october': '🎃',
             'november': '🦃',
             'december': '🎄',
-            'spring': '🌸',
             'summer': '☀️',
             'autumn': '🍂',
             'fall': '🍁',
@@ -6892,7 +7044,6 @@
             'mage': '🧙',
             'enchant': '✨',
             'charm': '🍀',
-            'curse': '💀',
             'hex': '🔮',
             'potion': '🧪',
             'elixir': '🧪',
@@ -6916,7 +7067,6 @@
             'chrome': '✨',
             'titanium': '⚪',
             'platinum': '💍',
-            'uranium': '☢️',
             'carbon': '♦️',
             'oxygen': '💨',
             'hydrogen': '💧',
@@ -6968,7 +7118,6 @@
             'circumference': '⭕',
             'perimeter': '🔲',
             'angle': '📐',
-            'degree': '°',
             'radian': '📐',
             'pi': 'π',
             'sine': '〰️',
@@ -7033,13 +7182,11 @@
             'destiny': '⭐',
             'future': '🔮',
             'past': '⏮️',
-            'present': '🎁',
             'moment': '⏱️',
             'instant': '⚡',
             'second': '⏱️',
             'minute': '⏱️',
             'hour': '⏰',
-            'day': '📅',
             'week': '📅',
             'month': '📅',
             'year': '📅',
@@ -7079,7 +7226,6 @@
             'watch': '⌚',
             'monitor': '🖥️',
             'keyboard': '⌨️',
-            'mouse': '🖱️',
             'touchpad': '⬜',
             'stylus': '✏️',
             'printer': '🖨️',
@@ -7090,7 +7236,6 @@
             'router': '📶',
             'server': '🖥️',
             'database': '🗄️',
-            'cloud': '☁️',
             'storage': '💾',
             'memory': '🧠',
             'processor': '🧠',
@@ -7099,7 +7244,6 @@
             'board': '🎯',
             'card': '💳',
             'slot': '🎰',
-            'port': '🔌',
             'jack': '🎃',
             'socket': '🔌',
             'adapter': '🔌',
@@ -7116,23 +7260,17 @@
             'shaft': '🔩',
             'bearing': '⚙️',
             'gasket': '⭕',
-            'seal': '🦭',
             'washer': '⭕',
-            'spring': '🌸',
             'coil': '🌀',
-            'wire': '🔌',
-            'cable': '🔌',
             'connector': '🔌',
             'terminal': '🖥️',
             'junction': '🚦',
             'switch': '🔀',
-            'button': '🔘',
             'knob': '🎛️',
             'dial': '☎️',
             'lever': '🎚️',
             'handle': '🚪',
             'grip': '✊',
-            'trigger': '🔫',
             'pedal': '🚴',
             'brake': '🛑',
             'clutch': '👜',
@@ -7145,7 +7283,6 @@
             'axle': '🔩',
             'suspension': '🏎️',
             'shock': '⚡',
-            'spring': '🌸',
             'strut': '🔩',
             'frame': '🖼️',
             'chassis': '🚗',
@@ -7159,7 +7296,6 @@
             'taillight': '🔴',
             'signal': '📶',
             'wiper': '🚗',
-            'mirror': '🪞',
             'window': '🪟',
             'windshield': '🚗',
             'sunroof': '☀️',
@@ -7173,8 +7309,6 @@
             'coolant': '💧',
             'fluid': '💧',
             'filter': '🔍',
-            'belt': '🥋',
-            'hose': '🚿',
             'clamp': '🗜️',
             'bracket': '〈〉',
             'mount': '🏔️',
@@ -7189,7 +7323,6 @@
             'truss': '🏗️',
             'arch': '🌉',
             'dome': '🏛️',
-            'vault': '🏦',
             'ceiling': '🏠',
             'floor': '🏠',
             'wall': '🧱',
@@ -7224,9 +7357,7 @@
             'dishwasher': '🍽️',
             'disposal': '🗑️',
             'compactor': '🗜️',
-            'washer': '🌊',
             'dryer': '☀️',
-            'iron': '👔',
             'vacuum': '🌪️',
             'broom': '🧹',
             'mop': '🧽',
@@ -7241,7 +7372,6 @@
             'powder': '💨',
             'granule': '•',
             'pellet': '•',
-            'tablet': '💊',
             'capsule': '💊',
             'pill': '💊',
             'medicine': '💊',
@@ -7256,7 +7386,6 @@
             'patient': '🤒',
             'surgery': '🏥',
             'operation': '⚙️',
-            'procedure': '📋',
             'treatment': '💊',
             'therapy': '🏥',
             'cure': '💊',
@@ -7270,8 +7399,6 @@
             'training': '🏋️',
             'practice': '🎯',
             'sport': '⚽',
-            'game': '🎮',
-            'match': '🔥',
             'race': '🏁',
             'competition': '🏆',
             'tournament': '🏆',
@@ -7303,7 +7430,6 @@
             'throw': '🏈',
             'catch': '🧤',
             'hit': '🏏',
-            'swing': '🏌️',
             'serve': '🎾',
             'volley': '🏐',
             'spike': '🏐',
@@ -7311,7 +7437,6 @@
             'slam': '💥',
             'ace': '🃏',
             'birdie': '🐦',
-            'eagle': '🦅',
             'par': '⛳',
             'bogey': '⛳',
             'hole': '🕳️',
@@ -7323,16 +7448,12 @@
             'hazard': '⚠️',
             'club': '⛳',
             'driver': '🏌️',
-            'iron': '⛳',
             'putter': '⛳',
             'wedge': '🧀',
-            'grip': '✊',
             'stance': '🦵',
-            'swing': '🏌️',
             'stroke': '🏊',
             'lap': '🏊',
             'lane': '🛣️',
-            'pool': '🏊',
             'dive': '🤿',
             'splash': '💦',
             'float': '🛟',
@@ -7360,18 +7481,15 @@
             'flip': '🤸',
             'spin': '🌀',
             'twirl': '💃',
-            'dance': '💃',
             'ballet': '🩰',
             'tap': '👟',
             'jazz': '🎷',
             'hip': '🕺',
-            'hop': '🐰',
             'break': '💔',
             'salsa': '💃',
             'tango': '💃',
             'waltz': '💃',
             'foxtrot': '🦊',
-            'swing': '🎶',
             'disco': '🕺',
             'rave': '🎉',
             'party': '🎉',
@@ -7379,7 +7497,6 @@
             'festival': '🎪',
             'carnival': '🎠',
             'parade': '🎊',
-            'march': '🚶',
             'protest': '✊',
             'rally': '🏁',
             'demonstration': '📊',
@@ -7434,28 +7551,21 @@
             'obstacle': '🚧',
             'barrier': '🚧',
             'hurdle': '🏃',
-            'block': '🚫',
             'limit': '🚫',
             'boundary': '🚧',
             'border': '🛂',
-            'edge': '🔪',
             'corner': '📐',
             'side': '↔️',
             'front': '⬆️',
-            'back': '⬇️',
-            'top': '⬆️',
             'bottom': '⬇️',
             'middle': '⬜',
             'center': '🎯',
             'core': '🍎',
-            'heart': '❤️',
             'soul': '👻',
             'spirit': '👻',
             'mind': '🧠',
             'brain': '🧠',
             'head': '👤',
-            'skull': '💀',
-            'face': '😊',
             'forehead': '👤',
             'eyebrow': '🤨',
             'eyelash': '👁️',
@@ -7468,10 +7578,8 @@
             'glasses': '👓',
             'contact': '👁️',
             'sight': '👀',
-            'vision': '👁️',
             'blind': '🦯',
             'deaf': '🦻',
-            'mute': '🔇',
             'voice': '🗣️',
             'speech': '💬',
             'language': '🗣️',
@@ -7480,41 +7588,28 @@
             'paragraph': '📄',
             'chapter': '📖',
             'verse': '📜',
-            'line': '➖',
             'text': '📝',
             'write': '✍️',
             'read': '📖',
-            'spell': '🔤',
             'grammar': '📚',
             'punctuation': '.',
             'comma': ',',
-            'period': '.',
             'exclamation': '❗',
-            'apostrophe': "'",
             'quotation': '"',
             'colon': ':',
             'semicolon': ';',
             'hyphen': '-',
             'parenthesis': '()',
-            'bracket': '[]',
             'brace': '{}',
             'slash': '/',
             'backslash': '\\',
             'asterisk': '*',
             'ampersand': '&',
-            'percent': '%',
             'hash': '#',
-            'dollar': '$',
-            'euro': '€',
-            'pound': '£',
-            'yen': '¥',
-            'cent': '¢',
             'copyright': '©',
             'trademark': '™',
             'registered': '®',
-            'degree': '°',
             'infinity': '∞',
-            'pi': 'π',
             'sigma': 'Σ',
             'delta': 'Δ',
             'alpha': 'α',
@@ -7537,11 +7632,51 @@
             'tau': 'τ',
             'upsilon': 'υ',
             'epsilon': 'ε',
-            'violin': '🎻',
-            'whale': '🐳',
-            'fox': '🦊',
             'yellow': '🟨',
-            'zebra': '🦓'
+            'igloo': '🛖',
+            'pie': '🥧',
+            'rat': '🐀',
+            'leg': '🦵',
+            'arm': '💪',
+            'toe': '🦶',
+            'lip': '👄',
+            'hot': '🔥',
+            'sad': '😢',
+            'mad': '😠',
+            'red': '🔴',
+            'sky': '🌤️',
+            'zoo': '🦁',
+            'boy': '👦',
+            'jam': '🍓',
+            'meat': '🥩',
+            'kiwi': '🥝',
+            'ring': '💍',
+            'hair': '💇',
+            'bone': '🦴',
+            'socks': '🧦',
+            'shoes': '👟',
+            'crown': '👑',
+            'dad': '👨',
+            'fan': '🪭',
+            'girl': '👧',
+            'house': '🏠',
+            'insect': '🐛',
+            'jelly': '🍮',
+            'kid': '🧒',
+            'nest': '🪺',
+            'net': '🥅',
+            'quilt': '🛌',
+            'quack': '🦆',
+            'rainbow': '🌈',
+            'van': '🚐',
+            'vest': '🦺',
+            'wagon': '🛒',
+            'x-ray': '🩻',
+            'xylophone': '🎼',
+            'x-ray fish': '🐟',
+            'yo-yo': '🪀',
+            'yogurt': '🥣',
+            'zip': '🤐'
         };
         // Improved letter names for clear pronunciation on basic TTS engines
         // Spellings tuned for accurate vowels and consonants across platforms
@@ -7582,6 +7717,18 @@
         }
 
         function getRandomLetter() {
+            if (typeof window !== 'undefined' && typeof window.__forcedNextLetter === 'string' && /^[a-zA-Z]$/.test(window.__forcedNextLetter)) {
+                const forcedRaw = window.__forcedNextLetter;
+                window.__forcedNextLetter = null;
+                const forced = currentCase === 'upper'
+                    ? forcedRaw.toUpperCase()
+                    : currentCase === 'lower'
+                        ? forcedRaw.toLowerCase()
+                        : forcedRaw;
+                recentLetters.push(forced.toLowerCase());
+                if (recentLetters.length > 3) recentLetters.shift();
+                return forced;
+            }
             let letters = getLetterCollection();
 
             // SRS: prioritize letters whose nextReview is due (or unscheduled)
@@ -7637,7 +7784,7 @@
 
             return selected;
         }
-        function updateAdaptivePool(availableLetters) {
+        function updateAdaptivePool(availableLetters = getLetterCollection()) {
             adaptivePool = [];
 
             // Calculate difficulty weights for each letter
@@ -7662,6 +7809,9 @@
                 // Increase weight for letters with errors
                 if (letterErrors[key]) {
                     weight += letterErrors[key] * 0.5;
+                }
+                if (Array.isArray(lastRoundProblemLetters) && lastRoundProblemLetters.includes(key)) {
+                    weight += 2;
                 }
 
                 // Decrease weight for recently used letters
@@ -7748,6 +7898,7 @@
             const totalPerf = Object.values(letterPerformance);
             if (totalPerf.length === 0) {
                 difficultyLevel = 1;
+                updateDifficultyIndicator();
                 return;
             }
 
@@ -7772,8 +7923,15 @@
         }
 
         function updateDifficultyIndicator() {
+            const indicator = document.getElementById('difficultyIndicator');
+            if (indicator) {
+                const label = `Difficulty: Level ${difficultyLevel} of 5`;
+                indicator.setAttribute('aria-label', label);
+                indicator.title = label;
+            }
             for (let i = 1; i <= 5; i++) {
                 const bar = document.getElementById(`diff${i}`);
+                if (!bar) continue;
                 if (i <= difficultyLevel) {
                     bar.classList.add('active');
                     if (difficultyLevel <= 2) {
@@ -8088,7 +8246,7 @@
         }
 
         function startTimer() {
-            if (!timerEnabled || focusModeEnabled || currentMode !== 'identify' || questionResolved) return;
+            if (!timerEnabled || focusModeEnabled || lessonPaused || currentMode !== 'identify' || questionResolved) return;
 
             clearTimer();
 
@@ -8167,6 +8325,10 @@
         function clearAllTimers() {
             window.wbPendingLevelAnimation = null;
             drawRetryClearTimeout = null;
+            if (window._wbLevelEscCleanup) {
+                try { window._wbLevelEscCleanup(); } catch (e) {}
+                window._wbLevelEscCleanup = null;
+            }
             document.querySelectorAll('.minigame-announcement, #wb-level-overlay, #wordExamplesOverlay, .wb-flight, .wb-prompt-emoji').forEach(element => element.remove());
             lessonTimeouts.forEach(id => clearTimeout(id));
             lessonTimeouts.clear();
@@ -8213,7 +8375,7 @@
             shapeBiasRoundsRemaining = 3; // bias for next few selections
         }
         let lastCelebrationTime = 0;
-        function createConfetti(element) {
+        function createConfetti(element, skipCooldown = false) {
             if (focusModeEnabled || motionReduced()) {
                 showFeedback('Great job! ✓', 'success');
                 return;
@@ -8223,18 +8385,21 @@
             const originX = rect.left + (rect.width || 0) / 2;
             const originY = rect.top + (rect.height || 0) / 2;
 
+            const now = Date.now();
+            if (!skipCooldown && (now - lastCelebrationTime < 500)) return;
+            if (!skipCooldown) lastCelebrationTime = now;
+
             const layer = document.createElement('div');
+            layer.className = 'letter-celebration-layer';
             layer.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:visible;';
             document.body.appendChild(layer);
 
             const emojis = celebrationEmojis[celebrationType] || celebrationEmojis.fireworks;
-            const now = Date.now();
-            if (now - lastCelebrationTime < 500) { layer.remove(); return; }
-            lastCelebrationTime = now;
             const count = 8;
 
             for (let i = 0; i < count; i++) {
                 const el = document.createElement('span');
+                el.className = 'celebration-theme-emoji';
                 el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
                 el.style.cssText = `position:absolute; left:${originX}px; top:${originY}px; will-change:transform,opacity; font-size:${24 + Math.random() * 14}px;`;
                 layer.appendChild(el);
@@ -8274,7 +8439,7 @@
 
         function createCustomCelebration(element) {
             // Alias to enhanced confetti for now
-            createConfetti(element);
+            createConfetti(element, true);
         }
         // Letter-specific celebrations
         function createLetterCelebration(letter, element) {
@@ -8325,6 +8490,11 @@
                     createHeroLetterBurst(upper, element, theme);
                 } catch (_) { /* non-fatal */ }
 
+                // Emit the user's selected Celebration Theme emojis alongside the letter-specific animation
+                try {
+                    createCustomCelebration(element);
+                } catch (_) { /* non-fatal */ }
+
                 // Then run the per-letter animation; fallback to a star burst
                 const specific = celebrations[upper];
                 if (specific) {
@@ -8334,7 +8504,7 @@
                 }
             } catch (e) {
                 // Fallback if anything goes wrong
-                try { createConfetti(element); } catch (_) { }
+                try { createConfetti(element, true); } catch (_) { }
             }
         }
 
@@ -8437,7 +8607,7 @@
                 'U': { base: '#06b6d4', accent: '#22d3ee', emojis: ['☔', '💧'] },
                 'V': { base: '#f472b6', accent: '#e879f9', emojis: ['✌️', '✨'] },
                 'W': { base: '#60a5fa', accent: '#93c5fd', emojis: ['🌊', '💦'] },
-                'X': { base: '#ef4444', accent: '#f59e0b', emojis: ['❌', '💥'] },
+                'X': { base: '#f59e0b', accent: '#fbbf24', emojis: ['🎶', '🎵', '✨'] },
                 'Y': { base: '#a78bfa', accent: '#8b5cf6', emojis: ['🪀', '✨'] },
                 'Z': { base: '#0ea5e9', accent: '#38bdf8', emojis: ['🚀', '🔥'] }
             };
@@ -8619,7 +8789,7 @@
             const origin = getOriginFromElement(element);
             const layer = createCelebrationLayer();
             const x = document.createElement('span');
-            x.textContent = '❌';
+            x.textContent = '🎶';
             x.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:72px; transform-origin:center;`;
             layer.appendChild(x);
             const duration = 700;
@@ -8634,7 +8804,7 @@
             }
             for (let i = 0; i < 6; i++) {
                 const burst = document.createElement('span');
-                burst.textContent = '💥';
+                burst.textContent = i % 2 === 0 ? '🎵' : '✨';
                 burst.style.cssText = `position:absolute; left:${origin.x}px; top:${origin.y}px; font-size:${22 + Math.random() * 10}px;`;
                 layer.appendChild(burst);
                 const angle = (Math.PI * 2) * (i / 6) + Math.random() * 0.4;
@@ -9574,10 +9744,30 @@
             const questionId = identifyPromptId;
 
             currentLetter = getRandomLetter();
-            const letters = (currentLetter === currentLetter.toLowerCase()) ? lowerLetters : upperLetters; // distractors in same case as target
+            const isLowerTarget = (currentLetter === currentLetter.toLowerCase());
+            const letters = isLowerTarget ? lowerLetters : upperLetters; // distractors in same case as target
             const options = [currentLetter];
 
-            // Generate 3 different options from a filtered pool
+            // Include top empirically confused letter from confusionMatrix for targeted discrimination practice
+            const targetLower = currentLetter.toLowerCase();
+            if (confusionMatrix && confusionMatrix[targetLower]) {
+                let topConfusedLower = null;
+                let topConfusedCount = 0;
+                for (const [wrongLower, count] of Object.entries(confusionMatrix[targetLower])) {
+                    if (wrongLower !== targetLower && typeof count === 'number' && count > topConfusedCount && lowerLetters.includes(wrongLower)) {
+                        topConfusedCount = count;
+                        topConfusedLower = wrongLower;
+                    }
+                }
+                if (topConfusedLower) {
+                    const confusedOption = isLowerTarget ? topConfusedLower : topConfusedLower.toUpperCase();
+                    if (!options.includes(confusedOption)) {
+                        options.push(confusedOption);
+                    }
+                }
+            }
+
+            // Generate remaining options from a filtered pool
             const letterPool = letters.filter(l => l !== currentLetter);
             while (options.length < 4) {
                 const letter = letterPool[Math.floor(Math.random() * letterPool.length)];
@@ -10305,13 +10495,28 @@
             matchedPairs = 0;
             flippedCards = [];
 
-            // Create pairs of letters
+            // Create 8 distinct pairs of letters without polluting main lesson recentLetters
+            const savedRecent = [...recentLetters];
             const letters = [];
+            const seenLower = new Set();
+            const fallbackAlphabet = 'abcdefghijklmnopqrstuvwxyz'.split('').sort(() => Math.random() - 0.5);
             for (let i = 0; i < 8; i++) {
-                const letter = getRandomLetter();
+                let letter = getRandomLetter();
+                let guard = 0;
+                while (seenLower.has((letter || '').toLowerCase()) && guard < 30) {
+                    letter = getRandomLetter();
+                    guard++;
+                }
+                if (seenLower.has((letter || '').toLowerCase())) {
+                    const unusedLower = fallbackAlphabet.find(ch => !seenLower.has(ch)) || 'a';
+                    letter = currentCase === 'upper' ? unusedLower.toUpperCase() : (currentCase === 'mixed' && Math.random() < 0.5 ? unusedLower.toUpperCase() : unusedLower);
+                }
+                seenLower.add(letter.toLowerCase());
                 letters.push(letter, letter);
             }
+            recentLetters = savedRecent;
             letters.sort(() => Math.random() - 0.5);
+            memoryCards = [...letters];
 
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = `
@@ -10358,9 +10563,11 @@
                         card1.classList.add('matched');
                         card2.classList.add('matched');
                         card1.disabled = true; card2.disabled = true;
+                        flippedCards = [];
                         matchedPairs++;
                         minigameScore = matchedPairs;
-                        document.getElementById('minigameScore').textContent = minigameScore;
+                        const scoreEl = document.getElementById('minigameScore');
+                        if (scoreEl) scoreEl.textContent = minigameScore;
 
                         speakLetter(card1.dataset.letter, null, { skipCancel: true });
 
@@ -10374,12 +10581,9 @@
                         card1.classList.remove('flipped');
                         card2.classList.remove('flipped');
                         [card1, card2].forEach(item => { item.setAttribute('aria-pressed', 'false'); item.setAttribute('aria-label', `Reveal card ${Number(item.dataset.index) + 1}`); });
+                        flippedCards = [];
                     }, 1000);
                 }
-
-                scheduleLesson(() => {
-                    flippedCards = [];
-                }, 1000);
             }
         }
 
@@ -10486,6 +10690,10 @@
         function startNextRound() {
             if (!roundSummaryShown) return;
             currentRound++;
+            const rawProblem = (Array.isArray(problemLetters) && problemLetters.length > 0)
+                ? problemLetters
+                : Object.entries(letterErrors || {}).filter(([, errors]) => errors >= 2).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([letter]) => letter);
+            lastRoundProblemLetters = Array.from(new Set(rawProblem.map(l => String(l).toLowerCase()).filter(l => /^[a-z]$/.test(l))));
             resetRoundState();
 
             closeDialog('roundModal');
@@ -10526,6 +10734,7 @@
                 <div class="formation-controls">
                     <button class="formation-btn secondary" onclick="showFormationGuide()">Show How to Write</button>
                     <button class="formation-btn secondary" onclick="hideFormationGuide()">Hide Guide</button>
+                    <button class="formation-btn secondary" id="undoStrokeBtn" onclick="undoLastStroke()" style="display: none;">⌫ Undo</button>
                 </div>
                 <div class="controls">
                     <button class="control-btn clear-btn" onclick="clearCanvas()">Clear ✨</button>
@@ -10658,6 +10867,7 @@
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', stroke.path);
                 path.setAttribute('class', 'stroke-path stroke-animated');
+                path.setAttribute('data-stroke-index', String(index));
                 path.style.animationDelay = `${index * 2}s`;
                 guide.appendChild(path);
 
@@ -10667,6 +10877,7 @@
                     const [startX, startY] = pathMatch.slice(1).map(Number);
                     const number = document.createElement('div');
                     number.className = 'stroke-number';
+                    number.setAttribute('data-stroke-index', String(index));
                     number.textContent = stroke.strokes;
                     // Position using percentage within the container to keep inside bounds
                     number.style.left = `${startX}%`;
@@ -10677,15 +10888,96 @@
             });
 
             speakPhrasePolitely(`Watch how to write ${currentLetter}`);
+            guide.classList.add('show');
+            updateFormationStrokeProgress();
         }
 
         function hideFormationGuide() {
             const guide = document.getElementById('formationGuide');
+            if (!guide) return;
+            guide.classList.remove('show');
             guide.innerHTML = '';
             const numbers = document.querySelectorAll('.stroke-number');
             numbers.forEach(n => n.remove());
             // remove viewBox so future resizes reset cleanly
             guide.removeAttribute('viewBox');
+        }
+
+        function updateFormationStrokeProgress() {
+            const completedStrokes = Array.isArray(drawingPoints)
+                ? drawingPoints.filter(p => p && p.newStroke).length
+                : 0;
+            const undoBtn = document.getElementById('undoStrokeBtn');
+            if (undoBtn) {
+                undoBtn.style.display = completedStrokes > 0 ? '' : 'none';
+            }
+            const guide = document.getElementById('formationGuide');
+            if (!guide) return;
+            const paths = guide.querySelectorAll('.stroke-path');
+            paths.forEach((path, idx) => {
+                path.classList.toggle('stroke-complete', idx < completedStrokes);
+                path.classList.toggle('stroke-next', idx === completedStrokes);
+            });
+            const container = guide.parentElement;
+            if (container) {
+                const numbers = container.querySelectorAll('.stroke-number');
+                numbers.forEach((num, idx) => {
+                    num.classList.toggle('stroke-complete', idx < completedStrokes);
+                    num.classList.toggle('stroke-next', idx === completedStrokes);
+                });
+            }
+        }
+
+        function redrawCanvasFromPoints() {
+            const canvas = document.getElementById('drawCanvas');
+            if (!canvas || !ctx) return;
+            const ratio = window.devicePixelRatio || 1;
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#764ba2';
+            for (let i = 0; i < drawingPoints.length; i++) {
+                const p = drawingPoints[i];
+                if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
+                if (p.newStroke || i === 0) {
+                    ctx.beginPath();
+                    ctx.fillStyle = ctx.strokeStyle;
+                    ctx.arc(p.x, p.y, ctx.lineWidth / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    const prev = drawingPoints[i - 1];
+                    if (prev && Number.isFinite(prev.x) && Number.isFinite(prev.y)) {
+                        ctx.beginPath();
+                        ctx.moveTo(prev.x, prev.y);
+                        ctx.lineTo(p.x, p.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function undoLastStroke() {
+            const canvas = document.getElementById('drawCanvas');
+            if (!canvas || currentMode !== 'draw' || !Array.isArray(drawingPoints) || drawingPoints.length === 0) return false;
+            let lastStartIdx = -1;
+            for (let i = drawingPoints.length - 1; i >= 0; i--) {
+                if (drawingPoints[i] && drawingPoints[i].newStroke) {
+                    lastStartIdx = i;
+                    break;
+                }
+            }
+            if (lastStartIdx <= 0) {
+                drawingPoints = [];
+                hasStartedTrace = false;
+                startIdleHintTimer();
+            } else {
+                drawingPoints = drawingPoints.slice(0, lastStartIdx);
+            }
+            redrawCanvasFromPoints();
+            updateFormationStrokeProgress();
+            return true;
         }
 
         function setupCanvas() {
@@ -10755,6 +11047,7 @@
             e.preventDefault();
             if (e.type === 'mouseup' || e.type === 'touchend') draw(e);
             isDrawing = false;
+            updateFormationStrokeProgress();
             // Don't clear points - allow multiple strokes
         }
         function clearCanvas() {
@@ -10763,6 +11056,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawingPoints = [];
             hasStartedTrace = false;
+            updateFormationStrokeProgress();
             // restart idle hint if user clears without drawing immediately
             startIdleHintTimer();
 
@@ -10777,29 +11071,36 @@
 
 
         function getDrawingBounds() {
-            if (drawingPoints.length === 0) return { width: 0, height: 0 };
+            const validPoints = (drawingPoints || []).filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y));
+            if (validPoints.length === 0) return { width: 0, height: 0, minX: 0, maxX: 0, minY: 0, maxY: 0 };
 
             let minX = Infinity, maxX = -Infinity;
             let minY = Infinity, maxY = -Infinity;
 
-            drawingPoints.forEach(point => {
-                if (!point.newStroke) {
-                    minX = Math.min(minX, point.x);
-                    maxX = Math.max(maxX, point.x);
-                    minY = Math.min(minY, point.y);
-                    maxY = Math.max(maxY, point.y);
-                }
+            validPoints.forEach(point => {
+                minX = Math.min(minX, point.x);
+                maxX = Math.max(maxX, point.x);
+                minY = Math.min(minY, point.y);
+                maxY = Math.max(maxY, point.y);
             });
 
             return {
                 width: maxX - minX,
-                height: maxY - minY
+                height: maxY - minY,
+                minX,
+                maxX,
+                minY,
+                maxY
             };
         }
 
-        function createDrawingCelebration() {
+        function createDrawingCelebration(element) {
+            if (focusModeEnabled || motionReduced()) return;
+            const bounds = getDrawingBounds();
             // Create overlay celebration that doesn't disrupt the view
             const overlay = document.createElement('div');
+            overlay.className = 'letter-celebration-layer';
+            overlay.dataset.boundsWidth = String(Math.round(bounds.width || 0));
             overlay.style.cssText = `
                 position: fixed;
                 top: 0;
@@ -10811,25 +11112,28 @@
             `;
             document.body.appendChild(overlay);
 
-            // Add celebration elements
-            for (let i = 0; i < 15; i++) {
+            const emojis = celebrationEmojis[celebrationType] || celebrationEmojis.fireworks;
+            // Add celebration elements using the player's chosen Celebration Theme
+            for (let i = 0; i < 12; i++) {
                 const star = document.createElement('div');
-                star.textContent = '⭐';
+                star.className = 'celebration-theme-emoji';
+                star.textContent = emojis[Math.floor(Math.random() * emojis.length)];
                 star.style.cssText = `
                     position: absolute;
-                    font-size: ${20 + Math.random() * 30}px;
-                    left: ${Math.random() * 100}%;
-                    top: ${Math.random() * 100}%;
+                    font-size: ${20 + Math.random() * 26}px;
+                    left: ${15 + Math.random() * 70}%;
+                    top: ${15 + Math.random() * 70}%;
                     animation: sparkle 1s ease-out forwards;
-                    animation-delay: ${Math.random() * 0.5}s;
+                    animation-delay: ${Math.random() * 0.4}s;
                 `;
                 overlay.appendChild(star);
             }
+            createCustomCelebration(element || document.querySelector('.canvas-container'));
 
             // Remove overlay after animation
             setTimeout(() => {
-                overlay.remove();
-            }, 2000);
+                if (overlay && overlay.parentNode) overlay.remove();
+            }, 1600);
         }
 
         function showFeedback(message, type) {
@@ -10862,7 +11166,7 @@
             ].join(';');
 
             const card = document.createElement('div');
-            card.setAttribute('role', 'dialog');
+            card.setAttribute('role', 'status');
             card.setAttribute('aria-live', 'polite');
             card.style.cssText = [
                 'max-width:84vw',
@@ -10896,7 +11200,8 @@
             const examples = words.slice(0, 3);
             examples.forEach(w => {
                 const chip = document.createElement('div');
-                chip.textContent = w;
+                const emoji = anchorEmojiMap[String(w).toLowerCase()] || '';
+                chip.textContent = emoji ? `${emoji} ${w}` : w;
                 chip.style.cssText = [
                     'font-size:24px',
                     'font-weight:700',
@@ -10923,13 +11228,13 @@
             const say = ` ${letter.toUpperCase()} is for ${examples.join(', ')}.`;
             try { speakPhrasePolitely(say); } catch (e) { }
             // Auto-dismiss quickly to avoid disrupting flow
-            setTimeout(() => {
+            scheduleLesson(() => {
                 if (!motionReduced() && typeof gsap !== 'undefined') {
                     gsap.to(card, { scale: 0.96, opacity: 0, duration: 0.18, ease: 'power2.in', onComplete: () => overlay.remove() });
                 } else {
                     overlay.remove();
                 }
-            }, 1400);
+            }, 1400, lessonVersion, true);
         }
         // Idle hint logic for tracing mode
         function startIdleHintTimer() {
@@ -10938,13 +11243,16 @@
             const guideEl = container ? container.querySelector('.letter-guide') : null;
             if (!guideEl) return;
             hintFadeOpacity = 0;
-            // Wait a few seconds before gradually revealing the hint
-            idleHintTimeout = setTimeout(() => {
+            // Wait a few seconds before gradually revealing the hint (paused while dialogs are open)
+            idleHintTimeout = scheduleLesson(() => {
+                idleHintTimeout = null;
+                if (hasStartedTrace || currentMode !== 'draw') { clearIdleHintTimers(); return; }
                 hintWasShown = true;
                 // fade from 0 → 0.12 over several seconds in tiny steps
                 idleHintInterval = setInterval(() => {
-                    // If the child started drawing, stop immediately
-                    if (hasStartedTrace) { clearIdleHintTimers(); return; }
+                    if (lessonPaused) return;
+                    // If the child started drawing or left draw mode, stop immediately
+                    if (hasStartedTrace || currentMode !== 'draw') { clearIdleHintTimers(); return; }
                     hintFadeOpacity = Math.min(0.12, hintFadeOpacity + 0.01);
                     guideEl.style.opacity = String(hintFadeOpacity);
                     if (hintFadeOpacity >= 0.12) {
@@ -10963,6 +11271,7 @@
         }
 
         function openSettings() {
+            if (typeof clearPressTimers === 'function') clearPressTimers();
             const modal = document.getElementById('settingsModal');
             openDialog('settingsModal');
             // Sync advanced settings checkboxes if present
@@ -11011,6 +11320,79 @@
             applyGameSettings();
             saveGameData();
         }
+        function syncActivePromptCase(mode) {
+            if ((mode !== 'lower' && mode !== 'upper') || isProcessing || questionResolved) return;
+            const toUpper = (mode === 'upper');
+            if (currentMode === 'identify') {
+                if (typeof currentLetter === 'string' && currentLetter.length === 1 && document.querySelectorAll('#gameArea .option-btn').length > 0) {
+                    currentLetter = toUpper ? currentLetter.toUpperCase() : currentLetter.toLowerCase();
+                    document.querySelectorAll('#gameArea .option-btn').forEach(btn => {
+                        const raw = btn.dataset.letter || btn.textContent || '';
+                        if (!raw) return;
+                        const converted = toUpper ? raw.trim().slice(0, 1).toUpperCase() : raw.trim().slice(0, 1).toLowerCase();
+                        const qidAttr = btn.dataset.qid;
+                        const qid = qidAttr != null && qidAttr !== '' ? Number(qidAttr) : identifyPromptId;
+                        btn.dataset.letter = converted;
+                        btn.setAttribute('aria-label', `Choose letter ${converted}`);
+                        btn.onclick = () => checkAnswer(converted, qid);
+                        const span = btn.querySelector('.vowel-highlight, .consonant-highlight');
+                        if (span) {
+                            span.textContent = converted;
+                        } else {
+                            const firstText = Array.from(btn.childNodes).find(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim().length > 0);
+                            if (firstText) firstText.textContent = btn.querySelector('.letter-association') ? `${converted}\n                        ` : converted;
+                            else if (!btn.children.length) btn.textContent = converted;
+                        }
+                    });
+                    updatePromptAlternative();
+                }
+            } else if (currentMode === 'draw') {
+                if (typeof currentLetter === 'string' && currentLetter.length === 1 && !hasStartedTrace && (!Array.isArray(drawingPoints) || drawingPoints.length === 0)) {
+                    currentLetter = toUpper ? currentLetter.toUpperCase() : currentLetter.toLowerCase();
+                    const displayEl = document.querySelector('#gameArea .letter-display');
+                    if (displayEl) displayEl.textContent = currentLetter;
+                    const guideTextEl = document.querySelector('#gameArea .letter-guide');
+                    if (guideTextEl) guideTextEl.textContent = currentLetter;
+                    const guideSvg = document.getElementById('formationGuide');
+                    if (guideSvg && guideSvg.classList.contains('show')) {
+                        showFormationGuide();
+                    }
+                }
+            } else if (currentMode === 'wordBuilder') {
+                if (typeof wbTargetWord === 'string' && wbTargetWord.length > 0 && !wbTransitioning) {
+                    wbTargetWord = toUpper ? wbTargetWord.toUpperCase() : wbTargetWord.toLowerCase();
+                    if (Array.isArray(wbSlots)) {
+                        wbSlots = wbSlots.map(s => s === null ? null : (toUpper ? String(s).toUpperCase() : String(s).toLowerCase()));
+                    }
+                    if (Array.isArray(wbBank)) {
+                        wbBank = wbBank.map(l => toUpper ? String(l).toUpperCase() : String(l).toLowerCase());
+                    }
+                    if (Array.isArray(wbUsedTiles)) {
+                        wbUsedTiles.forEach(entry => {
+                            if (entry && entry.letter) entry.letter = toUpper ? String(entry.letter).toUpperCase() : String(entry.letter).toLowerCase();
+                        });
+                    }
+                    document.querySelectorAll('#wbSlots .wb-slot').forEach(slot => {
+                        const idx = Number(slot.dataset.idx);
+                        if (Number.isInteger(idx) && wbSlots[idx] !== null) {
+                            const ch = wbSlots[idx];
+                            slot.textContent = ch;
+                            slot.setAttribute('aria-label', `Slot ${idx + 1}: ${ch}, tap to undo`);
+                        }
+                    });
+                    document.querySelectorAll('#wbBank .wb-tile').forEach(tile => {
+                        const idx = Number(tile.dataset.bankIdx);
+                        const raw = (Number.isInteger(idx) && wbBank[idx]) ? wbBank[idx] : (tile.dataset.letter || tile.textContent || '');
+                        if (!raw) return;
+                        const ch = toUpper ? String(raw).toUpperCase() : String(raw).toLowerCase();
+                        tile.dataset.letter = ch;
+                        tile.textContent = ch;
+                        tile.setAttribute('aria-label', `Pick letter ${ch}`);
+                        tile.onclick = () => wbPick(ch, idx);
+                    });
+                }
+            }
+        }
         function setCaseMode(mode) {
             currentCase = mode;
             writeStorage('letterLearningCase', mode);
@@ -11024,6 +11406,7 @@
                 el.classList.toggle('active', on);
                 el.setAttribute('aria-pressed', String(on));
             });
+            syncActivePromptCase(mode);
             saveGameData();
         }
         function setSoundMode(mode) {
@@ -11561,8 +11944,10 @@
                         if (!['🦁', '🐻', '🐼', '🦊', '🐸', '🦄', '🐙', '🦋', '🌟', '🚀'].includes(player.avatar)) player.avatar = '🌟';
                         for (const key of ['score', 'correctAnswers', 'wrongAnswers', 'bestStreak', 'totalPlayTime']) player[key] = nonnegative(player[key]);
                         player.letterPerformance = normalizePerformance(player.letterPerformance);
+                        player.modePerformance = Object.fromEntries(['identify', 'draw', 'wordBuilder'].map(mode => [mode, normalizePerformance(player.modePerformance?.[mode])]));
                         player.unlockedAchievements = new Set(Array.isArray(player.unlockedAchievements) ? player.unlockedAchievements.filter(id => ACHIEVEMENTS.some(a => a.id === id)) : []);
                         player.lettersMastered = new Set(Array.isArray(player.lettersMastered) ? player.lettersMastered.filter(letter => /^[a-z]$/.test(letter)) : []);
+                        player.drawAnalytics = normalizeDrawAnalyticsData(player.drawAnalytics);
                         // Backfill confusion matrix per player
                         const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
                         if (!player.confusionMatrix || typeof player.confusionMatrix !== 'object' || Array.isArray(player.confusionMatrix)) player.confusionMatrix = createEmptyConfusionMatrix();
@@ -11584,8 +11969,9 @@
                 ...player,
                 unlockedAchievements: Array.from(player.unlockedAchievements || []),
                 lettersMastered: Array.from(player.lettersMastered || []),
-                // Store confusion matrix as a plain object
-                confusionMatrix: player.confusionMatrix || createEmptyConfusionMatrix()
+                // Store confusion matrix and drawAnalytics as plain objects
+                confusionMatrix: player.confusionMatrix || createEmptyConfusionMatrix(),
+                drawAnalytics: normalizeDrawAnalyticsData(player.drawAnalytics)
             }));
             writeStorage('letterLearningPlayers', JSON.stringify(playersToSave));
         }
@@ -11649,11 +12035,13 @@
                 roundsCompleted: 0,
                 celebrationType: 'fireworks',
                 createdAt: Date.now(),
-                confusionMatrix: createEmptyConfusionMatrix()
+                confusionMatrix: createEmptyConfusionMatrix(),
+                drawAnalytics: createEmptyDrawAnalytics()
             };
 
             // Preserve the existing child's anonymous progress when creating the first profile.
-            if (!players.length && (correctAnswers + wrongAnswers > 0 || score > 0 || getTotalPlayMilliseconds() > 0)) {
+            const hasAnonDraw = Boolean(drawAnalytics && drawAnalytics.totals && drawAnalytics.totals.attempts > 0);
+            if (!players.length && (correctAnswers + wrongAnswers > 0 || score > 0 || getTotalPlayMilliseconds() > 0 || hasAnonDraw)) {
                 currentPlayer = newPlayer;
                 saveCurrentPlayerState();
                 currentPlayer = null;
@@ -11737,6 +12125,8 @@
 
                 // If in game, restart for new player
                 if (wasPlaying) startCurrentMode();
+                if (lessonPaused) pauseStartedAt = Date.now();
+                if (activeDialog === 'parentDashboard') updateDashboard();
                 saveGameData();
             }
         }
@@ -11760,6 +12150,7 @@
             currentPlayer.roundsCompleted = roundsCompleted;
             currentPlayer.celebrationType = celebrationType;
             currentPlayer.confusionMatrix = confusionMatrix;
+            currentPlayer.drawAnalytics = normalizeDrawAnalyticsData(drawAnalytics || parseStoredObject(readStorage(DRAW_ANALYTICS_STORAGE_KEY)));
             currentPlayer.totalQuestions = totalQuestions;
             currentPlayer.correctStreak = correctStreak;
             currentPlayer.totalPlayTime = getTotalPlayMinutes();
@@ -11783,6 +12174,11 @@
         function resetSelectionHistory() {
             recentLetters = []; adaptivePool = []; latestLetterWeights = {};
             shapeBiasTargetLower = null; shapeBiasRoundsRemaining = 0;
+            lastRoundProblemLetters = [];
+            if (typeof window !== 'undefined') {
+                window.__forcedNextLetter = null;
+                window.__forcedNextWordBuilderWord = null;
+            }
         }
         function loadPlayerState(player) {
             resetSelectionHistory();
@@ -11832,13 +12228,22 @@
             bestStreak = nonnegative(player.bestStreak);
             speedAnswers = nonnegative(player.speedAnswers);
             roundsCompleted = nonnegative(player.roundsCompleted);
-            celebrationType = player.celebrationType || 'fireworks';
+            celebrationType = Object.prototype.hasOwnProperty.call(celebrationEmojis, player.celebrationType) ? player.celebrationType : 'fireworks';
+            document.querySelectorAll('.celebration-option').forEach(option => {
+                const active = option.dataset.celebration === celebrationType;
+                option.classList.toggle('selected', active);
+                option.setAttribute('aria-pressed', String(active));
+            });
             // Confusion matrix per player
             if (player.confusionMatrix) {
                 confusionMatrix = player.confusionMatrix;
             } else {
                 confusionMatrix = createEmptyConfusionMatrix();
             }
+            // Tracing analytics per player
+            drawAnalytics = normalizeDrawAnalyticsData(player.drawAnalytics);
+            player.drawAnalytics = drawAnalytics;
+            persistDrawAnalytics();
         }
 
         // Parent Dashboard Functions
@@ -11865,6 +12270,206 @@
             updateLetterHeatmap();
             updateInsights();
             updateRecommendations();
+            updateDrawAnalyticsDashboard();
+            updateWordBuilderDashboard();
+        }
+
+        function updateDrawAnalyticsDashboard() {
+            const container = document.getElementById('drawAnalyticsSummary');
+            if (!container || typeof getDrawAnalytics !== 'function') return;
+            const summary = getDrawAnalytics();
+            const totals = summary && summary.totals ? summary.totals : { attempts: 0, accepts: 0, rejects: 0 };
+            const passRate = totals.attempts > 0 ? Math.round((totals.accepts / totals.attempts) * 100) : 0;
+            const letterEntries = summary && summary.letters ? Object.entries(summary.letters).filter(([, entry]) => entry && entry.attempts > 0) : [];
+            const lettersPracticed = letterEntries.length;
+            const missingDots = letterEntries.filter(([, entry]) => (entry.missingDot || 0) > 0).map(([ch]) => escapeText(ch));
+            const missingBars = letterEntries.filter(([, entry]) => (entry.missingCrossbar || 0) > 0).map(([ch]) => escapeText(ch));
+            const lowFidelity = letterEntries.filter(([, entry]) => typeof entry.avgFrechet === 'number' && entry.avgFrechet > 0 && entry.avgFrechet < 0.7).map(([ch]) => escapeText(ch));
+            const coachingParts = [];
+            if (missingDots.length > 0) coachingParts.push(`Missing dots on: ${missingDots.join(', ')}`);
+            if (missingBars.length > 0) coachingParts.push(`Missing crossbars on: ${missingBars.join(', ')}`);
+            if (lowFidelity.length > 0) coachingParts.push(`Extra path practice: ${lowFidelity.join(', ')}`);
+            const coachingNote = totals.attempts === 0
+                ? 'Play Tracing Practice to track stroke accuracy and formation coaching.'
+                : (coachingParts.length > 0 ? coachingParts.join(' • ') : 'Stroke formation is on track across practiced letters!');
+            container.innerHTML = `
+                <div class="player-stat-card">
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="drawTotalAttempts">${totals.attempts}</div>
+                            <div class="stat-label">Tracing Attempts</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="drawTotalAccepts">${totals.accepts}</div>
+                            <div class="stat-label">Accepted Traces</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="drawPassRate">${passRate}%</div>
+                            <div class="stat-label">Acceptance Rate</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="drawLettersPracticed">${lettersPracticed}/52</div>
+                            <div class="stat-label">Targets Practiced</div>
+                        </div>
+                    </div>
+                    <div id="drawCoachingNote" style="margin-top: 10px; font-size: 14px; color: #4b5563;">${coachingNote}</div>
+                </div>
+            `;
+        }
+
+        function updateWordBuilderDashboard() {
+            const container = document.getElementById('wordBuilderAnalyticsSummary');
+            if (!container) return;
+            const wbPerf = (modePerformance && modePerformance.wordBuilder) ? modePerformance.wordBuilder : {};
+            const entries = Object.entries(wbPerf).filter(([, d]) => d && d.total > 0);
+            const wordsPracticed = entries.length;
+            const totalAttempts = entries.reduce((sum, [, d]) => sum + (d.total || 0), 0);
+            const totalCorrect = entries.reduce((sum, [, d]) => sum + (d.correct || 0), 0);
+            const accuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
+            const masteredWords = entries.filter(([, d]) => d.total >= 2 && (d.correct / d.total) >= 0.8).map(([w]) => w.toUpperCase());
+            const practiceWords = entries
+                .filter(([, d]) => (d.correct / d.total) < 0.7)
+                .sort((a, b) => (a[1].correct / a[1].total) - (b[1].correct / b[1].total))
+                .slice(0, 6)
+                .map(([w]) => {
+                    const low = w.toLowerCase().replace(/[^a-z]/g, '');
+                    const up = low.toUpperCase();
+                    const em = (typeof anchorEmojiMap === 'object' && anchorEmojiMap && anchorEmojiMap[low]) ? anchorEmojiMap[low] : '🔤';
+                    return `<button type="button" class="wb-practice-word-btn" onclick="practiceWordBuilderWord('${low}')" aria-label="Practice spelling ${up}">${em} ${escapeText(up)}</button>`;
+                });
+            const practiceNote = wordsPracticed === 0
+                ? 'Play Word Builder to track spelling progress.'
+                : (practiceWords.length > 0 ? `Words to practice: ${practiceWords.join(', ')}` : 'All practiced words are on track!');
+            container.innerHTML = `
+                <div class="player-stat-card">
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="wbWordsPracticed">${wordsPracticed}</div>
+                            <div class="stat-label">Words Practiced</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="wbSpellingAccuracy">${accuracy}%</div>
+                            <div class="stat-label">Spelling Accuracy</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="wbWordsMastered">${masteredWords.length}</div>
+                            <div class="stat-label">Words Mastered</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="wbCurrentTier">${escapeText((wbDifficulty || 'easy').toUpperCase())}</div>
+                            <div class="stat-label">Current Tier</div>
+                        </div>
+                    </div>
+                    <div id="wbWordsToPractice" style="margin-top: 10px; font-size: 14px; color: #4b5563;">${practiceNote}</div>
+                </div>
+            `;
+        }
+
+        function exportProgressBackup(triggerDownload = false) {
+            saveGameData();
+            const gameData = parseStoredObject(readStorage('letterLearningGameData') || '{}');
+            let savedPlayers = [];
+            try {
+                const parsedPlayers = JSON.parse(readStorage('letterLearningPlayers') || '[]');
+                if (Array.isArray(parsedPlayers)) savedPlayers = parsedPlayers;
+            } catch (e) {
+                savedPlayers = [];
+            }
+            const drawData = parseStoredObject(readStorage(DRAW_ANALYTICS_STORAGE_KEY) || '{}');
+            const payload = {
+                schema: 'llg_backup_v1',
+                exportedAt: Date.now(),
+                gameData,
+                players: savedPlayers,
+                drawAnalytics: drawData
+            };
+            const json = JSON.stringify(payload, null, 2);
+            if (triggerDownload && typeof document !== 'undefined') {
+                try {
+                    const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'letter-learning-backup.json';
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                } catch (e) {}
+                if (typeof showFeedback === 'function') showFeedback('Progress backup JSON exported.', 'info');
+            }
+            return json;
+        }
+
+        function printProgressReport() {
+            try {
+                updateDashboard();
+                if (typeof window !== 'undefined' && typeof window.print === 'function') {
+                    window.print();
+                    return true;
+                }
+            } catch (e) {}
+            return false;
+        }
+
+        function importProgressBackup(rawInput) {
+            try {
+                const parsed = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
+                if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                    if (typeof showFeedback === 'function') showFeedback('Invalid backup file. Current progress was kept safe.', 'error');
+                    return false;
+                }
+                const gameDataObj = parsed.gameData && typeof parsed.gameData === 'object' && !Array.isArray(parsed.gameData) ? parsed.gameData : null;
+                if (!gameDataObj) {
+                    if (typeof showFeedback === 'function') showFeedback('Invalid backup file. Current progress was kept safe.', 'error');
+                    return false;
+                }
+                const playersArr = Array.isArray(parsed.players) ? parsed.players : [];
+                const drawObj = parsed.drawAnalytics && typeof parsed.drawAnalytics === 'object' && !Array.isArray(parsed.drawAnalytics)
+                    ? parsed.drawAnalytics
+                    : { letters: {}, totals: { attempts: 0, accepts: 0, rejects: 0 } };
+                writeStorage('letterLearningGameData', JSON.stringify(gameDataObj));
+                writeStorage('letterLearningPlayers', JSON.stringify(playersArr));
+                writeStorage(DRAW_ANALYTICS_STORAGE_KEY, JSON.stringify(drawObj));
+                if (typeof gameDataObj.currentCase === 'string') writeStorage('letterLearningCase', gameDataObj.currentCase);
+                if (typeof gameDataObj.soundEnabled === 'boolean') writeStorage('letterLearningSound', gameDataObj.soundEnabled ? 'on' : 'off');
+                if (typeof gameDataObj.phonicsEnabled === 'boolean') writeStorage('letterLearningPhonics', gameDataObj.phonicsEnabled ? 'on' : 'off');
+                const restoredTimerPref = typeof gameDataObj.timerPreference === 'boolean' ? gameDataObj.timerPreference : gameDataObj.timerEnabled;
+                if (typeof restoredTimerPref === 'boolean') writeStorage('letterLearningTimer', restoredTimerPref ? 'on' : 'off');
+                players = [];
+                currentPlayer = null;
+                currentPlayerIndex = 0;
+                multiplayerMode = false;
+                selectedPlayerId = null;
+                loadGameData();
+                initDrawAnalytics();
+                initializeMultiplayer();
+                applyGameSettings();
+                updateScoreDisplay();
+                updateBadgeCount();
+                updateAchievementStats();
+                updateDifficultyLevel();
+                updateStreakDisplay();
+                updateDashboard();
+                startCurrentMode();
+                if (lessonPaused) pauseStartedAt = Date.now();
+                if (typeof showFeedback === 'function') showFeedback('Progress backup restored!', 'success');
+                return true;
+            } catch (e) {
+                if (typeof showFeedback === 'function') showFeedback('Invalid backup file. Current progress was kept safe.', 'error');
+                return false;
+            }
+        }
+
+        function handleProgressBackupFile(inputEl) {
+            const file = inputEl && inputEl.files && inputEl.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function () {
+                importProgressBackup(String(reader.result || ''));
+                inputEl.value = '';
+            };
+            reader.readAsText(file);
         }
 
         function resetAllStatistics() {
@@ -11896,12 +12501,14 @@
             letterPerformance = {}; lettersMastered = new Set(); unlockedAchievements = new Set();
             modePerformance = { identify: {}, draw: {}, wordBuilder: {} };
             confusionMatrix = createEmptyConfusionMatrix(); achievementProgress = {};
+            resetDrawAnalytics();
             bestStreak = 0; speedAnswers = 0; totalPlayTime = 0; sessionPlayMs = 0; roundsCompleted = 0;
             currentStreak = 0; lastPlayDate = null; streakHistory = [];
             wbDifficulty = 'easy'; wbConsecutiveCorrect = 0; wbConsecutiveWrong = 0; wbRecentWords = [];
             currentMinigame = null; waitingForPhonics = false;
             isProcessing = false; isAnswering = false; wbTransitioning = false;
             startCurrentMode();
+            if (lessonPaused) pauseStartedAt = Date.now();
         }
         function updatePlayerStats() {
             const grid = document.getElementById('playerStatsGrid');
@@ -11918,9 +12525,25 @@
                 totalPlayTime: getTotalPlayMinutes()
             }];
 
-            allPlayers.forEach(player => {
+            allPlayers.forEach((player, index) => {
                 const card = document.createElement('div');
                 card.className = 'player-stat-card';
+                if (multiplayerMode) {
+                    const isActive = index === currentPlayerIndex;
+                    card.classList.add('interactive');
+                    card.classList.toggle('active', isActive);
+                    card.setAttribute('role', 'button');
+                    card.setAttribute('tabindex', '0');
+                    card.setAttribute('aria-pressed', String(isActive));
+                    card.setAttribute('aria-label', `View dashboard for ${player.name}`);
+                    card.onclick = () => switchToPlayer(index);
+                    card.onkeydown = (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            switchToPlayer(index);
+                        }
+                    };
+                }
 
                 const accuracy = (player.correctAnswers + player.wrongAnswers) > 0 ?
                     Math.round((player.correctAnswers / (player.correctAnswers + player.wrongAnswers)) * 100) : 0;
@@ -11953,6 +12576,86 @@
                 grid.appendChild(card);
             });
         }
+        function showLetterHeatmapDetail(letter) {
+            const detailEl = document.getElementById('heatmapLetterDetail');
+            if (!detailEl) return false;
+            const lower = String(letter || 'a').toLowerCase().slice(0, 1);
+            if (!/^[a-z]$/.test(lower)) return false;
+            const upper = lower.toUpperCase();
+            const perf = (multiplayerMode && currentPlayer && currentPlayer.letterPerformance && currentPlayer.letterPerformance[lower])
+                ? currentPlayer.letterPerformance[lower]
+                : letterPerformance[lower];
+            const recTotal = perf ? (perf.total || 0) : 0;
+            const recCorrect = perf ? (perf.correct || 0) : 0;
+            const recPct = recTotal > 0 ? `${Math.round((recCorrect / recTotal) * 100)}% (${recCorrect}/${recTotal})` : 'No recognition attempts yet';
+
+            const confRow = (confusionMatrix && confusionMatrix[lower]) ? confusionMatrix[lower] : {};
+            const topConf = Object.entries(confRow)
+                .filter(([w, c]) => w !== lower && typeof c === 'number' && c > 0)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 2)
+                .map(([w, c]) => `${w.toUpperCase()} (${c}×)`)
+                .join(', ');
+
+            const da = getDrawAnalytics();
+            const dLow = (da.letters && da.letters[lower]) || { attempts: 0, accepts: 0 };
+            const dUp = (da.letters && da.letters[upper]) || { attempts: 0, accepts: 0 };
+            const drawAttempts = (dLow.attempts || 0) + (dUp.attempts || 0);
+            const drawAccepts = (dLow.accepts || 0) + (dUp.accepts || 0);
+            const drawSummary = drawAttempts > 0 ? `${drawAccepts}/${drawAttempts} accepted` : '0 attempts';
+
+            detailEl.innerHTML = '';
+            const span = document.createElement('span');
+            span.textContent = `${upper}: Recognition ${recPct}${topConf ? ` • Confused with: ${topConf}` : ''} • Tracing: ${drawSummary}`;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'toggle-btn dashboard-print-hide';
+            btn.style.cssText = 'margin-left: 10px; padding: 4px 10px; font-size: 12px;';
+            btn.textContent = `Practice ${upper}`;
+            btn.setAttribute('aria-label', `Practice letter ${upper}`);
+            btn.onclick = () => practiceHeatmapLetter(lower);
+            detailEl.appendChild(span);
+            detailEl.appendChild(btn);
+            return true;
+        }
+
+        function practiceHeatmapLetter(letter) {
+            const targetLower = String(letter || 'a').toLowerCase().slice(0, 1);
+            if (!/^[a-z]$/.test(targetLower)) return false;
+            shapeBiasTargetLower = targetLower;
+            shapeBiasRoundsRemaining = 3;
+            if (!Array.isArray(lastRoundProblemLetters)) lastRoundProblemLetters = [];
+            if (!lastRoundProblemLetters.includes(targetLower)) lastRoundProblemLetters.unshift(targetLower);
+            if (typeof window !== 'undefined') {
+                window.__forcedNextLetter = currentCase === 'upper' ? targetLower.toUpperCase() : targetLower;
+            }
+            closeParentDashboard();
+            if (currentMode === 'wordBuilder') {
+                setMode('identify');
+            } else {
+                startCurrentMode();
+            }
+            return true;
+        }
+
+        function practiceWordBuilderWord(word) {
+            const targetWord = String(word || '').trim().toLowerCase();
+            if (!/^[a-z]{2,8}$/.test(targetWord)) return false;
+            if (!wordBuilderEnabled && typeof setWordBuilderMode === 'function') {
+                setWordBuilderMode('on');
+            }
+            if (typeof window !== 'undefined') {
+                window.__forcedNextWordBuilderWord = targetWord;
+            }
+            closeParentDashboard();
+            if (currentMode !== 'wordBuilder') {
+                setMode('wordBuilder');
+            } else {
+                startWordBuilderGame();
+            }
+            return true;
+        }
+
         function updateLetterHeatmap() {
             const heatmap = document.getElementById('letterHeatmap');
             heatmap.innerHTML = '';
@@ -11962,15 +12665,22 @@
             letters.forEach(letter => {
                 const cell = document.createElement('div');
                 cell.className = 'heatmap-cell';
+                cell.dataset.letter = letter;
                 cell.textContent = letter.toUpperCase();
 
-                // Calculate performance across all players
+                // Calculate performance for the active player (or aggregate only when no single player is selected)
                 let totalCorrect = 0;
                 let totalAttempts = 0;
 
-                if (multiplayerMode) {
+                if (multiplayerMode && currentPlayer) {
+                    const perf = letterPerformance[letter] || (currentPlayer.letterPerformance && currentPlayer.letterPerformance[letter]);
+                    if (perf) {
+                        totalCorrect += perf.correct;
+                        totalAttempts += perf.total;
+                    }
+                } else if (multiplayerMode) {
                     players.forEach(player => {
-                        const perf = player.letterPerformance[letter];
+                        const perf = player.letterPerformance && player.letterPerformance[letter];
                         if (perf) {
                             totalCorrect += perf.correct;
                             totalAttempts += perf.total;
@@ -12000,9 +12710,23 @@
 
                 cell.style.background = color;
                 cell.style.color = successRate > 0.5 ? 'white' : '#374151';
+                cell.style.cursor = 'pointer';
 
-                // Add tooltip on hover
-                cell.title = `${letter.toUpperCase()}: ${Math.round(successRate * 100)}% success rate (${totalAttempts} attempts)`;
+                // Add tooltip on hover and accessible button semantics for touch/keyboard drill-down
+                const summaryText = totalAttempts > 0
+                    ? `${letter.toUpperCase()}: ${Math.round(successRate * 100)}% success rate (${totalAttempts} attempts)`
+                    : `${letter.toUpperCase()}: No attempts yet (0 attempts)`;
+                cell.title = summaryText;
+                cell.setAttribute('role', 'button');
+                cell.tabIndex = 0;
+                cell.setAttribute('aria-label', summaryText);
+                cell.onclick = () => showLetterHeatmapDetail(letter);
+                cell.onkeydown = (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        showLetterHeatmapDetail(letter);
+                    }
+                };
 
                 heatmap.appendChild(cell);
             });
@@ -12045,11 +12769,30 @@
 
                 // Take up to 3 most frequent confusions above a small threshold
                 const significant = topPairs.filter(p => p.count >= 3).slice(0, 3);
+                const phonoGroups = [
+                    ['b', 'c', 'd', 'e', 'g', 'p', 't', 'v', 'z'],
+                    ['f', 'l', 'm', 'n', 's', 'x'],
+                    ['a', 'h', 'j', 'k'],
+                    ['a', 'e', 'i', 'o', 'u'],
+                    ['c', 'k', 'g', 'q']
+                ];
                 significant.forEach(p => {
+                    const sameShape = Boolean(letterToShapeGroupLower && letterToShapeGroupLower[p.correct] && letterToShapeGroupLower[p.correct] === letterToShapeGroupLower[p.wrong]);
+                    const sameSound = phonoGroups.some(group => group.includes(p.correct) && group.includes(p.wrong));
+                    const categoryTag = sameShape
+                        ? ' (visual shape similarity)'
+                        : sameSound
+                            ? ' (similar letter sound/name)'
+                            : '';
+                    const coachingTip = sameShape
+                        ? `Try side-by-side practice: trace ${p.correct.toUpperCase()} and ${p.wrong.toUpperCase()} next to each other, highlight their starting strokes, and use different colors.`
+                        : sameSound
+                            ? `Say each letter name and phonetic sound slowly while pointing to its anchor picture (${p.correct.toUpperCase()} vs ${p.wrong.toUpperCase()}).`
+                            : `Try side-by-side practice: trace ${p.correct.toUpperCase()} and ${p.wrong.toUpperCase()} next to each other, highlight their starting strokes, and use different colors.`;
                     insights.push({
                         icon: '🧩',
                         title: `Confuses ${p.correct.toUpperCase()} with ${p.wrong.toUpperCase()}`,
-                        description: `This happened ${p.count} times. Try side-by-side practice: trace ${p.correct.toUpperCase()} and ${p.wrong.toUpperCase()} next to each other, highlight their starting strokes, and use different colors.`
+                        description: `This happened ${p.count} times${categoryTag}. ${coachingTip}`
                     });
                 });
             } catch (e) { }
@@ -12084,11 +12827,60 @@
                 });
             }
 
+            // Tracing formation diagnostics (dots, crossbars, Fréchet path fidelity)
+            try {
+                const drawSummary = typeof getDrawAnalytics === 'function' ? getDrawAnalytics() : null;
+                const drawLetters = drawSummary && drawSummary.letters ? Object.entries(drawSummary.letters).filter(([, d]) => d && d.attempts > 0) : [];
+                const dotLetters = drawLetters.filter(([, d]) => (d.missingDot || 0) > 0).map(([ch]) => escapeText(ch));
+                const barLetters = drawLetters.filter(([, d]) => (d.missingCrossbar || 0) > 0).map(([ch]) => escapeText(ch));
+                if (dotLetters.length > 0 || barLetters.length > 0) {
+                    const details = [];
+                    if (dotLetters.length > 0) details.push(`dots on ${dotLetters.join(', ')}`);
+                    if (barLetters.length > 0) details.push(`crossbars on ${barLetters.join(', ')}`);
+                    insights.push({
+                        icon: '✏️',
+                        title: 'Stroke Completeness (Dots & Crossbars)',
+                        description: `Finishing strokes were occasionally skipped (${details.join(' and ')}). Say a playful two-step cue while tracing: "Line down, then dot or cross!"`
+                    });
+                } else {
+                    const lowPathLetters = drawLetters.filter(([, d]) => typeof d.avgFrechet === 'number' && d.avgFrechet > 0 && d.avgFrechet < 0.7).map(([ch]) => escapeText(ch));
+                    if (lowPathLetters.length > 0) {
+                        insights.push({
+                            icon: '✍️',
+                            title: 'Tracing Path Precision',
+                            description: `Extra guided tracing on ${lowPathLetters.join(', ')} will help smooth out stroke direction and curve control.`
+                        });
+                    }
+                }
+            } catch (e) { }
+
+            // Word Builder spelling diagnostics
+            try {
+                const wbEntries = Object.entries((modePerformance && modePerformance.wordBuilder) || {}).filter(([, d]) => d && d.total > 0);
+                const trickyWords = wbEntries.filter(([, d]) => (d.correct / d.total) < 0.7).map(([w]) => escapeText(w.toUpperCase()));
+                if (trickyWords.length > 0) {
+                    insights.push({
+                        icon: '🔤',
+                        title: 'Word Builder Spelling Focus',
+                        description: `Practice sounding out ${trickyWords.slice(0, 4).join(', ')} letter by letter before tapping the tiles.`
+                    });
+                } else if (wbEntries.length >= 3) {
+                    insights.push({
+                        icon: '📚',
+                        title: 'Strong Word Building!',
+                        description: `Spelling accuracy is strong across ${wbEntries.length} practiced words.`
+                    });
+                }
+            } catch (e) { }
+
             if (insights.length === 0) {
+                const hasDrawAttempts = typeof getDrawAnalytics === 'function' && (getDrawAnalytics()?.totals?.attempts > 0);
+                const hasWbAttempts = Object.values((modePerformance && modePerformance.wordBuilder) || {}).some(d => d && d.total > 0);
+                const hasHistory = Object.keys(letterPerformance).length > 0 || hasDrawAttempts || hasWbAttempts;
                 insights.push({
                     icon: '👍',
-                    title: Object.keys(letterPerformance).length ? 'Keep Going!' : 'Getting Started',
-                    description: Object.keys(letterPerformance).length ? 'Regular practice is key. Try a few letters each day.' : 'No letter recognition history yet. Play Find Letters to build a progress picture.'
+                    title: hasHistory ? 'Keep Going!' : 'Getting Started',
+                    description: hasHistory ? 'Regular practice is key. Try a few letters each day.' : 'No letter recognition history yet. Play Find Letters to build a progress picture.'
                 });
             }
 
@@ -12129,6 +12921,36 @@
                     text: `Focus on: ${strugglingLetters.map(l => l.toUpperCase()).join(', ')}. Try tracing them in sand or shaving cream for tactile learning.`
                 });
             }
+
+            // Tracing-specific recommendations
+            try {
+                const drawSummary = typeof getDrawAnalytics === 'function' ? getDrawAnalytics() : null;
+                const drawLetters = drawSummary && drawSummary.letters ? Object.entries(drawSummary.letters).filter(([, d]) => d && d.attempts > 0) : [];
+                const traceFocus = drawLetters
+                    .filter(([, d]) => (d.missingDot || 0) > 0 || (d.missingCrossbar || 0) > 0 || (d.attempts >= 2 && (d.accepts / d.attempts) < 0.6) || (typeof d.avgFrechet === 'number' && d.avgFrechet > 0 && d.avgFrechet < 0.7))
+                    .map(([ch]) => escapeText(ch));
+                if (traceFocus.length > 0) {
+                    recs.push({
+                        icon: '✏️',
+                        title: 'Guided Tracing Practice',
+                        text: `Tap "Show How to Write" in Tracing Practice for ${traceFocus.slice(0, 6).join(', ')} and follow the numbered green-to-red stroke guides.`
+                    });
+                }
+            } catch (e) { }
+
+            // Word Builder-specific recommendations
+            try {
+                const wbFocus = Object.entries((modePerformance && modePerformance.wordBuilder) || {})
+                    .filter(([, d]) => d && d.total > 0 && (d.correct / d.total) < 0.7)
+                    .map(([w]) => escapeText(w.toUpperCase()));
+                if (wbFocus.length > 0) {
+                    recs.push({
+                        icon: '🔤',
+                        title: 'Sound Out Word Builder Words',
+                        text: `In Word Builder, tap "Hear Word" for ${wbFocus.slice(0, 5).join(', ')} and say the first and last letter sounds aloud together.`
+                    });
+                }
+            } catch (e) { }
 
             // Time-based recommendations
             const currentHour = new Date().getHours();
@@ -12234,6 +13056,7 @@
                     bestStreak = nonnegative(gameData.bestStreak);
                     speedAnswers = nonnegative(gameData.speedAnswers);
                     totalPlayTime = nonnegative(gameData.totalActivePlayMs, nonnegative(gameData.totalPlayTime) * 60000) / 60000;
+                    sessionPlayMs = 0; playClockStartedAt = 0;
                     roundsCompleted = nonnegative(gameData.roundsCompleted);
                     // Restore confusion matrix, with backfill if missing
                     if (gameData.confusionMatrix && typeof gameData.confusionMatrix === 'object' && !Array.isArray(gameData.confusionMatrix)) {
@@ -12259,7 +13082,7 @@
                     focusModeEnabled = gameData.focusModeEnabled === true;
                     highContrastEnabled = gameData.highContrastEnabled === true;
                     reduceMotionEnabled = gameData.reduceMotionEnabled === true;
-                    celebrationType = ['fireworks', 'stars', 'hearts', 'confetti'].includes(gameData.celebrationType) ? gameData.celebrationType : 'fireworks';
+                    celebrationType = Object.prototype.hasOwnProperty.call(celebrationEmojis, gameData.celebrationType) ? gameData.celebrationType : 'fireworks';
                     currentTheme = ['classic', 'animals', 'colors'].includes(gameData.currentTheme) ? gameData.currentTheme : 'classic';
                     voiceRecordingEnabled = gameData.voiceRecordingEnabled === true;
                     selectedPlayerId = gameData.selectedPlayerId ?? null;
@@ -12405,6 +13228,13 @@
             timerEnabled = previousTimerState && !focusModeEnabled;
             document.body.classList.toggle('focus-mode', focusModeEnabled);
             document.body.classList.toggle('reduce-motion', motionReduced());
+            if (reduceMotionEnabled) {
+                document.body.style.setProperty('--animation-duration', '0.01s');
+            } else {
+                document.body.style.removeProperty('--animation-duration');
+                const rmStyle = document.getElementById('reduce-motion-style');
+                if (rmStyle) rmStyle.remove();
+            }
             document.body.classList.toggle('high-contrast', highContrastEnabled);
             document.body.style.filter = 'none';
             document.querySelectorAll('.mode-btn').forEach(button => {
@@ -12423,6 +13253,7 @@
             for (const [id, checked] of [['voiceToggle', voiceRecordingEnabled], ['focusModeCheck', focusModeEnabled], ['highContrastCheck', highContrastEnabled], ['reduceMotionCheck', reduceMotionEnabled]]) document.getElementById(id).checked = checked;
             document.getElementById('wordBuilderBtn').hidden = !wordBuilderEnabled;
             document.querySelectorAll('.theme-button').forEach(button => { const active = button.getAttribute('onclick').includes(`'${currentTheme}'`); button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active)); });
+            document.querySelectorAll('.celebration-option').forEach(option => { const active = option.dataset.celebration === celebrationType; option.classList.toggle('selected', active); option.setAttribute('aria-pressed', String(active)); });
             if (!timerEnabled) clearTimer();
             const minigameClock = document.getElementById('minigameTimer');
             if (minigameClock && (!timerEnabled || focusModeEnabled)) {
@@ -12552,15 +13383,25 @@
                 document.body.classList.add('modal-open');
 
                 // Celebration
-                setTimeout(() => {
-                    for (let i = 0; i < 5; i++) {
-                        setTimeout(() => createConfetti(), i * 200);
-                    }
-                }, 500);
+                clearStreakConfettiTimers();
+                const timers = [];
+                for (let i = 0; i < 5; i++) {
+                    timers.push(setTimeout(() => {
+                        if (activeDialog === 'streakModal') createConfetti(modal, true);
+                    }, 500 + i * 200));
+                }
+                window.__streakConfettiTimers = timers;
 
                 // Announce achievement
                 speakPhrasePolitely(`Wow! ${data.title} ${data.subtitle}`, null, 1500, true);
             }
+        }
+
+        function clearStreakConfettiTimers() {
+            if (Array.isArray(window.__streakConfettiTimers)) {
+                window.__streakConfettiTimers.forEach(id => clearTimeout(id));
+            }
+            window.__streakConfettiTimers = [];
         }
 
         function generateStreakCalendar() {
@@ -12593,18 +13434,19 @@
         }
 
         function closeStreakModal() {
+            clearStreakConfettiTimers();
             closeDialog('streakModal');
         }
 
         // Celebration Customization Functions
         function setCelebration(type) {
+            if (!Object.prototype.hasOwnProperty.call(celebrationEmojis, type)) return;
             celebrationType = type;
 
             document.querySelectorAll('.celebration-option').forEach(option => {
-                option.classList.remove('selected');
-                if (option.dataset.celebration === type) {
-                    option.classList.add('selected');
-                }
+                const active = option.dataset.celebration === type;
+                option.classList.toggle('selected', active);
+                option.setAttribute('aria-pressed', String(active));
             });
 
             // Preview the celebration
@@ -12636,6 +13478,7 @@
 
         settingsBtn.addEventListener('touchstart', startPressTimers);
         settingsBtn.addEventListener('touchend', clearPressTimers);
+        settingsBtn.addEventListener('touchcancel', clearPressTimers);
         settingsBtn.addEventListener('mousedown', startPressTimers);
         settingsBtn.addEventListener('mouseup', clearPressTimers);
         settingsBtn.addEventListener('mouseleave', clearPressTimers);
@@ -12651,11 +13494,107 @@
             openParentDashboard();
         }
 
-        // Add keyboard support for debugging
+        // Keyboard support for dialogs and active lesson modes
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (activeDialog === 'roundModal') startNextRound();
                 else if (activeDialog) closeDialog(activeDialog);
+                return;
+            }
+            if (activeDialog || lessonPaused || currentMinigame || waitingForPhonics || e.altKey) return;
+            if (document.getElementById('wb-level-overlay')) return;
+            const activeTag = document.activeElement ? document.activeElement.tagName : '';
+            if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+                if (currentMode === 'draw' && !isProcessing && !questionResolved && Array.isArray(drawingPoints) && drawingPoints.length > 0) {
+                    e.preventDefault();
+                    undoLastStroke();
+                } else if (currentMode === 'wordBuilder' && !isProcessing && !questionResolved && !wbTransitioning && wbFilledCount > 0) {
+                    e.preventDefault();
+                    wbUndo();
+                }
+                return;
+            }
+            if (e.ctrlKey || e.metaKey) return;
+
+            if (currentMode === 'identify' && !isAnswering && !questionResolved) {
+                if (e.key >= '1' && e.key <= '4') {
+                    const optionBtns = document.querySelectorAll('#gameArea .option-btn:not([disabled])');
+                    const targetBtn = optionBtns[Number(e.key) - 1];
+                    if (targetBtn) {
+                        e.preventDefault();
+                        targetBtn.click();
+                    }
+                } else if (/^[a-zA-Z]$/.test(e.key)) {
+                    const keyLower = e.key.toLowerCase();
+                    const optionBtns = Array.from(document.querySelectorAll('#gameArea .option-btn:not([disabled])'));
+                    const matchBtn = optionBtns.find(btn => (btn.dataset.letter || '').toLowerCase() === keyLower);
+                    if (matchBtn) {
+                        e.preventDefault();
+                        matchBtn.click();
+                    }
+                } else if (e.key === ' ' && activeTag !== 'BUTTON') {
+                    const soundBtn = document.querySelector('#gameArea .sound-btn');
+                    if (soundBtn) {
+                        e.preventDefault();
+                        playCurrentLetter();
+                    }
+                }
+            } else if (currentMode === 'wordBuilder' && !isProcessing && !questionResolved && !wbTransitioning) {
+                if (e.key === 'Backspace') {
+                    if (wbFilledCount > 0) {
+                        e.preventDefault();
+                        wbUndo();
+                    }
+                } else if (e.key >= '1' && e.key <= '9') {
+                    const slotIdx = Number(e.key) - 1;
+                    if (Array.isArray(wbSlots) && slotIdx < wbSlots.length) {
+                        e.preventDefault();
+                        wbSlotClick(slotIdx);
+                    }
+                } else if (e.key === ' ' && activeTag !== 'BUTTON') {
+                    if (wbTargetWord) {
+                        e.preventDefault();
+                        wbHearWord();
+                    }
+                } else if (/^[a-zA-Z]$/.test(e.key)) {
+                    const keyLower = e.key.toLowerCase();
+                    const tiles = Array.from(document.querySelectorAll('#wbBank .wb-tile:not([disabled])'));
+                    const matchTile = tiles.find(tile => (tile.dataset.letter || '').toLowerCase() === keyLower);
+                    if (matchTile) {
+                        e.preventDefault();
+                        matchTile.click();
+                    }
+                }
+            } else if (currentMode === 'draw' && !isProcessing && !questionResolved) {
+                if (e.key === 'Backspace') {
+                    if (document.getElementById('drawCanvas')) {
+                        e.preventDefault();
+                        clearCanvas();
+                    }
+                } else if ((e.key === 'u' || e.key === 'U') && activeTag !== 'BUTTON') {
+                    if (document.getElementById('drawCanvas') && Array.isArray(drawingPoints) && drawingPoints.length > 0) {
+                        e.preventDefault();
+                        undoLastStroke();
+                    }
+                } else if (e.key === 'Enter' && activeTag !== 'BUTTON') {
+                    if (document.getElementById('drawCanvas') && Array.isArray(drawingPoints) && drawingPoints.length > 0) {
+                        e.preventDefault();
+                        checkDrawing();
+                    }
+                } else if (e.key === ' ' && activeTag !== 'BUTTON') {
+                    if (currentLetter && document.getElementById('drawCanvas')) {
+                        e.preventDefault();
+                        speakTracePrompt(currentLetter);
+                    }
+                } else if ((e.key === 'g' || e.key === 'G') && activeTag !== 'BUTTON') {
+                    const guide = document.getElementById('formationGuide');
+                    if (guide) {
+                        e.preventDefault();
+                        if (guide.classList.contains('show')) hideFormationGuide();
+                        else showFormationGuide();
+                    }
+                }
             }
         });
 
@@ -12715,7 +13654,10 @@
                 stopPlayClock(); stopVoiceResources(); cancelSpeech();
                 document.body.classList.add('lesson-paused');
                 if (waitingForPhonics) skipPhonics();
-            } else document.getElementById(activeDialog).style.display = 'none';
+            } else {
+                if (activeDialog === 'streakModal' && typeof clearStreakConfettiTimers === 'function') clearStreakConfettiTimers();
+                document.getElementById(activeDialog).style.display = 'none';
+            }
             activeDialog = id;
             modal.style.display = display;
             modal.setAttribute('role', 'dialog'); modal.setAttribute('aria-modal', 'true'); modal.tabIndex = -1;
@@ -12727,6 +13669,7 @@
         }
         function closeDialog(id) {
             if (activeDialog !== id) return;
+            if (id === 'streakModal' && typeof clearStreakConfettiTimers === 'function') clearStreakConfettiTimers();
             document.getElementById(id).style.display = 'none';
             cancelSpeech();
             activeDialog = null;
@@ -12792,6 +13735,46 @@
             let spare = count - counts.reduce((sum, value) => sum + value, 0);
             for (let i = 0; i < spare; i++) counts[order[i].index]++;
             return paths.flatMap((stroke, i) => resampleStroke(stroke, counts[i]));
+        }
+
+        // Order-preserving discrete Frechet distance (Eiter & Mannila 1994) using O(m) space.
+        function discreteFrechetDistance(ptsA, ptsB) {
+            const a = Array.isArray(ptsA) ? ptsA.filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y)) : [];
+            const b = Array.isArray(ptsB) ? ptsB.filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y)) : [];
+            if (!a.length || !b.length) return Infinity;
+            const n = a.length, m = b.length;
+            let prev = new Float64Array(m);
+            let curr = new Float64Array(m);
+            for (let i = 0; i < n; i++) {
+                const ax = a[i].x, ay = a[i].y;
+                for (let j = 0; j < m; j++) {
+                    const d = Math.hypot(ax - b[j].x, ay - b[j].y);
+                    if (i === 0 && j === 0) curr[j] = d;
+                    else if (i === 0) curr[j] = Math.max(curr[j - 1], d);
+                    else if (j === 0) curr[j] = Math.max(prev[0], d);
+                    else curr[j] = Math.max(Math.min(prev[j], curr[j - 1], prev[j - 1]), d);
+                }
+                const tmp = prev; prev = curr; curr = tmp;
+            }
+            return prev[m - 1];
+        }
+
+        // Total absolute turning angle (radians) along a stroke polyline for curvature/scribble analysis.
+        function strokeCurvatureVariation(points) {
+            const pts = Array.isArray(points) ? points.filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y)) : [];
+            const headings = [];
+            for (let i = 1; i < pts.length; i++) {
+                const dx = pts[i].x - pts[i - 1].x, dy = pts[i].y - pts[i - 1].y;
+                if (Math.hypot(dx, dy) > 1e-6) headings.push(Math.atan2(dy, dx));
+            }
+            let totalTurn = 0;
+            for (let i = 1; i < headings.length; i++) {
+                let diff = headings[i] - headings[i - 1];
+                while (diff <= -Math.PI) diff += 2 * Math.PI;
+                while (diff > Math.PI) diff -= 2 * Math.PI;
+                totalTurn += Math.abs(diff);
+            }
+            return totalTurn;
         }
 
         // Tracing recognizer: classical geometry with optional deep similarity.
@@ -12957,6 +13940,9 @@
             const cloudSim = 1 - clamp(meCloudD / CLOUD_NORM, 0, 1);
             const visual = iou(userNorm, tmpl.strokesNorm, 54, 26);
             const classicalScore = 0.75 * cloudSim + 0.25 * visual;
+            const frechetDist = discreteFrechetDistance(userCloud, tmpl.cloud);
+            const frechetSim = Number.isFinite(frechetDist) ? (1 - clamp(frechetDist / (100 * Math.SQRT2), 0, 1)) : 0;
+            const curvatureRad = userNorm.reduce((sum, stroke) => sum + strokeCurvatureVariation(stroke), 0);
 
             // Best-other classical margin
             let bestOtherClassical = -1;
@@ -13057,10 +14043,13 @@
             const responseTime = (Date.now() - drawQuestionStartTime) / 1000;
             // Determine reason bucket before branching
             let reason = 'blended';
-            if (classicalTopOk) reason = 'nearTop';
-            else if (deepTopOk) reason = 'deepTop';
-            else if (!passed) {
-                if (looksLikeCross(userNorm) && !(currentLetter === 'X' || currentLetter === 'x')) reason = 'crossGuard';
+            if (passed) {
+                if (classicalTopOk) reason = 'nearTop';
+                else if (deepTopOk) reason = 'deepTop';
+            } else {
+                if (needDot && !dotOK) reason = 'missingDot';
+                else if (needCrossbar && !crossbarOK) reason = 'missingCrossbar';
+                else if (looksLikeCross(userNorm) && !(currentLetter === 'X' || currentLetter === 'x')) reason = 'crossGuard';
                 else if (wrongDominatesClassical || wrongDominatesDeep) reason = 'wrongDom';
                 else {
                     const loopishCheck = new Set(['o','O','Q','q','g','G','a','A','d','D','p','P','b','B']);
@@ -13093,16 +14082,20 @@
                     classicalScore,
                     deepScore: deepOk ? deepScore : null,
                     responseTime,
-                    points
+                    points,
+                    frechetSim,
+                    curvatureRad
                 });
                 showFeedback(`That's a great "${currentLetter}"! +${points} ✨`, 'success');
                 drawAdvanceTimeout = scheduleLesson(advanceToNextDrawLetterOnce, 2200);
                 cancelSpeech(); speakPhrase(`Great ${currentLetter}!`, () => { scheduleLesson(advanceToNextDrawLetterOnce, 1000); }, { skipCancel: true });
                 const container = document.querySelector('.canvas-container');
+                createDrawingCelebration(container);
                 if (container && !motionReduced()) { container.style.boxShadow = '0 10px 30px rgba(74, 222, 128, 0.5)'; container.style.transform = 'scale(1.03)'; scheduleLesson(() => { container.style.boxShadow = ''; container.style.transform = ''; }, 1000); }
             } else {
                 recordOutcome(false, responseTime, false, currentLetter);
-                const msg = (finalScore >= (acceptThresh - 0.06)) ? (tmpl.feedback.incomplete || 'So close! A little more will do it.') : (tmpl.feedback.wrong || "Let's try again with this letter shape.");
+                const isIncomplete = (needDot && !dotOK) || (needCrossbar && !crossbarOK) || (finalScore >= (acceptThresh - 0.06));
+                const msg = isIncomplete ? (tmpl.feedback.incomplete || 'So close! A little more will do it.') : (tmpl.feedback.wrong || "Let's try again with this letter shape.");
                 showFeedback(msg, 'error'); speakPhrasePolitely(msg);
                 const container = document.querySelector('.canvas-container');
                 if (container && !motionReduced()) { container.classList.add('animate__animated', 'animate__shakeX'); scheduleLesson(() => container.classList.remove('animate__animated', 'animate__shakeX'), 800); }
@@ -13115,7 +14108,9 @@
                     classicalScore,
                     deepScore: deepOk ? deepScore : null,
                     responseTime,
-                    points: 0
+                    points: 0,
+                    frechetSim,
+                    curvatureRad
                 });
                 drawRetryClearTimeout = scheduleLesson(() => { drawRetryClearTimeout = null; clearCanvas(); }, 2000);
             }
@@ -13191,7 +14186,7 @@
             const bankLetters = buildLetterBank(word);
             wbBank = bankLetters;
 
-            const slotsHTML = word.split('').map((_, i) => `<div class="wb-slot" data-idx="${i}"></div>`).join('');
+            const slotsHTML = word.split('').map((_, i) => `<div class="wb-slot" data-idx="${i}" onclick="wbSlotClick(${i})" title="Tap to hear sound ${i + 1}" aria-label="Letter slot ${i + 1} empty, tap to hear sound" style="cursor: pointer;"></div>`).join('');
             const bankHTML = bankLetters.map((L, i) => {
                 // Letters should only be A-Z/a-z, but sanitize just in case
                 // For data attributes and display, use the letter as-is (it's safe)
@@ -13219,11 +14214,13 @@
 
             // Add compact class for 4+ letter words to fit on mobile
             const compactClass = word.length >= 4 ? 'wb-compact' : '';
+            const targetWordEmoji = anchorEmojiMap[word.toLowerCase()] || '🔤';
 
             gameArea.innerHTML = `
                 <div class="wb-container ${compactClass}" role="region" aria-label="Word Builder">
                     <div class="wb-header">
                         <div class="wb-title-row">
+                            <span id="wbWordEmoji" class="wb-word-emoji" role="img" aria-label="Picture clue for ${word.toLowerCase()}" style="font-size: 32px; line-height: 1;">${targetWordEmoji}</span>
                             <div class="wb-title">Build the word</div>
                             <button class="wb-speaker-btn" onclick="wbHearWord()" aria-label="Hear word again" title="Hear word">
                                 🔊
@@ -13247,6 +14244,7 @@
                     <div class="wb-slots" id="wbSlots">${slotsHTML}</div>
                     <div class="wb-bank" id="wbBank">${bankHTML}</div>
                     <div class="wb-controls">
+                        <button id="wbUndoBtn" class="wb-btn secondary" onclick="wbUndo()" aria-label="Undo last letter" disabled>⌫ Undo</button>
                         <button class="wb-btn secondary" onclick="startWordBuilderGame(true)" aria-label="New word">New Word</button>
                     </div>
                 </div>
@@ -13405,6 +14403,16 @@
                 window.wbPendingLevelAnimation = () => showLevelDownAnimation('easy');
             }
 
+            if (typeof window !== 'undefined' && typeof window.__forcedNextWordBuilderWord === 'string' && /^[a-zA-Z]{2,8}$/.test(window.__forcedNextWordBuilderWord)) {
+                const forced = window.__forcedNextWordBuilderWord.toLowerCase();
+                window.__forcedNextWordBuilderWord = null;
+                wbRecentWords.push(forced);
+                if (wbRecentWords.length > wbMaxRecent) wbRecentWords.shift();
+                if (currentCase === 'upper') return forced.toUpperCase();
+                if (currentCase === 'mixed') return Math.random() < 0.5 ? forced : forced.toUpperCase();
+                return forced;
+            }
+
             const candidates = wordBuilderWords[wbDifficulty];
 
             // Validate word pool exists
@@ -13414,15 +14422,29 @@
                 return wordBuilderWords.easy[0];
             }
 
-            // Pick a random word, avoiding recent ones
-            let pick;
-            let attempts = 0;
-            const maxAttempts = 10;
-
-            do {
-                pick = candidates[Math.floor(Math.random() * candidates.length)];
-                attempts++;
-            } while (wbRecentWords.includes(pick) && attempts < maxAttempts);
+            // Adaptive word selection weighted by modePerformance.wordBuilder (excluding recent words when possible)
+            const wbPerfMap = (modePerformance && modePerformance.wordBuilder) ? modePerformance.wordBuilder : {};
+            const nonRecent = candidates.filter(w => !wbRecentWords.includes(w));
+            const eligible = nonRecent.length > 0 ? nonRecent : candidates;
+            const weights = eligible.map(w => {
+                const perf = wbPerfMap[w.toLowerCase()];
+                if (!perf || !perf.total) return 2.0; // Unseen words get exploration priority
+                const accuracy = perf.correct / perf.total;
+                const wrongCount = Math.max(0, perf.total - perf.correct);
+                if (accuracy < 0.6) return 6.0 + Math.min(6.0, wrongCount * 1.0);
+                if (accuracy < 0.85) return 2.2;
+                return 0.4;
+            });
+            const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+            let pick = eligible[0];
+            let roll = Math.random() * totalWeight;
+            for (let i = 0; i < eligible.length; i++) {
+                roll -= weights[i];
+                if (roll <= 0) {
+                    pick = eligible[i];
+                    break;
+                }
+            }
 
             // Add to recent words list and maintain max size
             wbRecentWords.push(pick);
@@ -13475,12 +14497,21 @@
                 if (btn._wbFloatTl && typeof btn._wbFloatTl.pause === 'function') {
                     try { btn._wbFloatTl.pause(0); } catch (e) {}
                 }
+                if (btn._wbPickAnimTimeout) {
+                    clearTimeout(btn._wbPickAnimTimeout);
+                    btn._wbPickAnimTimeout = null;
+                }
+                if (btn._wbPickTween && typeof btn._wbPickTween.kill === 'function') {
+                    try { btn._wbPickTween.kill(); } catch (e) {}
+                    btn._wbPickTween = null;
+                }
                 // Clear and restart animation properly
                 btn.style.animation = 'none';
                 void btn.offsetHeight; // Force reflow
                 btn.style.animation = 'tilePicked 0.3s ease-out';
-                setTimeout(() => {
+                btn._wbPickAnimTimeout = setTimeout(() => {
                     if (btn) btn.style.animation = 'none';
+                    if (btn) btn._wbPickAnimTimeout = null;
                 }, 350);
             }
 
@@ -13489,6 +14520,17 @@
             if (slot) {
                 slot.textContent = letter;
                 slot.classList.add('filled');
+                slot.style.cursor = 'pointer';
+                slot.tabIndex = 0;
+                slot.setAttribute('role', 'button');
+                slot.setAttribute('title', 'Tap to undo letter');
+                slot.setAttribute('aria-label', `Slot ${idx + 1}: ${letter}, tap to undo`);
+                slot.onkeydown = (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        wbUndo(idx);
+                    }
+                };
                 if (!motionReduced() && typeof gsap !== 'undefined') {
                     gsap.fromTo(slot, { scale: 0.9 }, { scale: 1.0, duration: 0.18, ease: 'back.out(2)' });
                 }
@@ -13496,13 +14538,115 @@
             if (btn) {
                 btn.disabled = true;
                 if (!motionReduced() && typeof gsap !== 'undefined') {
-                    gsap.to(btn, { opacity: 0.5, duration: 0.2, ease: 'power1.out' });
+                    btn._wbPickTween = gsap.to(btn, { opacity: 0.5, duration: 0.2, ease: 'power1.out' });
+                } else {
+                    btn.style.opacity = '0.5';
                 }
+            }
+            const undoBtn = document.getElementById('wbUndoBtn');
+            if (undoBtn) {
+                undoBtn.disabled = (wbFilledCount === 0 || wbFilledCount === wbSlots.length);
             }
 
             if (wbFilledCount === wbSlots.length) {
                 wbCheckWord();
             }
+        }
+
+        function wbSlotClick(slotIndex) {
+            if (currentMode !== 'wordBuilder' || isProcessing || lessonPaused || questionResolved || wbTransitioning) return false;
+            if (typeof slotIndex !== 'number' || slotIndex < 0 || slotIndex >= wbSlots.length) return false;
+            if (wbSlots[slotIndex] !== null) {
+                return wbUndo(slotIndex);
+            }
+            return wbSoundOutSlot(slotIndex);
+        }
+
+        function wbSoundOutSlot(slotIndex) {
+            if (currentMode !== 'wordBuilder' || isProcessing || lessonPaused || questionResolved || wbTransitioning) return false;
+            if (!wbTargetWord || typeof slotIndex !== 'number' || slotIndex < 0 || slotIndex >= wbTargetWord.length) return false;
+            const ch = wbTargetWord[slotIndex];
+            const upper = ch.toUpperCase();
+            const phonetic = phoneticSounds[upper] || { sound: ch.toLowerCase(), example: '' };
+            const slotsEl = document.getElementById('wbSlots');
+            const slot = slotsEl ? slotsEl.querySelector(`.wb-slot[data-idx="${slotIndex}"]`) : null;
+            if (slot && !motionReduced() && typeof gsap !== 'undefined') {
+                gsap.fromTo(slot, { scale: 1.08 }, { scale: 1.0, duration: 0.22, ease: 'back.out(2)' });
+            }
+            if (soundEnabled) {
+                speakPhrase(phonetic.sound, { rate: 0.82, pitch: 1.1 });
+            }
+            showFeedback(`🔊 Sound ${slotIndex + 1} of ${wbTargetWord.length}: "${phonetic.sound}"`, 'info');
+            return true;
+        }
+
+        function wbUndo(slotIndex) {
+            if (currentMode !== 'wordBuilder' || isProcessing || lessonPaused || questionResolved || wbTransitioning || wbFilledCount <= 0) return false;
+            let targetSlotIdx = -1;
+            if (typeof slotIndex === 'number') {
+                if (slotIndex < 0 || slotIndex >= wbSlots.length || wbSlots[slotIndex] === null) return false;
+                targetSlotIdx = slotIndex;
+            } else if (wbUsedTiles.length > 0) {
+                targetSlotIdx = wbUsedTiles[wbUsedTiles.length - 1].slotIdx;
+            } else {
+                for (let i = wbSlots.length - 1; i >= 0; i--) {
+                    if (wbSlots[i] !== null) {
+                        targetSlotIdx = i;
+                        break;
+                    }
+                }
+            }
+            if (targetSlotIdx === -1 || wbSlots[targetSlotIdx] === null) return false;
+
+            let usedEntryIdx = -1;
+            for (let i = wbUsedTiles.length - 1; i >= 0; i--) {
+                if (wbUsedTiles[i].slotIdx === targetSlotIdx) {
+                    usedEntryIdx = i;
+                    break;
+                }
+            }
+            const usedEntry = usedEntryIdx !== -1 ? wbUsedTiles.splice(usedEntryIdx, 1)[0] : null;
+            wbSlots[targetSlotIdx] = null;
+            wbFilledCount = Math.max(0, wbFilledCount - 1);
+
+            const slotsEl = document.getElementById('wbSlots');
+            const slot = slotsEl ? slotsEl.querySelector(`.wb-slot[data-idx="${targetSlotIdx}"]`) : null;
+            if (slot) {
+                slot.textContent = '';
+                slot.classList.remove('filled', 'correct', 'wrong');
+                slot.style.cursor = 'pointer';
+                slot.removeAttribute('tabindex');
+                slot.removeAttribute('role');
+                slot.setAttribute('title', `Tap to hear sound ${targetSlotIdx + 1}`);
+                slot.onkeydown = null;
+                slot.setAttribute('aria-label', `Letter slot ${targetSlotIdx + 1} empty, tap to hear sound`);
+            }
+
+            if (usedEntry && typeof usedEntry.bankIdx === 'number') {
+                const btn = document.querySelector(`.wb-tile[data-bank-idx="${usedEntry.bankIdx}"]`);
+                if (btn) {
+                    if (btn._wbPickAnimTimeout) {
+                        clearTimeout(btn._wbPickAnimTimeout);
+                        btn._wbPickAnimTimeout = null;
+                    }
+                    if (btn._wbPickTween && typeof btn._wbPickTween.kill === 'function') {
+                        try { btn._wbPickTween.kill(); } catch (e) {}
+                        btn._wbPickTween = null;
+                    }
+                    btn.style.animation = 'none';
+                    btn.disabled = false;
+                    btn.style.opacity = '';
+                    btn.style.visibility = '';
+                    if (!motionReduced() && btn._wbFloatTl && typeof btn._wbFloatTl.resume === 'function') {
+                        try { btn._wbFloatTl.resume(); } catch (e) {}
+                    }
+                }
+            }
+            const undoBtn = document.getElementById('wbUndoBtn');
+            if (undoBtn) {
+                undoBtn.disabled = wbFilledCount === 0;
+            }
+            return true;
         }
         function wbCheckWord() {
             if (currentMode !== 'wordBuilder' || questionResolved || isProcessing || wbFilledCount !== wbSlots.length) return;
@@ -13780,7 +14924,7 @@
         function createWordBuilderParticles() {
             if (motionReduced() || focusModeEnabled) return;
             const colors = ['#fbbf24', '#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#ef4444'];
-            const shapes = ['⭐', '✨', '💫', '🌟', '⚡', '💥', '🎊', '🎉'];
+            const shapes = celebrationEmojis[celebrationType] || celebrationEmojis.fireworks;
             const container = document.querySelector('.wb-container');
             if (!container) return;
 
@@ -13965,6 +15109,10 @@
 
         // Visual level change animations
         function showLevelUpAnimation(newLevel) {
+            if (window._wbLevelEscCleanup) {
+                try { window._wbLevelEscCleanup(); } catch (e) {}
+                window._wbLevelEscCleanup = null;
+            }
             // Remove any existing level overlay first
             const existingOverlay = document.getElementById('wb-level-overlay');
             if (existingOverlay) {
@@ -13973,6 +15121,12 @@
 
             const levelNames = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
             const levelEmojis = { easy: '🌟', medium: '⭐⭐', hard: '🏆' };
+
+            if (focusModeEnabled) {
+                showFeedback(`Level Up! ${levelNames[newLevel]} Words! ${levelEmojis[newLevel] || ''}`, 'success');
+                speakPhrasePolitely('Level up! ' + levelNames[newLevel] + ' words!');
+                return;
+            }
 
             // Create overlay with ID for tracking
             const overlay = document.createElement('div');
@@ -13988,31 +15142,34 @@
                 align-items: center;
                 justify-content: center;
                 z-index: 10000;
-                animation: fadeIn 0.3s ease-out;
+                animation: ${motionReduced() ? 'none' : 'fadeIn 0.3s ease-out'};
                 cursor: pointer;
             `;
 
-            // Click background to dismiss (not the message)
-            overlay.onclick = function(e) {
-                if (e.target === overlay) {
-                    const overlayToRemove = document.getElementById('wb-level-overlay');
-                    if (overlayToRemove) {
-                        overlayToRemove.remove();
-                    }
+            const dismissLevelOverlay = function() {
+                document.removeEventListener('keydown', escHandler);
+                window._wbLevelEscCleanup = null;
+                const overlayToRemove = document.getElementById('wb-level-overlay');
+                if (overlayToRemove) {
+                    overlayToRemove.remove();
                 }
             };
 
             // ESC key to dismiss
             const escHandler = function(e) {
                 if (e.key === 'Escape') {
-                    const overlayToRemove = document.getElementById('wb-level-overlay');
-                    if (overlayToRemove) {
-                        overlayToRemove.remove();
-                        document.removeEventListener('keydown', escHandler);
-                    }
+                    dismissLevelOverlay();
                 }
             };
             document.addEventListener('keydown', escHandler);
+            window._wbLevelEscCleanup = dismissLevelOverlay;
+
+            // Click background to dismiss (not the message)
+            overlay.onclick = function(e) {
+                if (e.target === overlay) {
+                    dismissLevelOverlay();
+                }
+            };
 
             const message = document.createElement('div');
             message.style.cssText = `
@@ -14024,7 +15181,7 @@
                 font-size: 32px;
                 font-weight: bold;
                 box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-                animation: levelUpBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                animation: ${motionReduced() ? 'none' : 'levelUpBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)'};
             `;
             message.innerHTML = `
                 <div style="font-size: 64px; margin-bottom: 10px;">${levelEmojis[newLevel]}</div>
@@ -14039,17 +15196,20 @@
             speakPhrasePolitely('Level up! ' + levelNames[newLevel] + ' words!');
 
             // Remove after animation with safety check
-            setTimeout(() => {
+            scheduleLesson(() => {
                 const overlayToRemove = document.getElementById('wb-level-overlay');
                 if (overlayToRemove) {
-                    overlayToRemove.style.animation = 'fadeOut 0.3s ease-in';
-                    setTimeout(() => {
-                        if (overlayToRemove && overlayToRemove.parentNode) {
-                            overlayToRemove.remove();
-                            // Clean up ESC key listener
-                            document.removeEventListener('keydown', escHandler);
-                        }
-                    }, 300);
+                    if (motionReduced()) {
+                        dismissLevelOverlay();
+                    } else {
+                        overlayToRemove.style.animation = 'fadeOut 0.3s ease-in';
+                        scheduleLesson(() => {
+                            dismissLevelOverlay();
+                        }, 300);
+                    }
+                } else {
+                    document.removeEventListener('keydown', escHandler);
+                    window._wbLevelEscCleanup = null;
                 }
             }, 2000);
         }

@@ -1,7 +1,7 @@
 const { test: nodeTest, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { createServer } = require('node:http');
-const { readFileSync, mkdirSync, writeFileSync } = require('node:fs');
+const { readFileSync, mkdirSync, writeFileSync, existsSync } = require('node:fs');
 const { join } = require('node:path');
 const { chromium, firefox, webkit } = require('playwright');
 
@@ -24,11 +24,14 @@ before(async () => {
     origin = `http://127.0.0.1:${server.address().port}`;
     const type = { chromium, firefox, webkit }[engine];
     assert.ok(type, `unsupported browser: ${engine}`);
+    const chromeExecutablePath = engine === 'chromium'
+        ? (process.env.LLG_CHROME_PATH || (!existsSync(chromium.executablePath()) && existsSync('/usr/bin/google-chrome') ? '/usr/bin/google-chrome' : undefined))
+        : undefined;
     browser = await type.launch({
         // The standalone headless shell rejects native audio capture. Use the
         // bundled full Chromium in headless mode; keep real streams/recorders.
-        ...(engine === 'chromium' ? { channel: 'chromium' } : {}),
-        ...(process.env.LLG_CHROME_PATH && engine === 'chromium' ? { executablePath: process.env.LLG_CHROME_PATH } : {}),
+        ...(engine === 'chromium' && !chromeExecutablePath ? { channel: 'chromium' } : {}),
+        ...(chromeExecutablePath ? { executablePath: chromeExecutablePath } : {}),
         ...(engine === 'chromium' ? { args: ['--no-sandbox', '--use-fake-device-for-media-stream'] } : {})
     });
 }, { timeout: 45000 });
@@ -470,11 +473,15 @@ test('active timer preference, Word Builder and all advanced settings restore co
     await page.evaluate(() => { setTimerMode('off'); });
     assert.equal(await page.evaluate(() => !!currentTimer), false);
     await page.locator('#wordBuilderBtn').press('Enter');
-    await page.evaluate(() => { setWordBuilderMode('off'); setTimerMode('on'); toggleFocusMode(); toggleHighContrast(); toggleReduceMotion(); setVisualTheme('colors'); });
+    await page.evaluate(() => { setWordBuilderMode('off'); setTimerMode('on'); toggleFocusMode(); toggleHighContrast(); toggleReduceMotion(); setVisualTheme('colors'); setCelebration('dinosaurs'); });
     assert.equal(await page.evaluate(() => currentMode), 'identify');
     await page.reload();
-    const settings = await page.evaluate(() => ({ timerEnabled, previousTimerState, wordBuilderEnabled, focusModeEnabled, highContrastEnabled, reduceMotionEnabled, currentTheme, hidden: document.getElementById('wordBuilderBtn').hidden }));
-    assert.deepEqual(settings, { timerEnabled: false, previousTimerState: true, wordBuilderEnabled: false, focusModeEnabled: true, highContrastEnabled: true, reduceMotionEnabled: true, currentTheme: 'colors', hidden: true });
+    const settings = await page.evaluate(() => ({
+        timerEnabled, previousTimerState, wordBuilderEnabled, focusModeEnabled, highContrastEnabled, reduceMotionEnabled, currentTheme, celebrationType,
+        celebrationSelected: document.querySelector('.celebration-option[data-celebration="dinosaurs"]')?.getAttribute('aria-pressed'),
+        hidden: document.getElementById('wordBuilderBtn').hidden
+    }));
+    assert.deepEqual(settings, { timerEnabled: false, previousTimerState: true, wordBuilderEnabled: false, focusModeEnabled: true, highContrastEnabled: true, reduceMotionEnabled: true, currentTheme: 'colors', celebrationType: 'dinosaurs', celebrationSelected: 'true', hidden: true });
     await page.evaluate(() => toggleFocusMode());
     assert.equal(await page.evaluate(() => timerEnabled), true);
 }));
@@ -503,10 +510,14 @@ test('reset current player preserves the other player and clears round/domain/da
 test('profile names render as text on selector and parent dashboard', t => run(t, async page => {
     const name = '<b>child</b>';
     await page.locator('.add-player-btn').press('Enter'); await page.locator('#playerNameInput').fill(name); await page.locator('.player-modal-save').press('Enter');
-    await page.evaluate(() => openParentDashboard());
+    await page.evaluate(() => { recordDrawAttempt({ letter: 'A', accepted: true, reason: 'blended', finalScore: 0.85, classicalScore: 0.85, deepScore: null, responseTime: 2.1, points: 25 }); openParentDashboard(); });
     assert.equal(await page.locator('.player-stat-name').textContent(), name);
     assert.equal(await page.locator('.player-stat-name b').count(), 0);
     assert.equal(await page.evaluate(() => window.injected), undefined);
+    assert.equal(await page.locator('#drawTotalAttempts').textContent(), '1');
+    assert.equal(await page.locator('#drawPassRate').textContent(), '100%');
+    assert.equal(await page.locator('#letterHeatmap .heatmap-cell').first().getAttribute('title'), 'A: No attempts yet (0 attempts)');
+    assert.ok((await page.evaluate(() => exportDrawAnalyticsCsv())).includes('A,1,1,0'));
 }));
 
 test('real optional MobileNet loads 52 embeddings after a drawing check', { skip: !process.env.LLG_LIVE_MODELS, timeout: 100000 }, t => run(t, async page => {
@@ -845,3 +856,593 @@ test('player switches and statistics resets discard the previous selection bias'
     await page.evaluate(() => { recentLetters = ['a', 'b', 'c']; shapeBiasTargetLower = 'b'; shapeBiasRoundsRemaining = 3; resetCurrentPlayerStatistics(); });
     assert.deepEqual(await page.evaluate(() => ({ recent: recentLetters.length, target: shapeBiasTargetLower, remaining: shapeBiasRoundsRemaining })), { recent: 1, target: null, remaining: 0 });
 }));
+
+test('confusionMatrix drives targeted Find Letters distractors and showWordExamples renders emoji status chips', t => run(t, async page => {
+    await identify(page);
+    const targeted = await page.evaluate(() => {
+        confusionMatrix.b.q = 5;
+        getRandomLetter = () => 'b';
+        startIdentifyGame(false);
+        const lowerOpts = [...document.querySelectorAll('#gameArea .option-btn')].map(btn => btn.dataset.letter);
+        getRandomLetter = () => 'B';
+        startIdentifyGame(false);
+        const upperOpts = [...document.querySelectorAll('#gameArea .option-btn')].map(btn => btn.dataset.letter);
+        showWordExamples('a', letterWords.a);
+        const statusCard = document.querySelector('#wordExamplesOverlay [role="status"]');
+        return {
+            lowerHasQ: lowerOpts.includes('q'),
+            upperHasQ: upperOpts.includes('Q'),
+            statusRole: statusCard ? statusCard.getAttribute('role') : null,
+            statusText: statusCard ? statusCard.textContent : ''
+        };
+    });
+    assert.equal(targeted.lowerHasQ, true);
+    assert.equal(targeted.upperHasQ, true);
+    assert.equal(targeted.statusRole, 'status');
+    assert.match(targeted.statusText, /🍎\s*apple/);
+}));
+
+test('Word Builder supports undo, persistent emoji clue, adaptive word weighting, and direct keyboard play', t => run(t, async page => {
+    await page.locator('#wordBuilderBtn').press('Enter');
+    await page.waitForSelector('#wbSlots');
+    const initial = await page.evaluate(() => ({
+        word: wbTargetWord,
+        emojiText: document.getElementById('wbWordEmoji')?.textContent,
+        expectedEmoji: anchorEmojiMap[wbTargetWord.toLowerCase()],
+        undoDisabled: document.getElementById('wbUndoBtn')?.disabled
+    }));
+    assert.equal(initial.emojiText, initial.expectedEmoji);
+    assert.equal(initial.undoDisabled, true);
+
+    // Pick a tile, undo via #wbUndoBtn, pick again, undo by clicking the filled .wb-slot, pick again, and undo via Backspace
+    const firstTileLetter = await page.locator('#wbBank .wb-tile').first().getAttribute('data-letter');
+    await page.locator('#wbBank .wb-tile').first().press('Enter');
+    assert.equal(await page.evaluate(() => wbFilledCount), 1);
+    assert.equal(await page.evaluate(() => document.getElementById('wbUndoBtn').disabled), false);
+    await page.locator('#wbUndoBtn').press('Enter');
+    assert.equal(await page.evaluate(() => wbFilledCount), 0);
+    assert.equal(await page.evaluate(() => document.querySelectorAll('#wbBank .wb-tile[disabled]').length), 0);
+
+    // Pick a tile, verify wbUndo(1) on an empty slot does not undo slot 0, tap empty slot 1 to hear phoneme sound, then tap filled slot 0 to undo
+    await page.locator('#wbBank .wb-tile').first().press('Enter');
+    assert.equal(await page.evaluate(() => wbFilledCount), 1);
+    assert.equal(await page.evaluate(() => wbUndo(1)), false);
+    assert.equal(await page.evaluate(() => wbFilledCount), 1);
+    await page.locator('#wbSlots .wb-slot').nth(1).click();
+    assert.equal(await page.evaluate(() => wbFilledCount), 1);
+    assert.match(await page.locator('#feedback').textContent(), /Sound 2 of/);
+    await page.locator('#wbSlots .wb-slot.filled').first().click();
+    assert.equal(await page.evaluate(() => wbFilledCount), 0);
+
+    // Type a letter via physical keyboard, press '2' to sound out empty slot 2, press '1' to undo slot 1, then type again and undo via Backspace
+    await page.keyboard.press(firstTileLetter);
+    assert.equal(await page.evaluate(() => wbFilledCount), 1);
+    await page.keyboard.press('2');
+    assert.equal(await page.evaluate(() => wbFilledCount), 1);
+    assert.match(await page.locator('#feedback').textContent(), /Sound 2 of/);
+    await page.keyboard.press('1');
+    assert.equal(await page.evaluate(() => wbFilledCount), 0);
+    await page.keyboard.press(firstTileLetter);
+    assert.equal(await page.evaluate(() => wbFilledCount), 1);
+    await page.keyboard.press('Backspace');
+    assert.equal(await page.evaluate(() => wbFilledCount), 0);
+
+    // Negative check: while Settings dialog is open, keyboard shortcuts must not place tiles
+    await page.locator('.settings-btn').press('Enter');
+    await page.keyboard.press(firstTileLetter);
+    assert.equal(await page.evaluate(() => wbFilledCount), 0);
+    await page.keyboard.press('Escape');
+
+    // Complete the target word using physical keyboard keys
+    for (const ch of initial.word) {
+        await page.keyboard.press(ch);
+    }
+    assert.equal(await page.evaluate(() => correctAnswers), 1);
+
+    // Verify adaptive word weighting prioritizes low-accuracy words in modePerformance.wordBuilder
+    const catHits = await page.evaluate(() => {
+        wbDifficulty = 'easy';
+        wbConsecutiveCorrect = 0;
+        wbConsecutiveWrong = 0;
+        for (const w of wordBuilderWords.easy) {
+            modePerformance.wordBuilder[w] = w === 'cat'
+                ? { correct: 0, total: 6, avgTime: 3, times: [3] }
+                : { correct: 10, total: 10, avgTime: 1, times: [1] };
+        }
+        let hits = 0;
+        const origRandom = Math.random;
+        try {
+            for (let i = 0; i < 60; i++) {
+                wbRecentWords = [];
+                Math.random = () => (i + 0.5) / 60;
+                if (getWordBuilderTarget().toLowerCase() === 'cat') hits++;
+            }
+        } finally {
+            Math.random = origRandom;
+        }
+        return hits;
+    });
+    assert.ok(catHits >= 8, `expected low-accuracy word 'cat' to be weighted well above uniform baseline (got ${catHits}/60)`);
+}));
+
+test('checkDrawingNew records Fréchet/curvature analytics and surfaces incomplete coaching for missing dot or crossbar', t => run(t, async page => {
+    const result = await page.evaluate(() => {
+        setMode('draw');
+        resetDrawAnalytics();
+        // 1. Draw only the vertical stem of 'i' (missing dot)
+        currentLetter = 'i';
+        questionResolved = false;
+        isProcessing = false;
+        drawingPoints = [
+            { x: 150, y: 120, newStroke: true },
+            { x: 150, y: 180, newStroke: false },
+            { x: 150, y: 240, newStroke: false }
+        ];
+        checkDrawingNew();
+        const iMsg = document.getElementById('feedback')?.textContent || '';
+
+        // 2. Draw only the vertical stem of 't' (missing crossbar)
+        currentLetter = 't';
+        questionResolved = false;
+        isProcessing = false;
+        drawingPoints = [
+            { x: 150, y: 80, newStroke: true },
+            { x: 150, y: 160, newStroke: false },
+            { x: 150, y: 240, newStroke: false }
+        ];
+        checkDrawingNew();
+        const tMsg = document.getElementById('feedback')?.textContent || '';
+
+        // 3. Draw curved 'C' to verify positive curvatureRad
+        currentLetter = 'C';
+        questionResolved = false;
+        isProcessing = false;
+        drawingPoints = LETTER_CHECKPOINTS.C.strokes[0].map((pt, idx) => ({
+            x: pt.x * 2 + 40,
+            y: pt.y * 2 + 40,
+            newStroke: idx === 0
+        }));
+        checkDrawingNew();
+
+        const analytics = getDrawAnalytics();
+        const csv = exportDrawAnalyticsCsv(false);
+        return {
+            iMsg,
+            iExpected: LETTER_CHECKPOINTS.i.feedback.incomplete,
+            tMsg,
+            tExpected: LETTER_CHECKPOINTS.t.feedback.incomplete,
+            iStats: analytics.letters.i,
+            tStats: analytics.letters.t,
+            cStats: analytics.letters.C,
+            csvHeader: csv.split('\n')[0]
+        };
+    });
+    assert.equal(result.iMsg, result.iExpected);
+    assert.equal(result.tMsg, result.tExpected);
+    assert.equal(result.iStats.reasons.missingDot, 1);
+    assert.equal(result.tStats.reasons.missingCrossbar, 1);
+    assert.ok(result.iStats.avgFrechet > 0, 'expected avgFrechet > 0 for i');
+    assert.ok(result.cStats.avgFrechet > 0.5, 'expected high avgFrechet for canonical C');
+    assert.ok(result.cStats.avgCurvature > 0.5, 'expected positive avgCurvature for curved C');
+    assert.match(result.csvHeader, /^letter,attempts,accepts,rejects,.*missingDot,missingCrossbar$/);
+}));
+
+test('startNextRound carries problemLetters into adaptive pool and Parent Dashboard renders Word Builder analytics and JSON backup/restore', t => run(t, async page => {
+    const carryover = await page.evaluate(() => {
+        setCaseMode('lower');
+        resetSelectionHistory();
+        letterPerformance = {};
+        letterErrors = {};
+        problemLetters = ['q', 'z'];
+        roundSummaryShown = true;
+        startNextRound();
+        const carried = [...lastRoundProblemLetters];
+        recentLetters = [];
+        updateAdaptivePool();
+        const weightQ = latestLetterWeights.q;
+        const weightZ = latestLetterWeights.z;
+        const weightA = latestLetterWeights.a;
+        // Also verify fallback from letterErrors when problemLetters is empty (e.g. after reload on roundModal)
+        problemLetters = [];
+        letterErrors = { m: 3, n: 2, p: 1 };
+        roundSummaryShown = true;
+        startNextRound();
+        const fallbackCarried = [...lastRoundProblemLetters];
+        resetSelectionHistory();
+        return {
+            carried,
+            fallbackCarried,
+            problemLettersAfterReset: [...problemLetters],
+            weightQ,
+            weightZ,
+            weightA,
+            afterResetHistory: [...lastRoundProblemLetters]
+        };
+    });
+    assert.deepEqual(carryover.carried, ['q', 'z']);
+    assert.deepEqual(carryover.fallbackCarried, ['m', 'n']);
+    assert.deepEqual(carryover.problemLettersAfterReset, []);
+    assert.ok(carryover.weightQ > carryover.weightA, `expected carried problem letter q weight (${carryover.weightQ}) > baseline a (${carryover.weightA})`);
+    assert.ok(carryover.weightZ > carryover.weightA, `expected carried problem letter z weight (${carryover.weightZ}) > baseline a (${carryover.weightA})`);
+    assert.deepEqual(carryover.afterResetHistory, []);
+
+    // Verify B24 (Word Builder Dashboard Analytics), B25 (JSON Progress Backup & Restore), & B26 (Cross-Mode Coaching/Insights)
+    const dashboardAndBackup = await page.evaluate(async () => {
+        score = 420;
+        correctAnswers = 18;
+        wrongAnswers = 4;
+        wbDifficulty = 'medium';
+        modePerformance.wordBuilder = {
+            cat: { correct: 1, total: 4, avgTime: 3, times: [3] },
+            dog: { correct: 3, total: 3, avgTime: 2, times: [2] }
+        };
+        resetDrawAnalytics();
+        recordDrawAttempt({ letter: 'A', accepted: true, reason: 'nearTop', finalScore: 0.9, classicalScore: 0.9, responseTime: 1.2, points: 25, frechetSim: 0.92, curvatureRad: 1.4 });
+        recordDrawAttempt({ letter: 'i', accepted: false, reason: 'belowThreshold', finalScore: 0.4, classicalScore: 0.4, responseTime: 1.5, points: 14, frechetSim: 0.55, curvatureRad: 0.2, missingDot: true });
+        setTimerMode('on');
+        openParentDashboard();
+        const wbSummary = {
+            practiced: document.getElementById('wbWordsPracticed')?.textContent,
+            accuracy: document.getElementById('wbSpellingAccuracy')?.textContent,
+            mastered: document.getElementById('wbWordsMastered')?.textContent,
+            tier: document.getElementById('wbCurrentTier')?.textContent,
+            toPractice: document.getElementById('wbWordsToPractice')?.textContent
+        };
+        const drawCoachingNote = document.getElementById('drawCoachingNote')?.textContent || '';
+        const insightTitles = generateInsights().map(item => item.title);
+        const recTitles = generateRecommendations().map(item => item.title);
+        const backupJson = exportProgressBackup(false);
+        await new Promise(r => setTimeout(r, 40));
+        resetAllStatistics();
+        const scoreAfterReset = score;
+        const corruptRestoreOk = importProgressBackup('{not-valid-json');
+        const scoreAfterCorrupt = score;
+        const validRestoreOk = importProgressBackup(backupJson);
+        const restoredScore = score;
+        const restoredTier = document.getElementById('wbCurrentTier')?.textContent;
+        const restoredPracticed = document.getElementById('wbWordsPracticed')?.textContent;
+        const timerWhileDialogOpen = currentTimer !== null;
+        closeParentDashboard();
+        const timerAfterDialogClose = currentTimer !== null;
+        setTimerMode('off');
+
+        // Verify rapid wbPick + wbUndo kills in-flight GSAP opacity tween and cleans up slot ARIA
+        setMode('wordBuilder');
+        const firstTile = document.querySelector('.wb-tile');
+        const pickedLetter = firstTile.textContent;
+        const pickedIdx = Number(firstTile.dataset.bankIdx);
+        wbPick(pickedLetter, pickedIdx);
+        const firstSlot = document.querySelector('.wb-slot[data-idx="0"]');
+        const slotRoleWhenFilled = firstSlot?.getAttribute('role');
+        const slotTabIndexWhenFilled = firstSlot?.tabIndex;
+        wbUndo(0);
+        await new Promise(r => setTimeout(r, 260));
+        const tileOpacityAfterUndo = firstTile.style.opacity;
+        const tileDisabledAfterUndo = firstTile.disabled;
+        const slotRoleAfterUndo = firstSlot?.getAttribute('role');
+
+        // 6. Celebration theme wiring across Find Letters, Tracing, and Word Builder + getDrawingBounds + Memory Match distinct pairs
+        setCelebration('dinosaurs');
+        createLetterCelebration('A', document.body);
+        const identifyDinoEmojis = Array.from(document.querySelectorAll('.celebration-theme-emoji')).map(el => el.textContent);
+        clearAllTimers();
+
+        drawingPoints = [];
+        const emptyBounds = getDrawingBounds();
+        drawingPoints = [
+            { x: 10, y: 20, newStroke: true },
+            { x: 50, y: 80, newStroke: false },
+            { x: 90, y: 120, newStroke: true }
+        ];
+        const strokeBounds = getDrawingBounds();
+        createDrawingCelebration(document.body);
+        const drawingDinoEmojis = Array.from(document.querySelectorAll('.celebration-theme-emoji')).map(el => el.textContent);
+        clearAllTimers();
+
+        createWordBuilderParticles();
+        const wbDinoEmojis = Array.from(document.querySelectorAll('.wb-particle')).map(el => el.textContent);
+        document.querySelectorAll('.wb-particle').forEach(el => el.remove());
+
+        recentLetters = ['a', 'b', 'c'];
+        startMemoryMatch();
+        const recentLettersAfterMemoryInit = [...recentLetters];
+        const distinctMemoryLetters = new Set(memoryCards.map(c => c.toLowerCase())).size;
+        endMemoryMatch();
+
+        // 7. B28: updateDifficultyLevel empty-state sync, #difficultyIndicator ARIA label, and #streakModal confetti timer cleanup
+        currentRound = 3;
+        letterPerformance = { a: { correct: 10, total: 10 } };
+        updateDifficultyLevel();
+        const diffLevelHigh = difficultyLevel;
+        const diff5ActiveHigh = document.getElementById('diff5')?.classList.contains('active') && document.getElementById('diff5')?.classList.contains('hard');
+        const diffAriaHigh = document.getElementById('difficultyIndicator')?.getAttribute('aria-label');
+
+        letterPerformance = {};
+        updateDifficultyLevel();
+        const diffLevelReset = difficultyLevel;
+        const diff1ActiveReset = document.getElementById('diff1')?.classList.contains('active');
+        const diff5ActiveReset = document.getElementById('diff5')?.classList.contains('active') || document.getElementById('diff5')?.classList.contains('hard');
+        const diffAriaReset = document.getElementById('difficultyIndicator')?.getAttribute('aria-label');
+
+        showStreakMilestone(3);
+        const streakTimersWhileOpen = Array.isArray(window.__streakConfettiTimers) ? window.__streakConfettiTimers.length : 0;
+        closeStreakModal();
+        const streakTimersAfterClose = Array.isArray(window.__streakConfettiTimers) ? window.__streakConfettiTimers.length : -1;
+
+        // 8. B29: live setCaseMode synchronization, visual vs phonological confusion insights, and printProgressReport
+        setMode('wordBuilder');
+        setCaseMode('lower');
+        startWordBuilderGame();
+        wbPick(wbBank[0], 0);
+        setCaseMode('upper');
+        const wbWordUpper = wbTargetWord === wbTargetWord.toUpperCase();
+        const wbSlot0Upper = wbSlots[0] === wbSlots[0].toUpperCase() && document.querySelector('#wbSlots .wb-slot.filled')?.textContent === wbSlots[0];
+        const wbTilesUpper = [...document.querySelectorAll('#wbBank .wb-tile')].every(t => t.textContent === t.textContent.toUpperCase() && t.dataset.letter === t.textContent);
+        setCaseMode('lower');
+        const wbWordLower = wbTargetWord === wbTargetWord.toLowerCase();
+
+        setMode('draw');
+        currentLetter = 'a';
+        hasStartedTrace = false;
+        drawingPoints = [];
+        const disp = document.querySelector('#gameArea .letter-display');
+        if (disp) disp.textContent = 'a';
+        setCaseMode('upper');
+        const drawUpperLetter = currentLetter;
+        const drawUpperDisplay = document.querySelector('#gameArea .letter-display')?.textContent;
+
+        confusionMatrix = createEmptyConfusionMatrix();
+        confusionMatrix.b.d = 4; // same shape group (b_d_p_q)
+        confusionMatrix.b.t = 3; // same phonological eRhyme group, different shape group
+        const confusionInsights = generateInsights().filter(i => i.title.startsWith('Confuses '));
+        const bdInsight = confusionInsights.find(i => i.title === 'Confuses B with D')?.description || '';
+        const btInsight = confusionInsights.find(i => i.title === 'Confuses B with T')?.description || '';
+
+        let printCalled = 0;
+        const origPrint = window.print;
+        window.print = () => { printCalled++; };
+        const printResult = printProgressReport();
+        window.print = origPrint;
+        const hasPrintBtn = Boolean(document.getElementById('printReportBtn'));
+
+        // 9. B30: Find Letters Spacebar shortcut, Tracing guide shortcut & pause-aware idle hint, and interactive Parent Heatmap drill-down
+        setMode('identify');
+        document.activeElement?.blur();
+        lastManualSpeakAt = 0;
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+        const spaceTriggeredPlay = lastManualSpeakAt > 0;
+
+        setMode('draw');
+        const idleHintUsesScheduleLesson = lessonTimeouts.has(idleHintTimeout);
+        document.activeElement?.blur();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', bubbles: true }));
+        const guideShownOnG = Boolean(document.getElementById('formationGuide')?.classList.contains('show'));
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', bubbles: true }));
+        const guideHiddenOnSecondG = !document.getElementById('formationGuide')?.classList.contains('show');
+
+        const restoredDrawAttempts = getDrawAnalytics().totals.attempts;
+        letterPerformance.b = { correct: 3, total: 4, avgTime: 1.5, times: [1.5] };
+        confusionMatrix.b.d = 4;
+        recordDrawAttempt({ letter: 'b', accepted: true, reason: 'blended', finalScore: 0.85, classicalScore: 0.85, deepScore: null, responseTime: 1.8, points: 25 });
+        updateLetterHeatmap();
+        const bCellRole = document.querySelector('#letterHeatmap .heatmap-cell[data-letter="b"]')?.getAttribute('role');
+        showLetterHeatmapDetail('b');
+        const bDetailText = document.getElementById('heatmapLetterDetail')?.textContent || '';
+        setCaseMode('lower');
+        openParentDashboard();
+        practiceHeatmapLetter('q');
+        const practicedLetterAfterDrilldown = currentLetter;
+        const dashboardClosedAfterPractice = activeDialog === null;
+
+        // 10. B31: Per-player drawAnalytics isolation, interactive Parent Dashboard player & word switchers, and multi-stroke formation progress + undoLastStroke
+        openParentDashboard();
+        const catBtn = document.querySelector('#wbWordsToPractice .wb-practice-word-btn');
+        const catBtnLabel = catBtn?.getAttribute('aria-label') || '';
+        if (catBtn) catBtn.click();
+        const wbForcedTargetAfterBtn = wbTargetWord.toLowerCase();
+
+        // Multi-stroke formation progress & undoLastStroke
+        setMode('draw');
+        currentLetter = 'H';
+        showFormationGuide();
+        const stroke0InitialNext = document.querySelector('#formationGuide .stroke-path[data-stroke-index="0"]')?.classList.contains('stroke-next');
+        const undoHiddenInitially = document.getElementById('undoStrokeBtn')?.style.display === 'none';
+        drawingPoints = [
+            { x: 20, y: 20, newStroke: true },
+            { x: 20, y: 80 },
+            { x: 80, y: 20, newStroke: true },
+            { x: 80, y: 80 }
+        ];
+        redrawCanvasFromPoints();
+        updateFormationStrokeProgress();
+        const stroke0CompleteAfter2 = document.querySelector('#formationGuide .stroke-path[data-stroke-index="0"]')?.classList.contains('stroke-complete');
+        const stroke1CompleteAfter2 = document.querySelector('#formationGuide .stroke-path[data-stroke-index="1"]')?.classList.contains('stroke-complete');
+        const stroke2NextAfter2 = document.querySelector('#formationGuide .stroke-path[data-stroke-index="2"]')?.classList.contains('stroke-next');
+        const undoVisibleAfterStroke = document.getElementById('undoStrokeBtn')?.style.display === '';
+        document.activeElement?.blur();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'u', bubbles: true }));
+        const strokesAfterFirstUndo = drawingPoints.filter(p => p && p.newStroke).length;
+        const stroke1NextAfterUndo = document.querySelector('#formationGuide .stroke-path[data-stroke-index="1"]')?.classList.contains('stroke-next');
+        undoLastStroke();
+        const strokesAfterSecondUndo = drawingPoints.length;
+        const undoHiddenAfterAllUndone = document.getElementById('undoStrokeBtn')?.style.display === 'none';
+
+        // Per-player drawAnalytics isolation & interactive Parent Dashboard player switcher
+        players = [
+            { id: 'p-alice', name: 'Alice', avatar: '🦁', score: 50, drawAnalytics: { letters: { A: { attempts: 2, accepts: 2, rejects: 0, reasons: {} } }, totals: { attempts: 2, accepts: 2, rejects: 0 } } },
+            { id: 'p-bob', name: 'Bob', avatar: '🐻', score: 10, drawAnalytics: { letters: {}, totals: { attempts: 0, accepts: 0, rejects: 0 } } }
+        ];
+        savePlayers();
+        selectedPlayerId = 'p-alice';
+        initializeMultiplayer();
+        const aliceDrawAttemptsInitial = getDrawAnalytics().totals.attempts;
+        openParentDashboard();
+        const playerCards = document.querySelectorAll('#playerStatsGrid .player-stat-card.interactive');
+        const aliceCardActive = playerCards[0]?.getAttribute('aria-pressed') === 'true';
+        if (playerCards[1]) playerCards[1].click();
+        const bobDrawAttemptsInDashboard = document.getElementById('drawTotalAttempts')?.textContent;
+        recordDrawAttempt({ letter: 'z', accepted: false, reason: 'other', finalScore: 0.2, classicalScore: 0.2, responseTime: 1.0, points: 10 });
+        const bobDrawAttemptsBeforeReset = getDrawAnalytics().totals.attempts;
+        resetCurrentPlayerStatistics();
+        const bobDrawAttemptsAfterReset = getDrawAnalytics().totals.attempts;
+        switchToPlayer(0);
+        const aliceDrawAttemptsPreserved = getDrawAnalytics().totals.attempts;
+        closeParentDashboard();
+
+        return {
+            wbSummary,
+            drawCoachingNote,
+            insightTitles,
+            recTitles,
+            scoreAfterReset,
+            corruptRestoreOk,
+            scoreAfterCorrupt,
+            validRestoreOk,
+            restoredScore,
+            restoredTier,
+            restoredPracticed,
+            restoredDrawAttempts,
+            timerWhileDialogOpen,
+            timerAfterDialogClose,
+            slotRoleWhenFilled,
+            slotTabIndexWhenFilled,
+            tileOpacityAfterUndo,
+            tileDisabledAfterUndo,
+            slotRoleAfterUndo,
+            identifyDinoValid: identifyDinoEmojis.length > 0 && identifyDinoEmojis.every(e => celebrationEmojis.dinosaurs.includes(e)),
+            drawingDinoValid: drawingDinoEmojis.length > 0 && drawingDinoEmojis.every(e => celebrationEmojis.dinosaurs.includes(e)),
+            wbDinoValid: wbDinoEmojis.length > 0 && wbDinoEmojis.every(e => celebrationEmojis.dinosaurs.includes(e)),
+            emptyBounds,
+            strokeBounds,
+            recentLettersAfterMemoryInit,
+            distinctMemoryLetters,
+            diffLevelHigh,
+            diff5ActiveHigh,
+            diffAriaHigh,
+            diffLevelReset,
+            diff1ActiveReset,
+            diff5ActiveReset,
+            diffAriaReset,
+            streakTimersWhileOpen,
+            streakTimersAfterClose,
+            wbWordUpper,
+            wbSlot0Upper,
+            wbTilesUpper,
+            wbWordLower,
+            drawUpperLetter,
+            drawUpperDisplay,
+            bdInsight,
+            btInsight,
+            printResult,
+            printCalled,
+            hasPrintBtn,
+            spaceTriggeredPlay,
+            idleHintUsesScheduleLesson,
+            guideShownOnG,
+            guideHiddenOnSecondG,
+            bCellRole,
+            bDetailText,
+            practicedLetterAfterDrilldown,
+            dashboardClosedAfterPractice,
+            catBtnLabel,
+            wbForcedTargetAfterBtn,
+            stroke0InitialNext,
+            undoHiddenInitially,
+            stroke0CompleteAfter2,
+            stroke1CompleteAfter2,
+            stroke2NextAfter2,
+            undoVisibleAfterStroke,
+            strokesAfterFirstUndo,
+            stroke1NextAfterUndo,
+            strokesAfterSecondUndo,
+            undoHiddenAfterAllUndone,
+            aliceDrawAttemptsInitial,
+            aliceCardActive,
+            bobDrawAttemptsInDashboard,
+            bobDrawAttemptsBeforeReset,
+            bobDrawAttemptsAfterReset,
+            aliceDrawAttemptsPreserved
+        };
+    });
+    assert.deepEqual(dashboardAndBackup.wbSummary, {
+        practiced: '2',
+        accuracy: '57%',
+        mastered: '1',
+        tier: 'MEDIUM',
+        toPractice: 'Words to practice: 🐱 CAT'
+    });
+    assert.match(dashboardAndBackup.drawCoachingNote, /Missing dots on: i/);
+    assert.ok(dashboardAndBackup.insightTitles.includes('Stroke Completeness (Dots & Crossbars)'), 'expected Stroke Completeness insight');
+    assert.ok(dashboardAndBackup.insightTitles.includes('Word Builder Spelling Focus'), 'expected Word Builder Spelling Focus insight');
+    assert.ok(dashboardAndBackup.recTitles.includes('Guided Tracing Practice'), 'expected Guided Tracing Practice recommendation');
+    assert.ok(dashboardAndBackup.recTitles.includes('Sound Out Word Builder Words'), 'expected Sound Out Word Builder Words recommendation');
+    assert.equal(dashboardAndBackup.scoreAfterReset, 0);
+    assert.equal(dashboardAndBackup.corruptRestoreOk, false);
+    assert.equal(dashboardAndBackup.scoreAfterCorrupt, 0);
+    assert.equal(dashboardAndBackup.validRestoreOk, true);
+    assert.equal(dashboardAndBackup.restoredScore, 420);
+    assert.equal(dashboardAndBackup.restoredTier, 'MEDIUM');
+    assert.equal(dashboardAndBackup.restoredPracticed, '2');
+    assert.equal(dashboardAndBackup.restoredDrawAttempts, 2);
+    assert.equal(dashboardAndBackup.timerWhileDialogOpen, false);
+    assert.equal(dashboardAndBackup.timerAfterDialogClose, true);
+    assert.equal(dashboardAndBackup.slotRoleWhenFilled, 'button');
+    assert.equal(dashboardAndBackup.slotTabIndexWhenFilled, 0);
+    assert.equal(dashboardAndBackup.tileOpacityAfterUndo, '');
+    assert.equal(dashboardAndBackup.tileDisabledAfterUndo, false);
+    assert.equal(dashboardAndBackup.slotRoleAfterUndo, null);
+    assert.equal(dashboardAndBackup.identifyDinoValid, true);
+    assert.equal(dashboardAndBackup.drawingDinoValid, true);
+    assert.equal(dashboardAndBackup.wbDinoValid, true);
+    assert.deepEqual(dashboardAndBackup.emptyBounds, { width: 0, height: 0, minX: 0, maxX: 0, minY: 0, maxY: 0 });
+    assert.deepEqual(dashboardAndBackup.strokeBounds, { width: 80, height: 100, minX: 10, maxX: 90, minY: 20, maxY: 120 });
+    assert.deepEqual(dashboardAndBackup.recentLettersAfterMemoryInit, ['a', 'b', 'c']);
+    assert.equal(dashboardAndBackup.distinctMemoryLetters, 8);
+    assert.equal(dashboardAndBackup.diffLevelHigh, 5);
+    assert.equal(dashboardAndBackup.diff5ActiveHigh, true);
+    assert.equal(dashboardAndBackup.diffAriaHigh, 'Difficulty: Level 5 of 5');
+    assert.equal(dashboardAndBackup.diffLevelReset, 1);
+    assert.equal(dashboardAndBackup.diff1ActiveReset, true);
+    assert.equal(dashboardAndBackup.diff5ActiveReset, false);
+    assert.equal(dashboardAndBackup.diffAriaReset, 'Difficulty: Level 1 of 5');
+    assert.equal(dashboardAndBackup.streakTimersWhileOpen, 5);
+    assert.equal(dashboardAndBackup.streakTimersAfterClose, 0);
+    assert.equal(dashboardAndBackup.wbWordUpper, true);
+    assert.equal(dashboardAndBackup.wbSlot0Upper, true);
+    assert.equal(dashboardAndBackup.wbTilesUpper, true);
+    assert.equal(dashboardAndBackup.wbWordLower, true);
+    assert.equal(dashboardAndBackup.drawUpperLetter, 'A');
+    assert.equal(dashboardAndBackup.drawUpperDisplay, 'A');
+    assert.match(dashboardAndBackup.bdInsight, /visual shape similarity/);
+    assert.match(dashboardAndBackup.btInsight, /similar letter sound\/name/);
+    assert.equal(dashboardAndBackup.printResult, true);
+    assert.equal(dashboardAndBackup.printCalled, 1);
+    assert.equal(dashboardAndBackup.hasPrintBtn, true);
+    assert.equal(dashboardAndBackup.spaceTriggeredPlay, true);
+    assert.equal(dashboardAndBackup.idleHintUsesScheduleLesson, true);
+    assert.equal(dashboardAndBackup.guideShownOnG, true);
+    assert.equal(dashboardAndBackup.guideHiddenOnSecondG, true);
+    assert.equal(dashboardAndBackup.bCellRole, 'button');
+    assert.match(dashboardAndBackup.bDetailText, /B: Recognition 75% \(3\/4\).*Confused with: D \(4×\).*Tracing: 1\/1 accepted/);
+    assert.equal(dashboardAndBackup.practicedLetterAfterDrilldown, 'q');
+    assert.equal(dashboardAndBackup.dashboardClosedAfterPractice, true);
+    assert.equal(dashboardAndBackup.catBtnLabel, 'Practice spelling CAT');
+    assert.equal(dashboardAndBackup.wbForcedTargetAfterBtn, 'cat');
+    assert.equal(dashboardAndBackup.stroke0InitialNext, true);
+    assert.equal(dashboardAndBackup.undoHiddenInitially, true);
+    assert.equal(dashboardAndBackup.stroke0CompleteAfter2, true);
+    assert.equal(dashboardAndBackup.stroke1CompleteAfter2, true);
+    assert.equal(dashboardAndBackup.stroke2NextAfter2, true);
+    assert.equal(dashboardAndBackup.undoVisibleAfterStroke, true);
+    assert.equal(dashboardAndBackup.strokesAfterFirstUndo, 1);
+    assert.equal(dashboardAndBackup.stroke1NextAfterUndo, true);
+    assert.equal(dashboardAndBackup.strokesAfterSecondUndo, 0);
+    assert.equal(dashboardAndBackup.undoHiddenAfterAllUndone, true);
+    assert.equal(dashboardAndBackup.aliceDrawAttemptsInitial, 2);
+    assert.equal(dashboardAndBackup.aliceCardActive, true);
+    assert.equal(dashboardAndBackup.bobDrawAttemptsInDashboard, '0');
+    assert.equal(dashboardAndBackup.bobDrawAttemptsBeforeReset, 1);
+    assert.equal(dashboardAndBackup.bobDrawAttemptsAfterReset, 0);
+    assert.equal(dashboardAndBackup.aliceDrawAttemptsPreserved, 2);
+}));
+

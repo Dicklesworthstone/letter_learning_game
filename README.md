@@ -14,32 +14,32 @@ The features below describe the implementation. The verification section separat
 
 ### Modes
 - Find Letters
-  - Presents 4 large letter tiles (same case as the target).
-  - Speaker button plays the target letter (via SpeechSynthesis API).
+  - Presents 4 large letter tiles (same case as the target). When the player has prior empirical confusions in `confusionMatrix[target]`, the most-confused letter is included among the distractors for targeted discrimination practice.
+  - Speaker button (or `Space` key) plays the target letter (via SpeechSynthesis API); options can also be chosen via keys `1–4` or by pressing the matching letter key.
   - Adaptive selection favors letters that need practice and avoids recent repeats.
   - Optional phonics follow‑up (3‑second countdown, then letter sound and anchor word/emoji). Can be skipped.
   - Scoring: base points plus a time bonus, with a per‑round cap. Wrong answers/timeouts deduct points.
 - Word Builder
-  - Presents a target word with empty slots and a small bank of letter tiles.
-  - Speaker button plays the target word (via SpeechSynthesis API).
-  - Build the word by tapping/clicking letter tiles to fill slots left‑to‑right.
-  - Adaptive difficulty with easy/medium/hard word pools: 3-letter words (including non-CVC words such as `owl` and `sky`) → 4-letter words → 5–6-letter words (including `cheese`). Four consecutive correct words raise difficulty; three incorrect words lower it. Letter case follows the Letters setting (lowercase/uppercase/mixed).
+  - Presents a target word with a persistent picture clue emoji (`#wbWordEmoji`), empty letter slots, and a bank of letter tiles.
+  - Speaker button (or `Space` key) plays the target word (via SpeechSynthesis API).
+  - Build the word by tapping/clicking letter tiles or typing letter keys (`A–Z`) to fill slots left‑to‑right. Tapping an empty slot or pressing number keys `1–9` sounds out that letter's phonetic sound (`wbSoundOutSlot` / Elkonin Sound Box scaffolding); before the final slot is filled, tap any filled slot, press its number key `1–9`, click `⌫ Undo` (`#wbUndoBtn`), or press `Backspace` to undo a tile placement.
+  - Adaptive difficulty with easy/medium/hard word pools: 3-letter words (including non-CVC words such as `owl` and `sky`) → 4-letter words → 5–6-letter words (including `cheese`). Within each pool, candidate words are weighted by `modePerformance.wordBuilder` accuracy so tricky or unseen words are practiced more often. Four consecutive correct words raise difficulty; three incorrect words lower it. Letter case follows the Letters setting (lowercase/uppercase/mixed) and updates live when changed in Settings (`syncActivePromptCase`).
   - Letter bank includes decoy letters and matches the word’s case; bank size is at least 5 or `word length + 3`.
   - Scoring: +20 for a correct word; −5 for an incorrect attempt; advances to the next word automatically.
-  - Controls: Hear Word, New Word.
+  - Controls: `⌫ Undo`, `Hear Word`, `New Word`.
 - Tracing Practice
   - Responsive canvas (200–560px square); the lesson scrolls on short screens. Resizing preserves ink and stroke coordinates at the device's pixel ratio.
-  - Numbered formation overlays for all 26 lowercase and 26 uppercase targets, using the recognizer's guide paths.
-  - Recognition: bounded arc-length sampling, point-cloud matching and raster overlap. TensorFlow.js/MobileNet load asynchronously on the first drawing check; classical recognition works immediately when those assets fail or are still loading.
-  - Letter‑specific helpers (dot detection for i/j, crossbar detection for t/f/E/F/H).
+  - Numbered formation overlays for all 26 lowercase and 26 uppercase targets, using the recognizer's guide paths (toggleable via `Show How to Write` / `Hide Guide` or the `G` key; completed and next strokes highlight automatically as you draw; `Undo Stroke` / `U` / `Ctrl+Z` removes only the last stroke; `Backspace` clears the canvas; `Enter` checks the drawing; and `Space` replays the trace prompt).
+  - Recognition: bounded arc-length sampling, point-cloud matching, discrete Fréchet / curvature primitives (`avgFrechet`, `avgCurvature`), and raster overlap. TensorFlow.js/MobileNet load asynchronously on the first drawing check; classical recognition works immediately when those assets fail or are still loading.
+  - Letter‑specific helpers (dot detection for i/j, crossbar detection for t/f/E/F/H) with specific incomplete-stroke coaching (`tmpl.feedback.incomplete`) and `missingDot` / `missingCrossbar` diagnostic counters when a required dot or crossbar is omitted.
   - Taps leave visible dots; sparse straight strokes can be checked. Starting a new stroke cancels a pending clear from the previous rejected attempt.
   - Fast strokes retain every distinct pointer sample delivered by the browser, including the release position. Ink is painted one new segment at a time.
-  - Idle hint: after a short delay, a faint letter guide fades in (disabled as soon as the child starts tracing).
+  - Idle hint: after a short delay (paused while any dialog is open), a faint letter guide fades in (disabled as soon as the child starts tracing).
 
 ### Adaptive Difficulty
 - Tracks recognition performance per letter: correct, total attempts, response times, and a small spaced-review state. Handwriting and spelling have separate mode histories; spelling a word does not award recognition mastery.
-- Builds an adaptive selection pool that up‑weights letters with low success rates and down‑weights recent letters. Tracing uses handwriting history; Identify uses recognition history.
-- Temporary “shape similarity” bias after an error (e.g., b/d/p/q) to reinforce tricky distinctions.
+- Builds an adaptive selection pool that up‑weights letters with low success rates and down‑weights recent letters. Tracing uses handwriting history; Identify uses recognition history (plus `confusionMatrix` distractor targeting); Word Builder weights candidate words by spelling history (`modePerformance.wordBuilder`).
+- Temporary “shape similarity” bias after an error (e.g., b/d/p/q) to reinforce tricky distinctions, plus round-to-round carryover of `problemLetters` (`lastRoundProblemLetters`) into the next round's adaptive pool.
 - Difficulty indicator (1–5 bars) reflects recognition performance; it is a visual indicator only (timing is not directly tied to the indicator).
 
 ### Timing and Feedback
@@ -48,8 +48,8 @@ The features below describe the implementation. The verification section separat
 - Feedback banner for success/error, plus subtle wrong‑answer flash to keep kids oriented.
 
 ### Celebrations
-- Default celebration uses themed emoji confetti and letter‑specific animations (e.g., rockets, balloons, etc.).
-- Celebration type is stored in save data; there is currently no UI for changing the celebration theme in Settings.
+- Default celebration uses themed emoji confetti (`celebrationEmojis[celebrationType]`) across all three modes (Find Letters, Tracing Practice via `createDrawingCelebration`, and Word Builder via `createWordBuilderParticles`) alongside letter‑specific hero animations (e.g., rockets, balloons, xylophone music notes for X, etc.).
+- Six selectable celebration themes in Settings: Fireworks, Animals, Vehicles, Space, Dinosaurs, and Hearts (persisted globally and per player profile).
 
 ### Visual Themes
 - Classic: clean letters.
@@ -60,13 +60,13 @@ The features below describe the implementation. The verification section separat
 - After a correct answer, optionally enters phonics phase:
   - 3‑second on‑screen countdown.
   - Speaks the phonetic sound 3 times and optionally “as in <word>”.
-  - Shows an on‑screen emoji for some anchor words.
+  - Shows an on‑screen emoji for every anchor word.
   - Echo practice: if Voice Recording is enabled and permitted, listens briefly for the child’s voice; otherwise shows a repeat button.
 - The phonics phase can be skipped at any time.
 
 ### Mini‑games (automatic short breaks)
 - Letter Rain: move the basket to catch the target letter; score feedback.
-- Memory Match: flip pairs of matching letters in a 4×4 grid with a timer; cards support native keyboard activation.
+- Memory Match: flip 8 distinct pairs of matching letters in a 4×4 grid with a timer; cards support native keyboard activation.
 - Mini‑games are occasionally offered between questions in Find Letters and Word Builder modes.
 - Both breaks offer a Return to Lesson button and resume the originating mode. Letter Rain also supports the left/right arrow keys.
 - Timer Off makes the breaks untimed. Turning it on starts a fresh countdown. Focus Mode suppresses automatic breaks and disables their timers.
@@ -86,7 +86,7 @@ Badge counter appears on the trophy button and is visible once you earn at least
 
 ### Round System
 - 15 resolved questions per round in all three modes. Incorrect recognition/tracing attempts allow a retry and remain in accuracy statistics; timeouts and completed spelling attempts resolve a question.
-- Round summary modal shows: average time, accuracy, points gained, and “problem letters” (letters with 2+ errors this round).
+- Round summary modal shows: average time, accuracy, points gained, and “problem letters” (letters with 2+ errors this round). Starting the next round (`startNextRound`) carries those problem letters (`lastRoundProblemLetters`) into the next round's adaptive pool so they are practiced promptly.
 
 ### Streaks
 - Tracks daily play streaks on local calendar days, beginning with an actual lesson outcome. Opening or reloading settings does not count as a practice day.
@@ -95,17 +95,20 @@ Badge counter appears on the trophy button and is visible once you earn at least
 
 ### Multiplayer (Profiles)
 - Add players with an emoji avatar and a name.
-- Per‑player: scores, rounds, best streak, letter performance, achievements, mastered letters, and celebration type.
+- Per‑player: scores, rounds, best streak, letter performance, tracing analytics (`drawAnalytics`), achievements, mastered letters, and celebration type.
 - Add Player is visible on the first visit. Outcomes save immediately; the selected player, mode, and partial round survive reload. Play time counts active lesson time, preserves partial minutes, and pauses for dialogs; dialog pauses also stay out of response-time statistics.
 - Settings are shared by profiles on the same browser; lesson progress belongs to the selected player.
 
 ### Parent/Teacher Dashboard
-- Open by long‑pressing (about 2s) or double‑clicking the gear button.
+- Open by long‑pressing (about 2s) or double‑clicking the gear button, or from the Settings dialog.
 - Sections:
-  - Player Progress cards (score, accuracy, letters mastered, best streak).
-  - Letter Performance Heatmap (A–Z color‑coded by success rate, with per‑cell tooltip).
-  - Insights (simple, rule‑based suggestions based on performance and timing).
-  - Recommendations (practical activity suggestions + time‑of‑day hints).
+  - Player Progress cards (score, accuracy, letters mastered, best streak; click or press `Enter`/`Space` on any player card in multiplayer mode to switch the active profile and inspect that child's analytics in place).
+  - Letter Performance Heatmap (A–Z color‑coded by success rate for the active player, with touch/keyboard drill-down `#heatmapLetterDetail` showing recognition accuracy, top confusions, tracing acceptance, and a `Practice <Letter>` action button).
+  - Learning Insights (rule‑based suggestions across Find Letters visual-shape vs phonological confusions/timing, Tracing Practice stroke completeness/path precision, and Word Builder spelling focus).
+  - Recommended Activities (practical activity suggestions across recognition, guided tracing, word sounding-out, and time‑of‑day hints).
+  - Word Builder Spelling Analytics (words practiced, spelling accuracy, words mastered, current difficulty tier, and clickable emoji-anchored words needing practice that jump directly into practicing that word via `practiceWordBuilderWord`).
+  - Tracing Practice Analytics (total attempts, accepted traces, acceptance rate, targets practiced out of 52, and stroke-formation coaching notes `#drawCoachingNote` for missing dots/crossbars or path precision) and CSV export (`Export Tracing CSV`).
+  - Data Management: reset statistics, export/restore local JSON progress backups (`Export Backup JSON` / `Restore Backup JSON`), and print a clean formatted progress report (`Print Report` / `printProgressReport()`).
 - Dashboard and other overlays trap keyboard focus and prevent background scrolling while open.
 
 ### Settings
@@ -116,6 +119,7 @@ Badge counter appears on the trophy button and is visible once you earn at least
   - Sound: On/Off
   - Word Builder: On/Off
 - Visual Theme: Classic / Animals / Colors
+- Celebration Theme: Fireworks / Animals / Vehicles / Space / Dinosaurs / Hearts
 - Advanced
   - Voice Recording: On/Off (for phonics echo + practice tools)
   - Focus Mode: simplifies the UI and disables the timer while active
@@ -136,9 +140,10 @@ Badge counter appears on the trophy button and is visible once you earn at least
 Saved in `localStorage`:
 - Overall game data: `letterLearningGameData` (score, rounds, achievements, per‑letter performance, streaks, settings, etc.).
 - Players list (for multiplayer): `letterLearningPlayers` (per‑player state; Sets are serialized as arrays).
-- Tracing diagnostic counters: `llg_draw_analytics_v1`. Missing deep-model scores are reported as unavailable, not zero-quality judgments.
+- Tracing diagnostic counters: `llg_draw_analytics_v1` (including per-letter `avgFrechet`, `avgCurvature`, `missingDot`, and `missingCrossbar`). Missing deep-model scores are reported as unavailable, not zero-quality judgments.
+- Parents/teachers can export a portable JSON backup (`exportProgressBackup`) and restore it (`importProgressBackup`) from the Parent Dashboard; invalid backup files are rejected non-destructively.
 - Invalid saved fields are normalized before use. If storage reads or writes are denied/full, a visible notice explains that progress lasts only for the current visit; lessons remain usable.
-- Clearing browser/site data removes progress. No server backup or cross-device synchronization is provided.
+- Clearing browser/site data removes local browser storage unless a JSON backup was exported. No server backup or automatic cross-device synchronization is provided.
 
 ## Accessibility
 - Big touch targets and large typography.
@@ -218,7 +223,7 @@ The suite serves the actual HTML and uses native browser controls. It covers geo
 
 Synthetic trace tests reuse the app's guide geometry. The synthetic microphone test checks native track cleanup and does not test a child's voice. Neither proves handwriting accuracy, pronunciation, screen-reader usability, or learning benefit. Those acceptance gates remain open in Beads under `llg-ova`, along with physical phone/Safari checks.
 
-- Celebration type is saved/restored, but there is no Settings UI to change it yet (default is fireworks).
+- Celebration themes (Fireworks, Animals, Vehicles, Space, Dinosaurs, Hearts) can be selected in Settings and are saved/restored per profile and globally.
 - Recognition thresholds have not been validated on a held-out corpus of children's handwriting. MobileNet supplies generic visual similarity, not a trained alphabet classifier.
 - Speech quality depends on the browser and installed English voices. Recording stays in memory for this visit (up to ten clips); it is not saved as part of a profile. Clip playback and comparison respect Sound Off and stop when leaving the lesson or opening a dialog.
 

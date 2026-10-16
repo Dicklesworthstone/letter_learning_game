@@ -47,3 +47,21 @@ test('multi-stroke cloud does not manufacture ink during pen-up travel', () => {
     assert.ok(result.some(p => p.x === 100 && p.y === 100));
     assert.ok(result.every(p => (p.x === 0 && p.y >= 0 && p.y <= 10) || (p.x === 100 && p.y === 100)));
 });
+test('discreteFrechetDistance is order-sensitive, zero on identical paths, and bounded on shifted curves', () => {
+    const forward = [{ x: 0, y: 0 }, { x: 50, y: 0 }, { x: 100, y: 0 }];
+    const shifted = [{ x: 0, y: 6 }, { x: 50, y: 6 }, { x: 100, y: 6 }];
+    const reversed = [...forward].reverse();
+    assert.equal(context.discreteFrechetDistance(forward, forward), 0);
+    assert.ok(Math.abs(context.discreteFrechetDistance(forward, shifted) - 6) < 1e-9);
+    assert.ok(context.discreteFrechetDistance(forward, reversed) >= 100);
+    assert.equal(context.discreteFrechetDistance([], forward), Infinity);
+});
+test('strokeCurvatureVariation distinguishes collinear lines, right-angle turns, and high-frequency zig-zags', () => {
+    const line = [{ x: 0, y: 0 }, { x: 25, y: 0 }, { x: 50, y: 0 }, { x: 100, y: 0 }];
+    const corner = [{ x: 0, y: 0 }, { x: 50, y: 0 }, { x: 50, y: 50 }];
+    const zigzag = Array.from({ length: 12 }, (_, i) => ({ x: i * 10, y: (i % 2) * 30 }));
+    assert.ok(context.strokeCurvatureVariation(line) < 1e-9);
+    assert.ok(Math.abs(context.strokeCurvatureVariation(corner) - Math.PI / 2) < 1e-9);
+    assert.ok(context.strokeCurvatureVariation(zigzag) > Math.PI * 4);
+});
+
