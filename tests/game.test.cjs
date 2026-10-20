@@ -338,7 +338,7 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 844, height: 390 }
     test(`drawing and spelling controls remain reachable at ${viewport.width}x${viewport.height}`, t => run(t, async page => {
         await page.locator('[aria-label="Tracing practice mode"]').press('Enter');
         const check = page.getByRole('button', { name: "I'm Done!", exact: true });
-        await check.scrollIntoViewIfNeeded();
+        await check.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' }));
         const box = await check.boundingBox();
         assert.ok(box.x >= 0 && box.x + box.width <= viewport.width + 1 && box.y >= 0 && box.y + box.height <= viewport.height + 1);
         assert.equal(await check.evaluate(element => {
@@ -701,6 +701,42 @@ test('idle tracing hints fade in and native drawing cancels further hint work', 
     assert.equal(await page.evaluate(() => !!idleHintTimeout || !!idleHintInterval), false);
 }));
 
+test('idle hints use all 52 recognizer guides and visibly render i and j dots', t => run(t, async page => {
+    await page.locator('[aria-label="Tracing practice mode"]').press('Enter');
+    assert.equal(await page.locator('.letter-guide').evaluate(element => element.tagName.toLowerCase()), 'svg');
+    const results = await page.evaluate(async () => {
+        const paths = Object.keys(LETTER_CHECKPOINTS).map(letter => {
+            // Seed a single due review; exercise actual selection and rendering,
+            // including both cases, rather than replacing either producer.
+            currentCase = letter === letter.toUpperCase() ? 'upper' : 'lower';
+            modePerformance.draw = Object.fromEntries(getLetterCollection().map(key => [key, { total: 1, correct: 0, nextReview: Date.now() + 86400000 }]));
+            modePerformance.draw[letter].nextReview = 0; resetSelectionHistory();
+            startDrawGame();
+            const svg = document.querySelector('.letter-guide');
+            return { letter, selected: currentLetter, actual: [...svg.querySelectorAll('path')].map(path => path.getAttribute('d')), expected: letterFormations[letter].map(stroke => stroke.path), viewBox: svg.getAttribute('viewBox'), hidden: svg.getAttribute('aria-hidden') };
+        });
+        const dots = [];
+        for (const letter of ['i', 'j']) {
+            const svg = new DOMParser().parseFromString(traceHintMarkup(letter), 'image/svg+xml').documentElement;
+            svg.setAttribute('width', '100'); svg.setAttribute('height', '100');
+            const image = new Image();
+            await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = reject; image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(svg)); });
+            const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100;
+            const context = canvas.getContext('2d'); context.drawImage(image, 0, 0);
+            const dot = LETTER_CHECKPOINTS[letter].strokes.find(stroke => stroke.length === 1)[0];
+            dots.push({ letter, alpha: context.getImageData(dot.x, dot.y, 1, 1).data[3] });
+        }
+        return { paths, dots };
+    });
+    assert.equal(results.paths.length, 52);
+    for (const result of results.paths) {
+        assert.equal(result.selected, result.letter);
+        assert.deepEqual(result.actual, result.expected, `idle ${result.letter} must teach the graded stroke paths`);
+        assert.equal(result.viewBox, '0 0 100 100'); assert.equal(result.hidden, 'true');
+    }
+    assert.ok(results.dots.every(dot => dot.alpha > 0), 'both required dots must paint real SVG pixels');
+}));
+
 test('anonymous mode and partial round progress survive reload', t => run(t, async page => {
     await page.locator('#wordBuilderBtn').press('Enter'); await correctWord(page);
     await page.reload();
@@ -727,10 +763,39 @@ test('timer and focus settings control mini-game countdowns and automatic breaks
 test('dialog pauses do not inflate response time', t => run(t, async page => {
     await identify(page); await page.locator('.settings-btn').press('Enter');
     const adjustment = await page.evaluate(() => {
+        // This existing-question fixture starts five seconds before its pause.
+        questionStartTime = Date.now() - 70000;
         const before = questionStartTime; pauseStartedAt = Date.now() - 65000; closeDialog('settingsModal');
         return questionStartTime - before;
     });
     assert.ok(adjustment >= 65000 && adjustment < 66000);
+}));
+
+test('a theme refresh during a dialog cannot create negative response times or fake speed', t => run(t, async page => {
+    const time = new Date('2026-10-14T12:00:00Z');
+    await page.clock.install({ time }); await page.clock.pauseAt(new Date(time.getTime() + 60000));
+    await identify(page); await page.clock.runFor(1000);
+    await page.locator('.settings-btn').press('Enter'); await page.clock.runFor(10000);
+    await page.locator('[onclick="setVisualTheme(\'animals\')"]').press('Enter');
+    await page.clock.runFor(20000); await page.keyboard.press('Escape');
+    assert.equal(await page.evaluate(() => Date.now() - questionStartTime), 0);
+    await page.clock.runFor(3000); await correctLetter(page);
+    assert.equal(await page.evaluate(() => responseTimes.at(-1)), 3);
+    assert.equal(await page.evaluate(() => speedAnswers), 0);
+}));
+
+test('settings pauses preserve active idle-hint time and prevent an unseen hint penalty', t => run(t, async page => {
+    const time = new Date('2026-10-14T12:00:00Z');
+    await page.clock.install({ time }); await page.clock.pauseAt(new Date(time.getTime() + 60000));
+    await page.locator('[aria-label="Tracing practice mode"]').press('Enter');
+    await page.clock.runFor(1000); await page.locator('.settings-btn').press('Enter');
+    await page.clock.runFor(20000);
+    assert.equal(await page.evaluate(() => hintWasShown), false);
+    assert.equal(await page.evaluate(() => hintFadeOpacity), 0);
+    await page.keyboard.press('Escape'); await page.clock.runFor(1000);
+    assert.equal(await page.evaluate(() => hintWasShown), false);
+    await page.clock.runFor(1000);
+    assert.equal(await page.evaluate(() => hintWasShown && hintFadeOpacity > 0), true);
 }));
 
 test('high contrast paints the heading and primary controls in dark text on white', t => run(t, async page => {

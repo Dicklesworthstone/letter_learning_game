@@ -1120,17 +1120,15 @@
 
         .letter-guide {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 220px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             color: #667eea;
             opacity: 0;
             /* hidden by default; will fade in as hint */
             transition: opacity 0.6s linear;
             pointer-events: none;
-            font-family: 'Georgia', serif;
-            font-weight: bold;
         }
 
         .controls {
@@ -5931,6 +5929,8 @@
         // Idle hint state for tracing
         let idleHintTimeout = null;
         let idleHintInterval = null;
+        let idleHintStartedAt = 0;
+        let idleHintToken = 0;
         let hintFadeOpacity = 0; // 0 → 0.12
         // Draw-mode advancement guards to avoid duplicate next prompts
         let drawAdvanceTimeout = null;
@@ -6298,6 +6298,11 @@
                 path: stroke.length === 1 ? `M ${stroke[0].x} ${stroke[0].y} l 0.1 0` : stroke.map((point, i) => `${i ? 'L' : 'M'} ${point.x} ${point.y}`).join(' '),
                 strokes: index + 1
             }))]));
+        function traceHintMarkup(letter) {
+            const paths = (letterFormations[letter] || []).map(stroke =>
+                `<path d="${stroke.path}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
+            return `<svg class="letter-guide" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${paths}</svg>`;
+        }
 
         // Parent Dashboard State
         let dashboardTimer = null;
@@ -10725,7 +10730,7 @@
             gameArea.innerHTML = `
                 <div class="instruction">Trace the letter: <span class="letter-display">${currentLetter}</span></div>
                 <div class="canvas-container">
-                    <div class="letter-guide">${currentLetter}</div>
+                    ${traceHintMarkup(currentLetter)}
                     <svg class="formation-guide" width="${canvasSize}" height="${canvasSize}" id="formationGuide" preserveAspectRatio="xMidYMid meet">
                         <!-- Letter formation guide will be added here -->
                     </svg>
@@ -10827,14 +10832,8 @@
             container.style.height = size + 'px';
 
             if (letterGuide) {
-                // Fit letter to inner padding so it won't clip rounded corners
-                const padding = 0.12; // 12% breathing room
-                const fitted = Math.round(size * (1 - padding * 2));
-                letterGuide.style.fontSize = fitted + 'px';
-                letterGuide.style.maxWidth = fitted + 'px';
-                letterGuide.style.maxHeight = fitted + 'px';
-                letterGuide.style.lineHeight = fitted + 'px';
-                letterGuide.style.whiteSpace = 'nowrap';
+                letterGuide.setAttribute('width', String(size));
+                letterGuide.setAttribute('height', String(size));
             }
         }
 
@@ -11243,27 +11242,37 @@
             const guideEl = container ? container.querySelector('.letter-guide') : null;
             if (!guideEl) return;
             hintFadeOpacity = 0;
+            idleHintStartedAt = Date.now();
+            const token = idleHintToken;
             // Wait a few seconds before gradually revealing the hint (paused while dialogs are open)
-            idleHintTimeout = scheduleLesson(() => {
-                idleHintTimeout = null;
+            const revealWhenDue = () => {
+                if (token !== idleHintToken) return;
+                if (lessonPaused) { idleHintTimeout = setTimeout(revealWhenDue, 100); return; }
+                const remaining = 2500 - (Date.now() - idleHintStartedAt);
+                if (remaining > 0) { idleHintTimeout = setTimeout(revealWhenDue, remaining); return; }
+                idleHintTimeout = null; idleHintStartedAt = 0;
                 if (hasStartedTrace || currentMode !== 'draw') { clearIdleHintTimers(); return; }
-                hintWasShown = true;
                 // fade from 0 → 0.12 over several seconds in tiny steps
-                idleHintInterval = setInterval(() => {
-                    if (lessonPaused) return;
+                const interval = setInterval(() => {
+                    if (token !== idleHintToken) { clearInterval(interval); return; }
                     // If the child started drawing or left draw mode, stop immediately
                     if (hasStartedTrace || currentMode !== 'draw') { clearIdleHintTimers(); return; }
+                    if (lessonPaused) return;
                     hintFadeOpacity = Math.min(0.12, hintFadeOpacity + 0.01);
+                    hintWasShown = true;
                     guideEl.style.opacity = String(hintFadeOpacity);
                     if (hintFadeOpacity >= 0.12) {
-                        clearInterval(idleHintInterval);
+                        clearInterval(interval);
                         idleHintInterval = null;
                     }
                 }, 200);
-            }, 2500);
+                idleHintInterval = interval;
+            };
+            idleHintTimeout = setTimeout(revealWhenDue, 2500);
         }
 
         function clearIdleHintTimers() {
+            idleHintToken++; idleHintStartedAt = 0;
             if (idleHintTimeout) { clearTimeout(idleHintTimeout); idleHintTimeout = null; }
             if (idleHintInterval) { clearInterval(idleHintInterval); idleHintInterval = null; }
             const guideEl = document.querySelector('.canvas-container .letter-guide');
@@ -13675,10 +13684,16 @@
             activeDialog = null;
             for (const child of document.querySelector('.container').children) child.inert = false;
             document.body.classList.remove('modal-open', 'lesson-paused');
-            const pausedFor = Date.now() - pauseStartedAt;
-            if (timerDeadline) timerDeadline += pausedFor;
-            if (questionStartTime) questionStartTime += pausedFor;
-            if (drawQuestionStartTime) drawQuestionStartTime += pausedFor;
+            const resumedAt = Date.now();
+            const pausedFor = resumedAt - pauseStartedAt;
+            const pausedSince = startedAt => Math.max(0, resumedAt - Math.max(pauseStartedAt, startedAt));
+            // A settings change can create a new question during the pause.
+            // Exclude only the paused time since that question/hint began.
+            const questionPause = questionStartTime ? pausedSince(questionStartTime) : pausedFor;
+            if (timerDeadline) timerDeadline += questionPause;
+            if (questionStartTime) questionStartTime += questionPause;
+            if (drawQuestionStartTime) drawQuestionStartTime += pausedSince(drawQuestionStartTime);
+            if (idleHintStartedAt) idleHintStartedAt += pausedSince(idleHintStartedAt);
             lessonPaused = false;
             if (document.querySelector('#gameArea .option-btn, #drawCanvas, #wbSlots, .minigame-container')) {
                 startPlayClock();

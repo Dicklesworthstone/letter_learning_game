@@ -34,7 +34,7 @@ The features below describe the implementation. The verification section separat
   - Letter‑specific helpers (dot detection for i/j, crossbar detection for t/f/E/F/H) with specific incomplete-stroke coaching (`tmpl.feedback.incomplete`) and `missingDot` / `missingCrossbar` diagnostic counters when a required dot or crossbar is omitted.
   - Taps leave visible dots; sparse straight strokes can be checked. Starting a new stroke cancels a pending clear from the previous rejected attempt.
   - Fast strokes retain every distinct pointer sample delivered by the browser, including the release position. Ink is painted one new segment at a time.
-  - Idle hint: after a short delay (paused while any dialog is open), a faint letter guide fades in (disabled as soon as the child starts tracing).
+  - Idle hint: after a short delay (paused while any dialog is open), the same stroke paths used by the formation guide and recognizer fade in. The hint fades out as soon as the child starts tracing or leaves tracing mode; it does not depend on a font's letter forms.
 
 ### Adaptive Difficulty
 - Tracks recognition performance per letter: correct, total attempts, response times, and a small spaced-review state. Handwriting and spelling have separate mode histories; spelling a word does not award recognition mastery.
@@ -110,6 +110,7 @@ Badge counter appears on the trophy button and is visible once you earn at least
   - Tracing Practice Analytics (total attempts, accepted traces, acceptance rate, targets practiced out of 52, and stroke-formation coaching notes `#drawCoachingNote` for missing dots/crossbars or path precision) and CSV export (`Export Tracing CSV`).
   - Data Management: reset statistics, export/restore local JSON progress backups (`Export Backup JSON` / `Restore Backup JSON`), and print a clean formatted progress report (`Print Report` / `printProgressReport()`).
 - Dashboard and other overlays trap keyboard focus and prevent background scrolling while open.
+- Dialog pauses preserve each question's active response time, including a question refreshed by a theme change. Drawing hint waits and fades pause too, so help hidden behind a dialog does not incur a hint penalty.
 
 ### Settings
 - Basic
@@ -192,6 +193,7 @@ Core CSS variables used in the app:
 
 ## Deployment
 - Static hosting: upload the single `index.html` to any static host (e.g., GitHub Pages, Cloudflare Pages, Netlify, S3/CloudFront).
+- Vercel production: [Open Learn Your Letters](https://letter-learning-game-seven.vercel.app/). The deployment serves the same single HTML file from a prebuilt static bundle.
 - Ensure the site is served over HTTPS to enable microphone features.
 
 ## Device Support
@@ -223,7 +225,11 @@ The suite serves the actual HTML and uses native browser controls. It covers geo
 
 Synthetic trace tests reuse the app's guide geometry. The synthetic microphone test checks native track cleanup and does not test a child's voice. Neither proves handwriting accuracy, pronunciation, screen-reader usability, or learning benefit. Those acceptance gates remain open in Beads under `llg-ova`, along with physical phone/Safari checks.
 
-- Celebration themes (Fireworks, Animals, Vehicles, Space, Dinosaurs, Hearts) can be selected in Settings and are saved/restored per profile and globally.
+A classical-only pilot at revision `4030cc7` replayed 208 stylus samples from two test writers in [UJI Pen Characters v2](https://archive.ics.uci.edu/dataset/177/uji%2Bpen%2Bcharacters%2Bversion%2B2) (Prat et al., 2008; CC BY 4.0). The checker accepted 136/208 intended-letter trials and 91/208 predeclared wrong-letter confusion trials. Automatic checks can therefore misgrade freehand stylus writing. This small replay study provides no evidence about the writers' ages, children's tracing, or learning benefit.
+
+- Celebration themes (Fireworks, Animals, Vehicles, Space, Dinosaurs, Hearts) can be selected in Settings and are saved/restored per profile and globally. The default remains fireworks.
+- Changing the theme during feedback for the fifteenth Find Letters answer can offer an extra question before the round summary. This remains open in Beads as `llg-ova.4`.
+- Voice Recording changes do not update the current question's recorder controls immediately. After switching it off, a leftover Record button can still request native microphone access before discarding the stream. These remain open in `llg-ova.7` and `llg-ova.10`.
 - Recognition thresholds have not been validated on a held-out corpus of children's handwriting. MobileNet supplies generic visual similarity, not a trained alphabet classifier.
 - Speech quality depends on the browser and installed English voices. Recording stays in memory for this visit (up to ten clips); it is not saved as part of a profile. Clip playback and comparison respect Sound Off and stop when leaving the lesson or opening a dialog.
 
